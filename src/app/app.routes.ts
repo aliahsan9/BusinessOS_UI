@@ -4,9 +4,15 @@ import { onboardingRedirectGuard } from './core/guards/onboarding.guard';
 import { themeGuard } from './core/theme/theme.guard';
 import { buildFeatureRoutes } from './app-feature.routes';
 import { ROUTES } from './core/constants/route.constants';
+import { HomeComponent } from './features/home/home.component';
+import { AboutComponent } from './features/about/about.component';
+import { ServicesComponent } from './features/services/services.component';
+import { ContactComponent } from './features/contact/contact.component';
 
 export const routes: Routes = [
-  // { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+  { path: 'about', component: AboutComponent },
+  { path: 'services', component: ServicesComponent },
+  { path: 'contact', component: ContactComponent },
   {
   path: '',
   loadComponent: () =>

@@ -1,11 +1,32 @@
-<a class="visually-hidden-focusable" href="#main-content">Skip to main content</a>
+<a
+class="visually-hidden-focusable"
+href="#main-content"
 
-<router-outlet />
+>
+
+Skip to main content </a>
+
+<app-home-navbar />
+
+<main id="main-content">
+  <router-outlet />
+</main>
+
+<app-footer />
 
 <app-toast-container />
 
 @if (isLoading()) {
-  <div class="global-loader" role="status" aria-live="polite" aria-label="Loading">
-    <app-spinner size="lg" label="Loading application..." />
+
+  <div
+    class="global-loader"
+    role="status"
+    aria-live="polite"
+    aria-label="Loading"
+  >
+    <app-spinner
+      size="lg"
+      label="Loading application..."
+    />
   </div>
 }

@@ -1,4 +1,24 @@
 :host {
-  display: block;
-  min-height: 100vh;
+display: flex;
+flex-direction: column;
+min-height: 100vh;
+}
+
+main {
+flex: 1;
+display: block;
+}
+
+.global-loader {
+position: fixed;
+inset: 0;
+
+display: flex;
+align-items: center;
+justify-content: center;
+
+background: rgba(0, 0, 0, 0.45);
+backdrop-filter: blur(8px);
+
+z-index: 9999;
 }

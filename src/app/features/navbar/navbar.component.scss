@@ -2,35 +2,39 @@
   display: block;
 }
 
+/* =========================
+   NAVBAR
+========================= */
+
 .business-navbar {
   height: 82px;
-  transition: all 0.35s ease;
+  transition: all .35s ease;
 
   background: transparent;
-
-  backdrop-filter: blur(0px);
-  -webkit-backdrop-filter: blur(0px);
 
   z-index: 1050;
 
   &.scrolled {
-    background: rgba(10, 10, 10, 0.85);
+    background: rgba(10, 10, 10, 0.88);
 
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
 
-    border-bottom: 1px solid rgba(255,255,255,0.08);
+    border-bottom: 1px solid rgba(255,255,255,.08);
 
-    box-shadow: 0 10px 40px rgba(0,0,0,.4);
+    box-shadow: 0 10px 35px rgba(0,0,0,.35);
   }
 }
 
-.navbar-brand {
+/* =========================
+   BRAND
+========================= */
+
+.navbar-brand,
+.brand-side {
   display: flex;
   align-items: center;
   gap: 12px;
-
-  cursor: pointer;
 
   text-decoration: none;
 }
@@ -55,23 +59,26 @@
     #7c3aed
   );
 
-  box-shadow: 0 0 30px rgba(99,102,241,.5);
+  box-shadow: 0 0 25px rgba(99,102,241,.4);
 }
 
-.brand-text {
+.brand-text,
+.brand-side span {
   color: white;
-  font-size: 1.2rem;
+  font-size: 1.15rem;
   font-weight: 700;
 }
 
+/* =========================
+   DESKTOP NAV
+========================= */
+
 .desktop-nav {
-  gap: 12px;
+  gap: 8px;
 }
 
 .nav-link-btn {
-  border: none;
-
-  background: transparent;
+  text-decoration: none;
 
   color: rgba(255,255,255,.8);
 
@@ -79,16 +86,25 @@
 
   border-radius: 10px;
 
-  transition: all .3s ease;
+  transition: .3s;
 
   font-weight: 500;
 
   &:hover {
     color: white;
-
     background: rgba(255,255,255,.08);
   }
 }
+
+.active-link {
+  color: white !important;
+
+  background: rgba(255,255,255,.1);
+}
+
+/* =========================
+   ACTION BUTTONS
+========================= */
 
 .desktop-actions {
   gap: 12px;
@@ -97,13 +113,13 @@
 .btn-login {
   color: white;
 
-  border: 1px solid rgba(255,255,255,.15);
-
-  background: rgba(255,255,255,.04);
+  border-radius: 12px;
 
   padding: .75rem 1.4rem;
 
-  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.15);
+
+  background: rgba(255,255,255,.05);
 }
 
 .btn-primary-custom {
@@ -113,7 +129,7 @@
 
   border-radius: 12px;
 
-  padding: .75rem 1.5rem;
+  padding: .75rem 1.4rem;
 
   font-weight: 600;
 
@@ -123,14 +139,18 @@
     #7c3aed
   );
 
-  transition: .3s;
+  transition: .3s ease;
 
   &:hover {
     transform: translateY(-2px);
 
-    box-shadow: 0 12px 30px rgba(99,102,241,.4);
+    box-shadow: 0 10px 25px rgba(99,102,241,.4);
   }
 }
+
+/* =========================
+   MOBILE BUTTON
+========================= */
 
 .hamburger-btn {
   border: none;
@@ -142,38 +162,44 @@
   font-size: 2rem;
 }
 
-/* Sidebar */
+/* =========================
+   BACKDROP
+========================= */
 
 .sidebar-backdrop {
   position: fixed;
 
   inset: 0;
 
-  background: rgba(0,0,0,.65);
+  background: rgba(0,0,0,.6);
 
   backdrop-filter: blur(8px);
 
   z-index: 1048;
 }
 
+/* =========================
+   SIDEBAR
+========================= */
+
 .mobile-sidebar {
   position: fixed;
 
   top: 0;
-  right: -320px;
+  right: -340px;
 
   width: 320px;
   height: 100vh;
 
   background: rgba(10,10,10,.96);
 
-  backdrop-filter: blur(20px);
+  backdrop-filter: blur(25px);
 
   border-left: 1px solid rgba(255,255,255,.08);
 
-  transition: .4s ease;
-
   z-index: 1051;
+
+  transition: .35s ease;
 
   display: flex;
   flex-direction: column;
@@ -189,18 +215,8 @@
   border-bottom: 1px solid rgba(255,255,255,.08);
 }
 
-.brand-side {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-
-  color: white;
-  font-size: 1.2rem;
-  font-weight: 700;
-}
-
 .sidebar-links {
-  padding: 2rem 1rem;
+  padding: 1.5rem;
 
   display: flex;
   flex-direction: column;
@@ -209,9 +225,7 @@
 }
 
 .sidebar-link {
-  border: none;
-
-  background: rgba(255,255,255,.04);
+  text-decoration: none;
 
   color: white;
 
@@ -219,7 +233,7 @@
 
   border-radius: 14px;
 
-  text-align: left;
+  background: rgba(255,255,255,.04);
 
   transition: .3s;
 
@@ -228,10 +242,14 @@
   }
 }
 
+.active-sidebar-link {
+  background: rgba(79,70,229,.25);
+}
+
 .sidebar-footer {
   margin-top: auto;
 
-  padding: 1rem;
+  padding: 1.5rem;
 
   display: flex;
   flex-direction: column;
@@ -242,11 +260,13 @@
 .btn-login-mobile {
   color: white;
 
-  border: 1px solid rgba(255,255,255,.15);
+  text-align: center;
 
-  background: rgba(255,255,255,.04);
+  padding: .9rem;
 
   border-radius: 12px;
 
-  padding: .85rem;
+  border: 1px solid rgba(255,255,255,.15);
+
+  background: rgba(255,255,255,.05);
 }

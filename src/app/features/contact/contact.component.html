@@ -1,1 +1,202 @@
-<p>contact works!</p>
+<section class="contact-page">
+
+  <div class="container">
+
+    <!-- Hero -->
+
+    <div class="hero-section text-center">
+
+      <span class="section-badge">
+        CONTACT US
+      </span>
+
+      <h1>
+        Let's Build Something Great Together
+      </h1>
+
+      <p>
+        Have questions about BusinessOS? Need a custom solution?
+        We'd love to hear from you.
+      </p>
+
+    </div>
+
+    <!-- Contact Cards -->
+
+    <div class="row g-4 mb-5">
+
+      <div class="col-lg-4">
+        <div class="contact-card">
+
+          <div class="icon-box">
+            <i class="bi bi-envelope"></i>
+          </div>
+
+          <h5>Email Us</h5>
+
+          <p>
+            support&#64;businessos.com
+          </p>
+
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="contact-card">
+
+          <div class="icon-box">
+            <i class="bi bi-telephone"></i>
+          </div>
+
+          <h5>Call Us</h5>
+
+          <p>
+            +92 300 1234567
+          </p>
+
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="contact-card">
+
+          <div class="icon-box">
+            <i class="bi bi-geo-alt"></i>
+          </div>
+
+          <h5>Office</h5>
+
+          <p>
+            Faisalabad, Pakistan
+          </p>
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Main Section -->
+
+    <div class="row g-4">
+
+      <!-- Form -->
+
+      <div class="col-lg-8">
+
+        <div class="contact-form-card">
+
+          <h3>
+            Send Us a Message
+          </h3>
+
+          <form
+            [formGroup]="contactForm"
+            (ngSubmit)="submit()"
+          >
+
+            <div class="row g-3">
+
+              <div class="col-md-6">
+
+                <input
+                  type="text"
+                  class="form-control"
+                  placeholder="Full Name"
+                  formControlName="fullName"
+                >
+
+              </div>
+
+              <div class="col-md-6">
+
+                <input
+                  type="email"
+                  class="form-control"
+                  placeholder="Email Address"
+                  formControlName="email"
+                >
+
+              </div>
+
+              <div class="col-md-6">
+
+                <input
+                  type="text"
+                  class="form-control"
+                  placeholder="Company Name"
+                  formControlName="company"
+                >
+
+              </div>
+
+              <div class="col-md-6">
+
+                <input
+                  type="text"
+                  class="form-control"
+                  placeholder="Subject"
+                  formControlName="subject"
+                >
+
+              </div>
+
+              <div class="col-12">
+
+                <textarea
+                  rows="6"
+                  class="form-control"
+                  placeholder="Your Message..."
+                  formControlName="message"
+                ></textarea>
+
+              </div>
+
+              <div class="col-12">
+
+                <button
+                  type="submit"
+                  class="btn btn-send"
+                >
+                  Send Message
+                </button>
+
+              </div>
+
+            </div>
+
+          </form>
+
+        </div>
+
+      </div>
+
+      <!-- Info -->
+
+      <div class="col-lg-4">
+
+        <div class="info-card">
+
+          <h4>
+            Business Hours
+          </h4>
+
+          <ul>
+            <li>Monday - Friday : 9 AM - 6 PM</li>
+            <li>Saturday : 10 AM - 3 PM</li>
+            <li>Sunday : Closed</li>
+          </ul>
+
+          <div class="map-placeholder">
+            <i class="bi bi-map"></i>
+            <span>Office Location</span>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>

@@ -6,7 +6,10 @@
 
     <!-- Logo -->
 
-    <a class="navbar-brand" (click)="scrollToSection('home')">
+    <a
+      routerLink="/home"
+      class="navbar-brand"
+    >
       <div class="logo-circle">
         B
       </div>
@@ -16,22 +19,26 @@
       </span>
     </a>
 
-    <!-- Desktop Nav -->
+    <!-- Desktop Navigation -->
 
     <div class="desktop-nav d-none d-lg-flex">
 
       @for(item of navItems; track item.label) {
-      <button
+
+      <a
+        [routerLink]="item.route"
+        routerLinkActive="active-link"
+        [routerLinkActiveOptions]="{ exact: true }"
         class="nav-link-btn"
-        (click)="scrollToSection(item.fragment)"
       >
         {{ item.label }}
-      </button>
+      </a>
+
       }
 
     </div>
 
-    <!-- CTA -->
+    <!-- Desktop Actions -->
 
     <div class="desktop-actions d-none d-lg-flex">
 
@@ -51,7 +58,7 @@
 
     </div>
 
-    <!-- Mobile Hamburger -->
+    <!-- Mobile Menu -->
 
     <button
       class="hamburger-btn d-lg-none"
@@ -67,16 +74,14 @@
   </div>
 </nav>
 
-<!-- Backdrop -->
-
 @if(isSidebarOpen()) {
+
 <div
   class="sidebar-backdrop"
   (click)="closeSidebar()"
 ></div>
-}
 
-<!-- Sidebar -->
+}
 
 <div
   class="mobile-sidebar"
@@ -85,8 +90,11 @@
 
   <div class="sidebar-header">
 
-    <div class="brand-side">
-
+    <a
+      routerLink="/home"
+      class="brand-side"
+      (click)="closeSidebar()"
+    >
       <div class="logo-circle">
         B
       </div>
@@ -94,20 +102,24 @@
       <span>
         BusinessOS
       </span>
-
-    </div>
+    </a>
 
   </div>
 
   <div class="sidebar-links">
 
     @for(item of navItems; track item.label) {
-    <button
+
+    <a
+      [routerLink]="item.route"
+      routerLinkActive="active-sidebar-link"
+      [routerLinkActiveOptions]="{ exact: true }"
       class="sidebar-link"
-      (click)="scrollToSection(item.fragment)"
+      (click)="closeSidebar()"
     >
       {{ item.label }}
-    </button>
+    </a>
+
     }
 
   </div>
@@ -116,7 +128,7 @@
 
     <a
       routerLink="/auth/login"
-      class="btn btn-login-mobile w-100"
+      class="btn btn-login-mobile"
       (click)="closeSidebar()"
     >
       Login
@@ -124,7 +136,7 @@
 
     <a
       routerLink="/auth/register"
-      class="btn btn-primary-custom w-100"
+      class="btn btn-primary-custom"
       (click)="closeSidebar()"
     >
       Get Started

@@ -1,11 +1,37 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import {
+  FormBuilder,
+  ReactiveFormsModule,
+  Validators
+} from '@angular/forms';
 
 @Component({
   selector: 'app-contact',
-  imports: [],
+  standalone: true,
+  imports: [ReactiveFormsModule],
   templateUrl: './contact.component.html',
-  styleUrl: './contact.component.scss'
+  styleUrls: ['./contact.component.scss']
 })
 export class ContactComponent {
 
+  private fb = inject(FormBuilder);
+
+  contactForm = this.fb.group({
+    fullName: ['', Validators.required],
+    email: ['', [Validators.required, Validators.email]],
+    company: [''],
+    subject: ['', Validators.required],
+    message: ['', Validators.required]
+  });
+
+  submit(): void {
+    if (this.contactForm.invalid) {
+      this.contactForm.markAllAsTouched();
+      return;
+    }
+
+    console.log(this.contactForm.value);
+
+    this.contactForm.reset();
+  }
 }
