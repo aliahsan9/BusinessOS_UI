@@ -1,6 +1,19 @@
 :host {
   display: block;
-  background: #050816;
+   background:
+    radial-gradient(
+      circle at top right,
+      rgba(7, 4, 56, 0.12),
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at bottom left,
+      rgba(24, 4, 59, 0.12),
+      transparent 35%
+    ),
+    #070707;
+
+  overflow: hidden;
   color: white;
   overflow: hidden;
 }
