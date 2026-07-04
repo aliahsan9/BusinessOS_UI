@@ -1,1 +1,207 @@
-<p>about works!</p>
+<section
+  id="about"
+  class="about-section"
+>
+  <div class="container">
+
+    <!-- Header -->
+
+    <div class="section-header">
+
+      <span class="section-badge">
+        About BusinessOS
+      </span>
+
+      <h2>
+        Built For Modern Businesses
+      </h2>
+
+      <p>
+        BusinessOS is a complete business management platform
+        designed to help organizations streamline operations,
+        automate workflows, improve visibility, and accelerate
+        growth from a single intelligent dashboard.
+      </p>
+
+    </div>
+
+    <!-- Main Content -->
+
+    <div class="row align-items-center g-5">
+
+      <!-- Left -->
+
+      <div class="col-lg-6">
+
+        <div class="content-card">
+
+          <h3>
+            One Platform. Complete Control.
+          </h3>
+
+          <p>
+            Running a business often requires multiple tools,
+            disconnected spreadsheets, and time-consuming
+            manual processes. BusinessOS eliminates that
+            complexity by bringing every critical business
+            function into one centralized ecosystem.
+          </p>
+
+          <p>
+            From inventory management and customer tracking
+            to sales, finance, reporting, analytics, and
+            team collaboration, BusinessOS empowers
+            organizations to make faster and smarter decisions.
+          </p>
+
+          <div class="features-grid">
+
+            <div class="feature-item">
+              ✓ Inventory Management
+            </div>
+
+            <div class="feature-item">
+              ✓ Sales Automation
+            </div>
+
+            <div class="feature-item">
+              ✓ Customer CRM
+            </div>
+
+            <div class="feature-item">
+              ✓ Financial Tracking
+            </div>
+
+            <div class="feature-item">
+              ✓ Team Collaboration
+            </div>
+
+            <div class="feature-item">
+              ✓ Business Analytics
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Right -->
+
+      <div class="col-lg-6">
+
+        <div class="showcase-card">
+
+          <div class="dashboard-window">
+
+            <div class="window-header">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+
+            <div class="dashboard-content">
+
+              <div class="metric-card">
+                <small>Revenue</small>
+                <h4>$128K</h4>
+              </div>
+
+              <div class="metric-card">
+                <small>Orders</small>
+                <h4>4,268</h4>
+              </div>
+
+              <div class="metric-card">
+                <small>Customers</small>
+                <h4>2,391</h4>
+              </div>
+
+              <div class="metric-card">
+                <small>Growth</small>
+                <h4>+24%</h4>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Stats -->
+
+    <div class="stats-wrapper">
+
+      <div
+        class="stat-card"
+        *ngFor="let stat of stats"
+      >
+        <h3>
+          {{ stat.value }}
+        </h3>
+
+        <p>
+          {{ stat.label }}
+        </p>
+      </div>
+
+    </div>
+
+    <!-- Mission Vision -->
+
+    <div class="row g-4 mission-section">
+
+      <div class="col-lg-6">
+
+        <div class="mission-card">
+
+          <div class="icon">
+            🎯
+          </div>
+
+          <h4>
+            Our Mission
+          </h4>
+
+          <p>
+            To simplify business management by providing
+            a unified platform that empowers organizations
+            to operate efficiently, make data-driven decisions,
+            and scale confidently.
+          </p>
+
+        </div>
+
+      </div>
+
+      <div class="col-lg-6">
+
+        <div class="mission-card">
+
+          <div class="icon">
+            🚀
+          </div>
+
+          <h4>
+            Our Vision
+          </h4>
+
+          <p>
+            To become the operating system for businesses
+            worldwide, enabling companies of every size to
+            achieve operational excellence and sustainable growth.
+          </p>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+  <app-services></app-services>
+</section>
