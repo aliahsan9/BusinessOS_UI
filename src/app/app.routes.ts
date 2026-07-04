@@ -6,7 +6,15 @@ import { buildFeatureRoutes } from './app-feature.routes';
 import { ROUTES } from './core/constants/route.constants';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+  // { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+  {
+  path: '',
+  loadComponent: () =>
+    import('./features/home/home.component').then(
+      (m) => m.HomeComponent
+    ),
+  title: 'BusinessOS | Business Management Platform',
+},
   {
     path: 'auth',
     loadChildren: () => import('./features/auth/auth.routes').then((m) => m.AUTH_ROUTES),

@@ -1,0 +1,70 @@
+<section class="testimonials-section" id="testimonials">
+
+  <div class="container">
+
+    <div class="section-header">
+
+      <span class="section-badge">
+        Trusted By Businesses
+      </span>
+
+      <h2>
+        What Our Clients Say
+      </h2>
+
+      <p>
+        Thousands of professionals trust BusinessOS to
+        streamline operations, improve productivity,
+        and accelerate growth.
+      </p>
+
+    </div>
+
+    <div class="row g-4">
+
+      @for (item of testimonials; track item.name) {
+
+      <div class="col-lg-4 col-md-6">
+
+        <div class="testimonial-card">
+
+          <div class="stars">
+            ★★★★★
+          </div>
+
+          <p class="review">
+            "{{ item.review }}"
+          </p>
+
+          <div class="client">
+
+            <img
+              [src]="item.image"
+              [alt]="item.name"
+            />
+
+            <div>
+
+              <h5>
+                {{ item.name }}
+              </h5>
+
+              <span>
+                {{ item.designation }}
+              </span>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      }
+
+    </div>
+
+  </div>
+
+</section>

@@ -1,0 +1,135 @@
+<nav
+  class="navbar navbar-expand-lg fixed-top business-navbar"
+  [class.scrolled]="isScrolled()"
+>
+  <div class="container">
+
+    <!-- Logo -->
+
+    <a class="navbar-brand" (click)="scrollToSection('home')">
+      <div class="logo-circle">
+        B
+      </div>
+
+      <span class="brand-text">
+        BusinessOS
+      </span>
+    </a>
+
+    <!-- Desktop Nav -->
+
+    <div class="desktop-nav d-none d-lg-flex">
+
+      @for(item of navItems; track item.label) {
+      <button
+        class="nav-link-btn"
+        (click)="scrollToSection(item.fragment)"
+      >
+        {{ item.label }}
+      </button>
+      }
+
+    </div>
+
+    <!-- CTA -->
+
+    <div class="desktop-actions d-none d-lg-flex">
+
+      <a
+        routerLink="/auth/login"
+        class="btn btn-login"
+      >
+        Login
+      </a>
+
+      <a
+        routerLink="/auth/register"
+        class="btn btn-primary-custom"
+      >
+        Get Started
+      </a>
+
+    </div>
+
+    <!-- Mobile Hamburger -->
+
+    <button
+      class="hamburger-btn d-lg-none"
+      (click)="toggleSidebar()"
+    >
+      <i
+        class="bi"
+        [class.bi-list]="!isSidebarOpen()"
+        [class.bi-x-lg]="isSidebarOpen()"
+      ></i>
+    </button>
+
+  </div>
+</nav>
+
+<!-- Backdrop -->
+
+@if(isSidebarOpen()) {
+<div
+  class="sidebar-backdrop"
+  (click)="closeSidebar()"
+></div>
+}
+
+<!-- Sidebar -->
+
+<div
+  class="mobile-sidebar"
+  [class.open]="isSidebarOpen()"
+>
+
+  <div class="sidebar-header">
+
+    <div class="brand-side">
+
+      <div class="logo-circle">
+        B
+      </div>
+
+      <span>
+        BusinessOS
+      </span>
+
+    </div>
+
+  </div>
+
+  <div class="sidebar-links">
+
+    @for(item of navItems; track item.label) {
+    <button
+      class="sidebar-link"
+      (click)="scrollToSection(item.fragment)"
+    >
+      {{ item.label }}
+    </button>
+    }
+
+  </div>
+
+  <div class="sidebar-footer">
+
+    <a
+      routerLink="/auth/login"
+      class="btn btn-login-mobile w-100"
+      (click)="closeSidebar()"
+    >
+      Login
+    </a>
+
+    <a
+      routerLink="/auth/register"
+      class="btn btn-primary-custom w-100"
+      (click)="closeSidebar()"
+    >
+      Get Started
+    </a>
+
+  </div>
+
+</div>
