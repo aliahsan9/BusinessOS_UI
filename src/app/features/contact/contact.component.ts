@@ -4,11 +4,13 @@ import {
   ReactiveFormsModule,
   Validators
 } from '@angular/forms';
+import { FooterComponent } from "../footer/footer.component";
+import { NavbarComponent } from '../navbar/navbar.component';
 
 @Component({
   selector: 'app-contact',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, NavbarComponent, FooterComponent],
   templateUrl: './contact.component.html',
   styleUrls: ['./contact.component.scss']
 })
