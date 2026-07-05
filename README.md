@@ -2,6 +2,9 @@
 
 Production-ready Angular 19 frontend for the BusinessOS backend API.
 
+<img width="1890" height="860" alt="landing_page" src="https://github.com/user-attachments/assets/7c89a4b7-075d-4756-a158-96cef4f1a8d9" />
+
+
 ## Tech Stack
 
 - **Angular 19.2** with standalone components
