@@ -6,16 +6,16 @@
 
   background:
     radial-gradient(
-      circle at top left,
-      rgba(99,102,241,.15),
-      transparent 30%
+      circle at top right,
+      rgba(7, 4, 56, 0.12),
+      transparent 35%
     ),
     radial-gradient(
-      circle at bottom right,
-      rgba(124,58,237,.15),
-      transparent 30%
+      circle at bottom left,
+      rgba(24, 4, 59, 0.12),
+      transparent 35%
     ),
-    #0b1120;
+    #070707;
 
   color: white;
 }
@@ -178,4 +178,4 @@
   i {
     font-size: 2rem;
   }
-}
+} 
