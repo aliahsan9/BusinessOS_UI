@@ -1,58 +1,151 @@
-<div class="auth-form">
-  <div class="auth-form__header">
-    <h2 class="auth-form__title">Welcome back</h2>
-    <p class="auth-form__subtitle">Sign in to your BusinessOS account</p>
-  </div>
+<div class="login-card">
 
-  @if (errorMessage()) {
-    <app-alert [message]="errorMessage()!" variant="danger" [dismissible]="true" (dismissed)="errorMessage.set(null)" />
-  }
+  <div class="login-header">
 
-  <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
-    <app-input
-      label="Email"
-      type="email"
-      formControlName="email"
-      placeholder="you@company.com"
-      autocomplete="email"
-      [required]="true"
-      [error]="getFieldError(form.controls.email, 'Email') ?? undefined"
-    />
-
-    <app-input
-      label="Password"
-      type="password"
-      formControlName="password"
-      placeholder="Enter your password"
-      autocomplete="current-password"
-      [required]="true"
-      [error]="getFieldError(form.controls.password, 'Password') ?? undefined"
-    />
-
-    <div class="auth-form__options">
-      <label class="auth-form__checkbox">
-        <input type="checkbox" formControlName="rememberMe" />
-        Remember me
-      </label>
-      <a routerLink="/auth/forgot-password" class="auth-form__link">Forgot password?</a>
+    <div class="login-icon">
+      <i class="bi bi-shield-lock"></i>
     </div>
 
-    <app-button
-      label="Sign in"
-      type="submit"
-      [loading]="loading()"
-      [fullWidth]="true"
-    />
+    <h2>Welcome Back 👋</h2>
 
-    <p class="auth-form__footer">
-      Don't have an account?
-      <a routerLink="/auth/register" class="auth-form__link">Create account</a>
+    <p>
+      Sign in to continue using BusinessOS
     </p>
+
+  </div>
+
+  @if(errorMessage()) {
+    <app-alert
+      [message]="errorMessage()!"
+      variant="danger"
+      [dismissible]="true"
+      (dismissed)="errorMessage.set(null)">
+    </app-alert>
+  }
+
+  <form
+    [formGroup]="form"
+    (ngSubmit)="onSubmit()">
+
+    <div class="mb-4">
+
+      <label class="form-label">
+        Email Address
+      </label>
+
+      <input
+        type="email"
+        class="form-control auth-input"
+        formControlName="email"
+        placeholder="you@company.com">
+
+    </div>
+
+    <div class="mb-3">
+
+      <label class="form-label">
+        Password
+      </label>
+
+      <div class="password-wrapper">
+
+        <input
+          [type]="showPassword() ? 'text' : 'password'"
+          class="form-control auth-input"
+          formControlName="password"
+          placeholder="Enter your password">
+
+        <button
+          type="button"
+          class="password-toggle"
+          (click)="togglePassword()">
+
+          <i
+            class="bi"
+            [class.bi-eye]="!showPassword()"
+            [class.bi-eye-slash]="showPassword()">
+          </i>
+
+        </button>
+
+      </div>
+
+    </div>
+
+    <div
+      class="d-flex justify-content-between align-items-center mb-4">
+
+      <div class="form-check">
+
+        <input
+          type="checkbox"
+          class="form-check-input"
+          formControlName="rememberMe">
+
+        <label class="form-check-label">
+          Remember Me
+        </label>
+
+      </div>
+
+      <a
+        routerLink="/auth/forgot-password"
+        class="forgot-link">
+
+        Forgot Password?
+
+      </a>
+
+    </div>
+
+    <button
+      type="submit"
+      class="btn signin-btn w-100"
+      [disabled]="loading()">
+
+      @if(loading()) {
+
+        <span
+          class="spinner-border spinner-border-sm me-2">
+        </span>
+
+        Signing In...
+
+      } @else {
+
+        Sign In
+
+      }
+
+    </button>
+
+    @if(devCredentials){
+
+      <button
+        type="button"
+        class="btn btn-outline-light demo-btn w-100 mt-3"
+        (click)="fillDemoCredentials()">
+
+        Use Demo Account
+
+      </button>
+
+    }
+
+    <div class="divider">
+      <span>OR</span>
+    </div>
+
+    <p class="signup-text">
+
+      Don't have an account?
+
+      <a routerLink="/auth/register">
+        Create Account
+      </a>
+
+    </p>
+
   </form>
 
-  @if (devCredentials) {
-    <p class="auth-form__dev-hint">
-      Dev account: {{ devCredentials.email }} / {{ devCredentials.password }}
-    </p>
-  }
 </div>
