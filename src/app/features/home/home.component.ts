@@ -4,10 +4,11 @@ import { TestimonialsComponent } from '../testimonials/testimonials.component';
 import { FooterComponent } from '../footer/footer.component';
 import { AboutComponent } from "../about/about.component";
 import { ServicesComponent } from '../services/services.component';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-home',
-  imports: [NavbarComponent, TestimonialsComponent, FooterComponent, AboutComponent, ServicesComponent],
+  imports: [RouterModule, NavbarComponent, TestimonialsComponent, FooterComponent, AboutComponent, ServicesComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss'
 })

@@ -1,21 +1,106 @@
+<app-home-navbar></app-home-navbar>
 <div class="auth-layout">
-  <div class="auth-layout__panel auth-layout__panel--brand">
-    <div class="auth-layout__brand-content">
-      <div class="auth-layout__logo" aria-hidden="true">B</div>
-      <h1 class="auth-layout__headline">Run your business with confidence</h1>
-      <p class="auth-layout__tagline">
-        Inventory, orders, customers, and analytics — all in one modern platform built for growing teams.
-      </p>
-      <ul class="auth-layout__features">
-        <li>Real-time dashboard insights</li>
-        <li>Role-based access control</li>
-        <li>Multi-tenant architecture</li>
-      </ul>
+
+  <!-- Floating Shapes -->
+  <div class="shape shape-1"></div>
+  <div class="shape shape-2"></div>
+  <div class="shape shape-3"></div>
+
+  <div class="container-fluid h-100">
+
+    <div class="row min-vh-100">
+
+      <!-- LEFT SIDE -->
+
+      <div class="col-lg-6 d-none d-lg-flex auth-brand-panel">
+
+        <div class="brand-content">
+
+          <div class="brand-logo">
+            <span>B</span>
+          </div>
+
+          <div class="brand-badge">
+            Smart Business Management Platform
+          </div>
+
+          <h1 class="brand-title">
+            Run Your Business
+            <span>Without Limits</span>
+          </h1>
+
+          <p class="brand-description">
+            Streamline operations, manage customers,
+            track inventory, analyze performance,
+            and scale your organization from a single platform.
+          </p>
+
+          <div class="brand-features">
+
+            <div class="feature-card">
+              <i class="bi bi-graph-up-arrow"></i>
+              <div>
+                <h6>Analytics Dashboard</h6>
+                <p>Real-time business intelligence</p>
+              </div>
+            </div>
+
+            <div class="feature-card">
+              <i class="bi bi-people-fill"></i>
+              <div>
+                <h6>Team Collaboration</h6>
+                <p>Manage departments efficiently</p>
+              </div>
+            </div>
+
+            <div class="feature-card">
+              <i class="bi bi-shield-check"></i>
+              <div>
+                <h6>Enterprise Security</h6>
+                <p>Role-based secure access</p>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="stats-row">
+
+            <div class="stat-box">
+              <h3>99.9%</h3>
+              <span>Uptime</span>
+            </div>
+
+            <div class="stat-box">
+              <h3>500+</h3>
+              <span>Businesses</span>
+            </div>
+
+            <div class="stat-box">
+              <h3>24/7</h3>
+              <span>Support</span>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- RIGHT SIDE -->
+
+      <div class="col-lg-6 auth-form-panel">
+
+        <div class="form-wrapper">
+
+          <router-outlet></router-outlet>
+
+        </div>
+
+      </div>
+
     </div>
+
   </div>
-  <div class="auth-layout__panel auth-layout__panel--form">
-    <main class="auth-layout__form-container">
-      <router-outlet />
-    </main>
-  </div>
+
 </div>
+<app-footer></app-footer>
