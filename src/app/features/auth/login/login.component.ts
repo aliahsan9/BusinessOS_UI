@@ -32,7 +32,7 @@ import { environment } from '../../../../environments/environment';
   imports: [
     ReactiveFormsModule,
     RouterLink,
-    AppAlertComponent
+    AppAlertComponent,
   ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
