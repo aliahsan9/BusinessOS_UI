@@ -67,6 +67,10 @@
 
   color: white;
 }
+// White
+.auth-input::placeholder {
+  color: #c6c1c1;
+}
 
 .auth-input:focus {
   background: rgba(255,255,255,.08);
@@ -148,7 +152,7 @@
   position: relative;
 }
 
-.signup-text {
+.signup-text { 
   text-align: center;
   margin: 0;
 }
