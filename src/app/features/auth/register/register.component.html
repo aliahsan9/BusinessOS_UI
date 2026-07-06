@@ -1,36 +1,159 @@
-<div class="auth-form">
-  <div class="auth-form__header">
-    <h2 class="auth-form__title">Create your account</h2>
-    <p class="auth-form__subtitle">Start managing your business in minutes</p>
-  </div>
+<div class="register-card">
 
-  @if (errorMessage()) {
-    <app-alert [message]="errorMessage()!" variant="danger" />
-  }
+  <div class="register-header">
 
-  <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
-    <div class="row g-3">
-      <div class="col-md-6">
-        <app-input label="First name" formControlName="firstName" [required]="true" [error]="getFieldError(form.controls.firstName, 'First name') ?? undefined" />
-      </div>
-      <div class="col-md-6">
-        <app-input label="Last name" formControlName="lastName" [required]="true" [error]="getFieldError(form.controls.lastName, 'Last name') ?? undefined" />
-      </div>
+    <div class="register-icon">
+      <i class="bi bi-person-plus"></i>
     </div>
 
-    <app-input label="Business name" formControlName="businessName" [required]="true" [error]="getFieldError(form.controls.businessName, 'Business name') ?? undefined" />
+    <h2>Create Account</h2>
 
-    <app-input label="Email" type="email" formControlName="email" autocomplete="email" [required]="true" [error]="getFieldError(form.controls.email, 'Email') ?? undefined" />
-
-    <app-input label="Password" type="password" formControlName="password" autocomplete="new-password" [required]="true" hint="Min 8 characters with upper, lower, and number" [error]="getFieldError(form.controls.password, 'Password') ?? undefined" />
-
-    <app-input label="Confirm password" type="password" formControlName="confirmPassword" autocomplete="new-password" [required]="true" [error]="getFieldError(form.controls.confirmPassword, 'Confirm password') ?? undefined" />
-
-    <app-button label="Create account" type="submit" [loading]="loading()" [fullWidth]="true" />
-
-    <p class="auth-form__footer">
-      Already have an account?
-      <a routerLink="/auth/login" class="auth-form__link">Sign in</a>
+    <p>
+      Start managing your business with BusinessOS
     </p>
+
+  </div>
+
+  @if(errorMessage()) {
+    <app-alert
+      [message]="errorMessage()!"
+      variant="danger"
+      [dismissible]="true"
+      (dismissed)="errorMessage.set(null)">
+    </app-alert>
+  }
+
+  <form
+    [formGroup]="form"
+    (ngSubmit)="onSubmit()">
+
+    <div class="row">
+
+      <div class="col-md-6 mb-3">
+
+        <label class="form-label">
+          First Name
+        </label>
+
+        <input
+          type="text"
+          class="form-control auth-input"
+          formControlName="firstName"
+          placeholder="Ali">
+
+      </div>
+
+      <div class="col-md-6 mb-3">
+
+        <label class="form-label">
+          Last Name
+        </label>
+
+        <input
+          type="text"
+          class="form-control auth-input"
+          formControlName="lastName"
+          placeholder="Ahsan">
+
+      </div>
+
+    </div>
+
+    <div class="mb-3">
+
+      <label class="form-label">
+        Business Name
+      </label>
+
+      <input
+        type="text"
+        class="form-control auth-input"
+        formControlName="businessName"
+        placeholder="My Business">
+
+    </div>
+
+    <div class="mb-3">
+
+      <label class="form-label">
+        Email Address
+      </label>
+
+      <input
+        type="email"
+        class="form-control auth-input"
+        formControlName="email"
+        placeholder="you@company.com">
+
+    </div>
+
+    <div class="mb-3">
+
+      <label class="form-label">
+        Password
+      </label>
+
+      <input
+        type="password"
+        class="form-control auth-input"
+        formControlName="password"
+        placeholder="Create password">
+
+      <small class="password-hint">
+        Minimum 8 characters with uppercase, lowercase and number
+      </small>
+
+    </div>
+
+    <div class="mb-4">
+
+      <label class="form-label">
+        Confirm Password
+      </label>
+
+      <input
+        type="password"
+        class="form-control auth-input"
+        formControlName="confirmPassword"
+        placeholder="Confirm password">
+
+    </div>
+
+    <button
+      type="submit"
+      class="btn register-btn w-100"
+      [disabled]="loading()">
+
+      @if(loading()) {
+
+        <span
+          class="spinner-border spinner-border-sm me-2">
+        </span>
+
+        Creating Account...
+
+      } @else {
+
+        Create Account
+
+      }
+
+    </button>
+
+    <div class="divider">
+      <span>OR</span>
+    </div>
+
+    <p class="signin-text">
+
+      Already have an account?
+
+      <a routerLink="/auth/login">
+        Sign In
+      </a>
+
+    </p>
+
   </form>
+
 </div>
