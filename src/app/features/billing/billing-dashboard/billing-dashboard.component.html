@@ -33,7 +33,7 @@
             <dd class="col-sm-8">{{ data.currentPlan.paymentProvider }}</dd>
           </dl>
 
-          @if (canManage) {
+          @if (canManage) { 
             <div class="d-flex flex-wrap gap-2 mt-3 pt-3 border-top">
               <a [routerLink]="ROUTES.pricing.base"><app-button label="Change Plan" [variant]="ButtonVariant.Primary" type="button" /></a>
               <app-button label="Manage Payment" [variant]="ButtonVariant.Secondary" type="button" [loading]="actionLoading()" (clicked)="openPortal()" />
