@@ -16,14 +16,25 @@ export class AppCurrencyPipe implements PipeTransform {
     digitsInfo?: string,
     locale?: string,
   ): string | null {
+    if (value === null || value === undefined) return null;
+
     const resolvedLocale = locale ?? this.currencyService.locale();
+    const currencyCode = this.currencyService.currencyCode();
+
     const currencyPipe = new CurrencyPipe(resolvedLocale);
 
-    return currencyPipe.transform(
+    let result = currencyPipe.transform(
       value,
-      this.currencyService.currencyCode(),
+      currencyCode,
       display === undefined || display === false ? 'symbol' : display,
       digitsInfo ?? '1.2-2',
     );
+
+    if (!result) return result;
+
+    // Ensure space between currency and amount (PKR1200 -> PKR 1200)
+    result = result.replace(currencyCode, currencyCode + ' ');
+
+    return result;
   }
 }
