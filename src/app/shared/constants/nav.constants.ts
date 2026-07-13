@@ -1,3 +1,4 @@
+// nav.constants.ts
 import { ROUTES } from '../../core/constants/route.constants';
 
 /** @deprecated Use ROUTES from core/constants/route.constants.ts */
@@ -45,21 +46,21 @@ export interface NavItem {
 export const TOP_NAV_ITEMS: NavItem[] = [
   {
     label: 'Sales Dashboard',
-    icon: '💰',
+    icon: 'fa-chart-line',
     route: ROUTES.sales.dashboard,
     description: 'Sales KPIs, revenue trends, and top products.',
     permissions: ['Order.View'],
   },
   {
     label: 'Reports',
-    icon: '📈',
+    icon: 'fa-chart-bar',
     route: ROUTES.reports,
     description: 'Analyze business performance and trends.',
     permissions: ['Report.View'],
   },
   {
     label: 'Financial Dashboard',
-    icon: '💹',
+    icon: 'fa-coins',
     route: ROUTES.finance.dashboard,
     description: 'Financial KPIs, revenue and expense trends.',
     permissions: ['Finance.View'],
@@ -69,97 +70,97 @@ export const TOP_NAV_ITEMS: NavItem[] = [
 export const NAV_ITEMS: NavItem[] = [
   {
     label: 'Dashboard',
-    icon: '📊',
+    icon: 'fa-chart-pie',
     route: ROUTES.dashboard,
     description: 'Overview of sales, orders, inventory, and key metrics.',
   },
   {
     label: 'Products',
-    icon: '📦',
+    icon: 'fa-cube',
     route: ROUTES.products.base,
     description: 'Manage product catalog and pricing.',
     permissions: ['Product.View'],
   },
   {
     label: 'Inventory',
-    icon: '🏭',
+    icon: 'fa-warehouse',
     route: ROUTES.inventory.base,
     description: 'Track stock levels and inventory movements.',
     permissions: ['Inventory.View'],
   },
   {
     label: 'Suppliers',
-    icon: '🚚',
+    icon: 'fa-truck',
     route: ROUTES.suppliers.base,
     description: 'Manage supplier contacts and purchase relationships.',
     permissions: ['Supplier.View'],
   },
   {
     label: 'Purchase Orders',
-    icon: '📋',
+    icon: 'fa-clipboard-list',
     route: ROUTES.purchaseOrders.base,
     description: 'Create and track purchase orders from suppliers.',
     permissions: ['PurchaseOrder.View'],
   },
   {
     label: 'Customers',
-    icon: '🤝',
+    icon: 'fa-user-tie',
     route: ROUTES.customers.base,
     description: 'Manage customer records and relationships.',
     permissions: ['Customer.View'],
   },
   {
     label: 'Orders',
-    icon: '🛒',
+    icon: 'fa-shopping-cart',
     route: ROUTES.orders.base,
     description: 'View and manage customer orders.',
     permissions: ['Order.View'],
   },
   {
     label: 'Quotations',
-    icon: '📝',
+    icon: 'fa-file-signature',
     route: ROUTES.quotations.base,
     description: 'Create and track customer quotations.',
     permissions: ['Quotation.View'],
   },
   {
     label: 'Invoices',
-    icon: '🧾',
+    icon: 'fa-file-invoice',
     route: ROUTES.invoices.base,
     description: 'Review billing and invoice history.',
     permissions: ['Invoice.View'],
   },
   {
     label: 'Payments',
-    icon: '💳',
+    icon: 'fa-credit-card',
     route: ROUTES.payments.base,
     description: 'Record and track customer payments.',
     permissions: ['Payment.View'],
   },
   {
     label: 'Sales Dashboard',
-    icon: '💰',
+    icon: 'fa-chart-line',
     route: ROUTES.sales.dashboard,
     description: 'Sales KPIs, revenue trends, and top products.',
     permissions: ['Order.View'],
   },
   {
     label: 'Reports',
-    icon: '📈',
+    icon: 'fa-chart-bar',
     route: ROUTES.reports,
     description: 'Analyze business performance and trends.',
     permissions: ['Report.View'],
   },
   {
     label: 'Business Analytics',
-    icon: '📉',
+    icon: 'fa-chart-area',
     route: ROUTES.analytics.base,
     description: 'Advanced analytics across customers, projects, revenue, and expenses.',
     permissions: ['Analytics.View'],
   },
   {
     label: 'Financial Dashboard',
-    icon: '💹',
+    icon: 'fa-coins',
     route: ROUTES.finance.dashboard,
     description: 'Financial KPIs, revenue and expense trends.',
     permissions: ['Finance.View'],
@@ -167,7 +168,7 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     label: 'Expenses',
-    icon: '💸',
+    icon: 'fa-arrow-up-right-dots',
     route: ROUTES.expenses.base,
     description: 'Track and manage business expenses.',
     permissions: ['Expense.View'],
@@ -175,7 +176,7 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     label: 'Expense Categories',
-    icon: '🏷️',
+    icon: 'fa-tags',
     route: ROUTES.expenseCategories.base,
     description: 'Organize expenses into categories.',
     permissions: ['ExpenseCategory.View'],
@@ -183,7 +184,7 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     label: 'Profit & Loss',
-    icon: '📉',
+    icon: 'fa-bullseye',
     route: ROUTES.finance.profitLoss,
     description: 'Analyze revenue, expenses, and profitability.',
     permissions: ['Finance.View'],
@@ -191,7 +192,7 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     label: 'Team',
-    icon: '👨‍👩‍👧‍👦',
+    icon: 'fa-users',
     route: ROUTES.team.base,
     description: 'Manage team members, roles, and collaboration.',
     permissions: ['Team.View'],
@@ -199,7 +200,7 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     label: 'Tenant',
-    icon: '🏛️',
+    icon: 'fa-building',
     route: ROUTES.tenant.dashboard,
     description: 'Tenant dashboard, plan, and resource usage.',
     permissions: ['Tenant.View'],
@@ -207,7 +208,7 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     label: 'Organization',
-    icon: '🏢',
+    icon: 'fa-city',
     route: ROUTES.organization.base,
     description: 'Organization profile, logo, timezone, and currency.',
     permissions: ['Organization.View'],
@@ -215,7 +216,7 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     label: 'Users',
-    icon: '👥',
+    icon: 'fa-user-group',
     route: ROUTES.users.base,
     description: 'Manage user accounts and access.',
     permissions: ['User.View'],
@@ -223,7 +224,7 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     label: 'Roles',
-    icon: '🛡️',
+    icon: 'fa-shield-halved',
     route: ROUTES.roles.base,
     description: 'Configure roles and assign permissions.',
     permissions: ['Role.View'],
@@ -231,7 +232,7 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     label: 'Permissions',
-    icon: '🔐',
+    icon: 'fa-key',
     route: ROUTES.permissions.base,
     description: 'Review permission definitions across the system.',
     permissions: ['Role.View'],
@@ -239,7 +240,7 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     label: 'Audit Logs',
-    icon: '📋',
+    icon: 'fa-clipboard',
     route: ROUTES.audit.base,
     description: 'Review system audit trail and entity changes.',
     permissions: ['Audit.View'],
@@ -247,7 +248,7 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     label: 'Activity',
-    icon: '🕒',
+    icon: 'fa-clock',
     route: ROUTES.activity.base,
     description: 'View business activity timeline.',
     permissions: ['Activity.View'],
@@ -255,7 +256,7 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     label: 'Notifications',
-    icon: '🔔',
+    icon: 'fa-bell',
     route: ROUTES.notifications.base,
     description: 'View and manage notifications.',
     permissions: ['Notification.View'],
@@ -263,7 +264,7 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     label: 'Billing',
-    icon: '💳',
+    icon: 'fa-receipt',
     route: ROUTES.billing.base,
     description: 'Manage subscription, usage, and invoices.',
     permissions: ['Subscription.View'],
@@ -271,7 +272,7 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     label: 'Pricing',
-    icon: '🏷️',
+    icon: 'fa-tag',
     route: ROUTES.pricing.base,
     description: 'Compare plans and upgrade your subscription.',
     permissions: ['Subscription.View'],
@@ -279,7 +280,7 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     label: 'Settings',
-    icon: '⚙️',
+    icon: 'fa-gear',
     route: ROUTES.settings.base,
     description: 'Configure application and tenant settings.',
     permissions: ['Settings.View'],
@@ -287,11 +288,10 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     label: 'System Admin',
-    icon: '🖥️',
+    icon: 'fa-server',
     route: ROUTES.admin.base,
     description: 'Monitor system health, stats, and environment.',
     permissions: ['SystemAdmin.View'],
     group: 'Administration',
   },
 ];
-

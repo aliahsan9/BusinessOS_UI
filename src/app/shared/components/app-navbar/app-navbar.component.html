@@ -1,6 +1,6 @@
 <header class="app-navbar">
 
-  <!-- Left -->
+  <!-- Left Section -->
   <div class="app-navbar__start">
 
     <button
@@ -19,7 +19,7 @@
 
   </div>
 
-  <!-- Navigation -->
+  <!-- Navigation Links -->
   <nav class="app-navbar__nav" aria-label="Main navigation">
 
     @for (item of navItems; track item.route) {
@@ -29,7 +29,8 @@
         routerLinkActive="app-navbar__nav-link--active"
         [routerLinkActiveOptions]="{ exact: true }"
         class="app-navbar__nav-link"
-        [title]="item.description">
+        [title]="item.description"
+        (click)="closeMobileMenu()">
 
         <i class="bi" [class]="item.icon"></i>
 
@@ -43,11 +44,10 @@
 
   </nav>
 
-  <!-- Right -->
+  <!-- Right Actions -->
   <div class="app-navbar__actions">
 
-    <!-- Theme -->
-
+    <!-- Theme Toggle -->
     <button
       type="button"
       class="btn app-navbar__icon-btn"
@@ -62,8 +62,7 @@
 
     </button>
 
-    <!-- AI -->
-
+    <!-- AI Assistant -->
     <button
       type="button"
       class="btn app-navbar__icon-btn"
@@ -76,13 +75,11 @@
     </button>
 
     <!-- Notifications -->
-
     @if (canViewNotifications()) {
       <app-notification-bell />
     }
 
-    <!-- Profile -->
-
+    <!-- Profile Dropdown -->
     <div class="app-navbar__dropdown">
 
       <button
@@ -124,6 +121,7 @@
 
       </button>
 
+      <!-- Dropdown Menu -->
       @if (showProfile()) {
 
         <div class="app-navbar__dropdown-menu">
@@ -187,3 +185,70 @@
   </div>
 
 </header>
+
+<!-- Mobile Sidebar Overlay -->
+<div
+  class="mobile-sidebar-overlay"
+  [class.active]="isMobileMenuOpen()"
+  (click)="closeMobileMenu()">
+</div>
+
+<!-- Mobile Sidebar -->
+<div
+  class="mobile-sidebar"
+  [class.active]="isMobileMenuOpen()">
+
+  <div class="mobile-sidebar__header">
+
+    <span class="mobile-sidebar__brand">
+      BusinessOS
+    </span>
+
+    <button
+      type="button"
+      class="mobile-sidebar__close"
+      (click)="closeMobileMenu()">
+
+      <i class="bi bi-x-lg"></i>
+
+    </button>
+
+  </div>
+
+  <nav class="mobile-sidebar__nav">
+
+    @for (item of navItems; track item.route) {
+
+      <a
+        [routerLink]="item.route"
+        routerLinkActive="mobile-sidebar__link--active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="mobile-sidebar__link"
+        (click)="closeMobileMenu()">
+
+        <i class="bi" [class]="item.icon"></i>
+
+        <span>{{ item.label }}</span>
+
+      </a>
+
+    }
+
+  </nav>
+
+  <div class="mobile-sidebar__footer">
+
+    <button
+      type="button"
+      class="mobile-sidebar__logout"
+      (click)="logout()">
+
+      <i class="bi bi-box-arrow-right"></i>
+
+      <span>Sign Out</span>
+
+    </button>
+
+  </div>
+
+</div>

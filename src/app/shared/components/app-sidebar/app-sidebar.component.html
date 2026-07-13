@@ -1,36 +1,61 @@
+<!-- app-sidebar.component.html -->
 <aside
   class="app-sidebar"
   [class.app-sidebar--collapsed]="isCollapsedView()"
   [class.app-sidebar--mobile-open]="mobileOpen()"
+  [class.app-sidebar--tablet-open]="tabletOpen()"
+  [class.app-sidebar--mini]="isMiniView()"
   aria-label="Main navigation"
 >
   <div class="app-sidebar__brand">
-    <span class="app-sidebar__logo" aria-hidden="true">B</span>
+    <div class="app-sidebar__logo" aria-hidden="true">
+      <i class="fas fa-cubes"></i>
+    </div>
     @if (!hideLabels()) {
       <span class="app-sidebar__name">BusinessOS</span>
     }
   </div>
 
-  <nav class="app-sidebar__nav">
-    @for (item of navItems; track item.route) {
-      <a
-        [routerLink]="item.route"
-        routerLinkActive="app-sidebar__link--active"
-        class="app-sidebar__link"
-        [attr.aria-label]="item.label"
-        (click)="onNavClick()"
-      >
-        <span class="app-sidebar__icon" aria-hidden="true">{{ item.icon }}</span>
-        @if (!hideLabels()) {
-          <span class="app-sidebar__label">{{ item.label }}</span>
-        }
-      </a>
+  <nav class="app-sidebar__nav" role="navigation">
+    @if (navGroups().length > 0) {
+      @for (group of navGroups(); track group.name) {
+        <div class="app-sidebar__group">
+          @if (!hideLabels() && group.name) {
+            <span class="app-sidebar__group-label">{{ group.name }}</span>
+          }
+          @for (item of group.items; track item.route) {
+            <a
+              [routerLink]="item.route"
+              routerLinkActive="app-sidebar__link--active"
+              class="app-sidebar__link"
+              [attr.aria-label]="item.label"
+              [attr.aria-current]="isActiveRoute(item.route) ? 'page' : null"
+              (click)="onNavClick()"
+            >
+              <span class="app-sidebar__icon" aria-hidden="true">
+                <i [class]="'fas ' + item.icon"></i>
+              </span>
+              @if (!hideLabels()) {
+                <span class="app-sidebar__label">{{ item.label }}</span>
+              }
+            </a>
+          }
+        </div>
+      }
     }
   </nav>
 
-  <button type="button" class="app-sidebar__toggle" (click)="toggleCollapse()" [attr.aria-label]="isCollapsedView() ? 'Expand sidebar' : 'Collapse sidebar'">
-    {{ isCollapsedView() ? '›' : '‹' }}
-  </button>
+  <div class="app-sidebar__footer">
+    <button
+      type="button"
+      class="app-sidebar__toggle"
+      (click)="toggleCollapse()"
+      [attr.aria-label]="isCollapsedView() ? 'Expand sidebar' : 'Collapse sidebar'"
+      title="Toggle sidebar"
+    >
+      <i [class]="'fas ' + (isCollapsedView() ? 'fa-angle-right' : 'fa-angle-left')"></i>
+    </button>
+  </div>
 </aside>
 
 @if (mobileOpen()) {

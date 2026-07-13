@@ -45,20 +45,11 @@ export class AppNavbarComponent implements OnInit {
   // --------------------------------------------------------------------------
 
   private readonly authService = inject(AuthService);
-
   private readonly tokenService = inject(TokenService);
-
-  private readonly tenantSettingsStore =
-    inject(TenantSettingsStoreService);
-
-  private readonly notificationState =
-    inject(NotificationStateService);
-
-  private readonly aiAssistantState =
-    inject(AiAssistantStateService);
-
-  private readonly themeService =
-    inject(ThemeService);
+  private readonly tenantSettingsStore = inject(TenantSettingsStoreService);
+  private readonly notificationState = inject(NotificationStateService);
+  private readonly aiAssistantState = inject(AiAssistantStateService);
+  private readonly themeService = inject(ThemeService);
 
   // --------------------------------------------------------------------------
   // Outputs
@@ -67,23 +58,24 @@ export class AppNavbarComponent implements OnInit {
   readonly menuToggle = output<void>();
 
   // --------------------------------------------------------------------------
+  // Mobile Menu State
+  // --------------------------------------------------------------------------
+
+  readonly isMobileMenuOpen = signal(false);
+
+  // --------------------------------------------------------------------------
   // Routes
   // --------------------------------------------------------------------------
 
   readonly routes = APP_ROUTE_PATHS;
-
   readonly settingsRoutes = ROUTES;
 
   // --------------------------------------------------------------------------
   // Theme
   // --------------------------------------------------------------------------
 
-  readonly resolvedAppearance =
-    this.themeService.resolvedAppearance;
-
-  readonly isDarkMode = computed(
-    () => this.resolvedAppearance() === 'dark',
-  );
+  readonly resolvedAppearance = this.themeService.resolvedAppearance;
+  readonly isDarkMode = computed(() => this.resolvedAppearance() === 'dark');
 
   // --------------------------------------------------------------------------
   // Navigation
@@ -93,38 +85,23 @@ export class AppNavbarComponent implements OnInit {
     if (!item.permissions?.length) {
       return true;
     }
-
-    return this.tokenService.hasAnyPermission(
-      item.permissions,
-    );
+    return this.tokenService.hasAnyPermission(item.permissions);
   });
 
   // --------------------------------------------------------------------------
   // User
   // --------------------------------------------------------------------------
 
-  readonly currentUser =
-    this.authService.currentUser;
-
-  readonly showProfile =
-    signal(false);
+  readonly currentUser = this.authService.currentUser;
+  readonly showProfile = signal(false);
 
   readonly userInitial = computed(() => {
-    return (
-      this.currentUser()
-        ?.email
-        ?.charAt(0)
-        ?.toUpperCase() ?? 'U'
-    );
+    return this.currentUser()?.email?.charAt(0)?.toUpperCase() ?? 'U';
   });
 
   readonly userDisplayName = computed(() => {
     const email = this.currentUser()?.email;
-
-    if (!email) {
-      return 'User';
-    }
-
+    if (!email) return 'User';
     return email.split('@')[0];
   });
 
@@ -132,20 +109,12 @@ export class AppNavbarComponent implements OnInit {
   // Company Logo
   // --------------------------------------------------------------------------
 
-  readonly companyLogoUrl =
-    this.tenantSettingsStore.logoUrl;
-
-  readonly logoLoadFailed =
-    signal(false);
-
-  readonly logoLoading =
-    signal(false);
+  readonly companyLogoUrl = this.tenantSettingsStore.logoUrl;
+  readonly logoLoadFailed = signal(false);
+  readonly logoLoading = signal(false);
 
   readonly showCompanyLogo = computed(() => {
-    return (
-      !!this.companyLogoUrl() &&
-      !this.logoLoadFailed()
-    );
+    return !!this.companyLogoUrl() && !this.logoLoadFailed();
   });
 
   // --------------------------------------------------------------------------
@@ -153,17 +122,14 @@ export class AppNavbarComponent implements OnInit {
   // --------------------------------------------------------------------------
 
   readonly canViewNotifications = computed(() =>
-    this.tokenService.hasPermission(
-      'Notification.View',
-    ),
+    this.tokenService.hasPermission('Notification.View')
   );
 
   // --------------------------------------------------------------------------
   // AI Assistant
   // --------------------------------------------------------------------------
 
-  readonly aiAssistantOpen =
-    this.aiAssistantState.isOpen;
+  readonly aiAssistantOpen = this.aiAssistantState.isOpen;
 
   // --------------------------------------------------------------------------
   // Constructor
@@ -172,7 +138,6 @@ export class AppNavbarComponent implements OnInit {
   constructor() {
     effect(() => {
       const logo = this.companyLogoUrl();
-
       this.logoLoadFailed.set(false);
       this.logoLoading.set(!!logo);
     });
@@ -187,12 +152,35 @@ export class AppNavbarComponent implements OnInit {
   }
 
   // --------------------------------------------------------------------------
+  // Mobile Menu
+  // --------------------------------------------------------------------------
+
+  openMobileMenu(): void {
+    this.isMobileMenuOpen.set(true);
+    document.body.style.overflow = 'hidden';
+  }
+
+  closeMobileMenu(): void {
+    this.isMobileMenuOpen.set(false);
+    document.body.style.overflow = '';
+  }
+
+  toggleMobileMenu(): void {
+    if (this.isMobileMenuOpen()) {
+      this.closeMobileMenu();
+    } else {
+      this.openMobileMenu();
+    }
+  }
+
+  // --------------------------------------------------------------------------
   // Profile
   // --------------------------------------------------------------------------
 
   toggleProfile(): void {
     this.showProfile.update((value) => !value);
     this.notificationState.closePanel();
+    this.closeMobileMenu();
   }
 
   closeProfileMenu(): void {
@@ -213,9 +201,7 @@ export class AppNavbarComponent implements OnInit {
 
   toggleAiAssistant(): void {
     this.showProfile.set(false);
-
     this.notificationState.closePanel();
-
     this.aiAssistantState.toggle();
   }
 
@@ -238,5 +224,16 @@ export class AppNavbarComponent implements OnInit {
 
   logout(): void {
     this.authService.logout();
+    this.closeProfileMenu();
+    this.closeMobileMenu();
+  }
+
+  // --------------------------------------------------------------------------
+  // Menu Toggle (for parent component)
+  // --------------------------------------------------------------------------
+
+  onMenuToggle(): void {
+    this.toggleMobileMenu();
+    this.menuToggle.emit();
   }
 }
