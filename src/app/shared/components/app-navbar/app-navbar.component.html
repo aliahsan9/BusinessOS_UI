@@ -1,86 +1,189 @@
 <header class="app-navbar">
+
+  <!-- Left -->
   <div class="app-navbar__start">
-    <button type="button" class="app-navbar__menu-btn" aria-label="Toggle navigation menu" (click)="menuToggle.emit()">
-      <span class="app-navbar__menu-icon" aria-hidden="true"></span>
+
+    <button
+      type="button"
+      class="btn app-navbar__menu-btn"
+      aria-label="Toggle navigation"
+      (click)="menuToggle.emit()">
+
+      <i class="bi bi-list"></i>
+
     </button>
-    <span class="app-navbar__brand">BusinessOS</span>
+
+    <span class="app-navbar__brand">
+      BusinessOS
+    </span>
+
   </div>
 
-  <nav class="app-navbar__nav" aria-label="Quick navigation">
+  <!-- Navigation -->
+  <nav class="app-navbar__nav" aria-label="Main navigation">
+
     @for (item of navItems; track item.route) {
+
       <a
-        class="app-navbar__nav-link"
         [routerLink]="item.route"
         routerLinkActive="app-navbar__nav-link--active"
         [routerLinkActiveOptions]="{ exact: true }"
-        [title]="item.description"
-      >
-        <span class="app-navbar__nav-icon" aria-hidden="true">{{ item.icon }}</span>
-        <span class="app-navbar__nav-label">{{ item.label }}</span>
+        class="app-navbar__nav-link"
+        [title]="item.description">
+
+        <i class="bi" [class]="item.icon"></i>
+
+        <span class="app-navbar__nav-text">
+          {{ item.label }}
+        </span>
+
       </a>
+
     }
+
   </nav>
 
+  <!-- Right -->
   <div class="app-navbar__actions">
-    <button
-      type="button"
-      class="app-navbar__action-btn"
-      [attr.aria-label]="isDarkMode() ? 'Switch to light mode' : 'Switch to dark mode'"
-      [attr.aria-pressed]="isDarkMode()"
-      (click)="toggleDarkMode()"
-    >
-      {{ isDarkMode() ? '☀️' : '🌙' }}
-    </button>
+
+    <!-- Theme -->
 
     <button
       type="button"
-      class="app-navbar__action-btn"
-      [class.app-navbar__action-btn--active]="aiAssistantOpen()"
-      aria-label="Open BusinessOS AI Assistant"
-      [attr.aria-expanded]="aiAssistantOpen()"
-      title="BusinessOS AI Assistant"
-      (click)="toggleAiAssistant()"
-    >
-      🤖
+      class="btn app-navbar__icon-btn"
+      [attr.aria-label]="isDarkMode() ? 'Light mode' : 'Dark mode'"
+      (click)="toggleDarkMode()">
+
+      <i
+        class="bi"
+        [class.bi-sun]="isDarkMode()"
+        [class.bi-moon-stars]="!isDarkMode()">
+      </i>
+
     </button>
+
+    <!-- AI -->
+
+    <button
+      type="button"
+      class="btn app-navbar__icon-btn"
+      [class.active]="aiAssistantOpen()"
+      aria-label="BusinessOS AI"
+      (click)="toggleAiAssistant()">
+
+      <i class="bi bi-stars"></i>
+
+    </button>
+
+    <!-- Notifications -->
 
     @if (canViewNotifications()) {
       <app-notification-bell />
     }
 
+    <!-- Profile -->
+
     <div class="app-navbar__dropdown">
+
       <button
         type="button"
         class="app-navbar__profile"
-        aria-label="User menu"
         [attr.aria-expanded]="showProfile()"
-        (click)="toggleProfile()"
-      >
+        (click)="toggleProfile()">
+
         @if (showCompanyLogo()) {
+
           <img
-            class="app-navbar__avatar app-navbar__avatar-image"
+            class="app-navbar__avatar"
             [src]="companyLogoUrl()!"
-            alt="Company logo"
+            alt="Company Logo"
             (load)="onLogoLoad()"
-            (error)="onLogoError()"
-          />
+            (error)="onLogoError()">
+
         } @else {
-          <span class="app-navbar__avatar" aria-hidden="true">{{ userInitial() }}</span>
+
+          <span class="app-navbar__avatar">
+            {{ userInitial() }}
+          </span>
+
         }
-        <span class="app-navbar__profile-text">
-          <span class="app-navbar__profile-name">{{ userDisplayName() }}</span>
-          <span class="app-navbar__profile-role">Account</span>
-        </span>
-      </button>
-      @if (showProfile()) {
-        <div class="app-navbar__panel" role="menu">
-          <div class="app-navbar__panel-header">{{ currentUser()?.email }}</div>
-          <a class="app-navbar__menu-item" role="menuitem" [routerLink]="routes.profile" (click)="closeProfileMenu()">Profile</a>
-          <a class="app-navbar__menu-item" role="menuitem" [routerLink]="settingsRoutes.settings.appearance" (click)="closeProfileMenu()">Appearance</a>
-          <a class="app-navbar__menu-item" role="menuitem" [routerLink]="settingsRoutes.settings.hub" (click)="closeProfileMenu()">Settings</a>
-          <button type="button" class="app-navbar__menu-item app-navbar__menu-item--danger" role="menuitem" (click)="logout()">Sign out</button>
+
+        <div class="app-navbar__profile-info">
+
+          <span class="app-navbar__profile-name">
+            {{ userDisplayName() }}
+          </span>
+
+          <small class="text-body-secondary">
+            Account
+          </small>
+
         </div>
+
+        <i class="bi bi-chevron-down"></i>
+
+      </button>
+
+      @if (showProfile()) {
+
+        <div class="app-navbar__dropdown-menu">
+
+          <div class="app-navbar__dropdown-header">
+
+            {{ currentUser()?.email }}
+
+          </div>
+
+          <a
+            class="dropdown-item"
+            [routerLink]="routes.profile"
+            (click)="closeProfileMenu()">
+
+            <i class="bi bi-person"></i>
+
+            <span>Profile</span>
+
+          </a>
+
+          <a
+            class="dropdown-item"
+            [routerLink]="settingsRoutes.settings.appearance"
+            (click)="closeProfileMenu()">
+
+            <i class="bi bi-palette"></i>
+
+            <span>Appearance</span>
+
+          </a>
+
+          <a
+            class="dropdown-item"
+            [routerLink]="settingsRoutes.settings.hub"
+            (click)="closeProfileMenu()">
+
+            <i class="bi bi-gear"></i>
+
+            <span>Settings</span>
+
+          </a>
+
+          <button
+            type="button"
+            class="dropdown-item text-danger"
+            (click)="logout()">
+
+            <i class="bi bi-box-arrow-right"></i>
+
+            <span>Sign Out</span>
+
+          </button>
+
+        </div>
+
       }
+
     </div>
+
   </div>
+
 </header>
