@@ -53,7 +53,6 @@ type ReportTab =
     DatePipe,
     DecimalPipe,
     AppBreadcrumbComponent,
-    AppPageHeaderComponent,
     AppButtonComponent,
     AppSkeletonComponent,
     AppAlertComponent,
