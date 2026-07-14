@@ -1,17 +1,24 @@
-<div class="ai-widget">
-  @if (isOpen()) {
-    <app-ai-chat-window (close)="close()" (navigate)="navigate($event)" />
-  }
+@if (showWidget()) {
+  <div class="ai-widget" [class.ai-widget--open]="isOpen()">
+    @if (isOpen()) {
+      <app-ai-chat-window 
+        class="ai-widget__window"
+        (close)="close()" 
+        (navigate)="navigate($event)" 
+      />
+    }
 
-  <button
-    type="button"
-    class="ai-widget__fab"
-    [class.ai-widget__fab--active]="isOpen()"
-    aria-label="Open BusinessOS AI Assistant"
-    [attr.aria-expanded]="isOpen()"
-    (click)="toggle()"
-  >
-    <span class="ai-widget__fab-icon">🤖</span>
-    <span class="ai-widget__fab-label">BusinessOS AI</span>
-  </button>
-</div>
+    <button
+      type="button"
+      class="ai-widget__fab"
+      [class.ai-widget__fab--active]="isOpen()"
+      aria-label="Open BusinessOS AI Assistant"
+      [attr.aria-expanded]="isOpen()"
+      (click)="toggle()"
+    >
+      <i class="bi bi-robot ai-widget__fab-icon"></i>
+      <span class="ai-widget__fab-label">AI Assistant</span>
+      <i class="bi bi-chevron-down ai-widget__fab-arrow" [class.ai-widget__fab-arrow--open]="isOpen()"></i>
+    </button>
+  </div>
+}
