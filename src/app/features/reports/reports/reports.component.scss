@@ -1,32 +1,47 @@
 .reports {
+  &__hero {
+    border: 1px solid rgba(var(--bs-primary-rgb), 0.12);
+    background: linear-gradient(135deg, rgba(var(--bs-primary-rgb), 0.08), rgba(var(--bs-info-rgb), 0.06));
+  }
+
   &__toolbar {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
     gap: var(--space-3);
     margin-bottom: var(--space-4);
-    align-items: flex-end;
+    align-items: flex-start;
   }
 
   &__tabs {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--space-1);
+    gap: var(--space-2);
   }
 
   &__tab {
-    padding: 0.5rem 1rem;
+    min-height: 2.75rem;
+    padding: 0.65rem 0.95rem;
     border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
+    border-radius: 999px;
     background: var(--color-surface);
     color: var(--color-text);
     cursor: pointer;
     font: inherit;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    white-space: nowrap;
+
+    &:hover {
+      transform: translateY(-1px);
+      border-color: var(--color-primary);
+      box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.08);
+    }
 
     &--active {
-      background: var(--color-primary);
+      background: linear-gradient(135deg, var(--color-primary), #3b82f6);
       border-color: var(--color-primary);
       color: #fff;
+      box-shadow: 0 0.5rem 1rem rgba(13, 110, 253, 0.2);
     }
   }
 
@@ -39,6 +54,14 @@
   &__content {
     margin-top: var(--space-2);
   }
+
+  &__hero-pill {
+    border: 1px solid rgba(var(--bs-primary-rgb), 0.15);
+  }
+
+  &__chip {
+    font-size: 0.8rem;
+  }
 }
 
 .loading-stack {
@@ -49,7 +72,7 @@
 
 .summary-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: var(--space-3);
   margin-bottom: var(--space-4);
 }
@@ -76,6 +99,27 @@
 
 .row-overdue td {
   color: var(--color-danger);
+}
+
+.bos-table-wrapper {
+  overflow-x: auto;
+}
+
+.bos-table {
+  min-width: 720px;
+}
+
+@media (max-width: 767.98px) {
+  .reports {
+    &__toolbar {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    &__actions {
+      width: 100%;
+    }
+  }
 }
 
 @media print {

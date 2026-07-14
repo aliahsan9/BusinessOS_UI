@@ -41,7 +41,7 @@
             </div>
           }
           <div class="report-hub__card-actions">
-            <span class="report-hub__icon" aria-hidden="true">{{ def.icon }}</span>
+            <i [class]="def.icon + ' report-hub__icon'" aria-hidden="true"></i>
             <app-button
               label="Export PDF"
               [variant]="ButtonVariant.Primary"

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { AppCurrencyPipe } from '../../../shared/pipes/app-currency.pipe';
 import { CustomerService } from '../../../core/services/customer.service';
@@ -21,6 +21,7 @@ import { InventorySummary } from '../../../core/models/inventory.model';
 import { AuditLogDto } from '../../../core/models/audit.model';
 import { UserSummaryDto } from '../../../core/models/user.model';
 import { RevenueTrend, SalesAnalyticsResponse } from '../../../core/models/dashboard.model';
+import { REPORT_DEFINITIONS, ReportType } from '../../../core/models/report.model';
 import { ButtonVariant, InvoiceStatus } from '../../../core/enums';
 import { ExportColumn, ExportHelper } from '../../../core/helpers/export.helper';
 import { ROUTES } from '../../../core/constants/route.constants';
@@ -93,24 +94,40 @@ export class ReportsComponent implements OnInit {
   readonly users = signal<UserSummaryDto[]>([]);
 
   readonly routes = ROUTES;
-  readonly tabs: { id: ReportTab; label: string }[] = [
-    { id: 'customers', label: 'Customers' },
-    { id: 'sales', label: 'Sales' },
-    { id: 'invoices', label: 'Invoices' },
-    { id: 'payments', label: 'Payments' },
-    { id: 'revenue', label: 'Revenue' },
-    { id: 'outstanding', label: 'Outstanding' },
-    { id: 'expenses', label: 'Expenses' },
-    { id: 'suppliers', label: 'Suppliers' },
-    { id: 'inventory', label: 'Inventory' },
-    { id: 'audit', label: 'Audit' },
-    { id: 'users', label: 'Users' },
-  ];
+  readonly tabs = this.buildTabs();
+  readonly currentTab = computed(() => this.tabs.find((tab) => tab.id === this.activeTab()) ?? this.tabs[0]);
 
   readonly breadcrumbs = [{ label: 'Reports', route: ROUTES.reports }];
 
   ngOnInit(): void {
     this.loadTab('customers');
+  }
+
+  private buildTabs(): Array<{ id: ReportTab; label: string; icon: string; description: string }> {
+    const mappings: Array<[ReportTab, ReportType]> = [
+      ['customers', ReportType.Customers],
+      ['sales', ReportType.Revenue],
+      ['invoices', ReportType.Invoice],
+      ['payments', ReportType.Revenue],
+      ['revenue', ReportType.Revenue],
+      ['outstanding', ReportType.Invoice],
+      ['expenses', ReportType.Expenses],
+      ['suppliers', ReportType.Customers],
+      ['inventory', ReportType.Projects],
+      ['audit', ReportType.BusinessSummary],
+      ['users', ReportType.Customers],
+    ];
+
+    return mappings.map(([id, reportType]) => {
+      const definition = REPORT_DEFINITIONS.find((item) => item.type === reportType);
+
+      return {
+        id,
+        label: definition?.label ?? id,
+        icon: definition?.icon ?? 'bi bi-file-earmark-bar-graph',
+        description: definition?.description ?? 'Business performance insights.',
+      };
+    });
   }
 
   selectTab(tab: ReportTab): void {
