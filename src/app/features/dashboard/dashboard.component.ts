@@ -65,11 +65,11 @@ export class DashboardComponent implements OnInit {
   readonly period = this.dashboardState.period;
 
   readonly periods = [
-    { label: 'All', value: DashboardPeriod.All },
     { label: 'Today', value: DashboardPeriod.Today },
     { label: 'Week', value: DashboardPeriod.Week },
     { label: 'Month', value: DashboardPeriod.Month },
-    { label: 'Year', value: DashboardPeriod.Year }
+    { label: 'Year', value: DashboardPeriod.Year },
+    { label: 'All', value: DashboardPeriod.All }
   ];
 
   readonly breadcrumbs = [{ label: 'Dashboard', route: '/dashboard' }, { label: 'Overview' }];
