@@ -1,163 +1,163 @@
 <app-home-navbar></app-home-navbar>
-<section class="hero-section">
 
-  <div class="hero-bg"></div>
+<section class="hero">
+  <div class="hero__bg" aria-hidden="true"></div>
 
   <div class="container">
+    <div class="hero__grid">
 
-    <div class="row align-items-center min-vh-100">
+      <div class="hero__content">
+        <span class="eyebrow">Business Operating System</span>
 
-      <div class="col-lg-6">
-
-        <span class="hero-badge">
-          Smart Business Management Platform
-        </span>
-
-        <h1 class="hero-title">
-          Run Your Entire Business
-          <span>From One Platform</span>
+        <h1 class="hero__title">
+          Every part of your business.
+          <span>One control panel.</span>
         </h1>
 
-        <p class="hero-description">
-          Manage inventory, sales, customers, finance,
-          employees and analytics through a single,
-          powerful dashboard built for modern businesses.
+        <p class="hero__lead">
+          Inventory, sales, customers, finance, and your team —
+          running on a single system built to keep every
+          module talking to the others.
         </p>
 
-        <div class="hero-actions">
-
-          <a
-            routerLink="/auth/register"
-            class="btn btn-primary btn-lg"
-          >
-            Start Free Trial
+        <div class="hero__actions">
+          <a routerLink="/auth/register" class="btn-cta">
+            Start free trial
+            <i class="bi bi-arrow-right"></i>
           </a>
 
-          <a 
-            href="#features"
-            class="btn btn-outline-light btn-lg"
-          >
-            Explore Features
+          <a href="#modules" class="btn-ghost">
+            <i class="bi bi-grid-1x2"></i>
+            See the modules
           </a>
-
         </div>
 
-        <div class="hero-stats">
-
-          <div>
-            <h3>10K+</h3>
-            <p>Businesses</p>
+        <div class="hero__stats" #statsRef>
+          <div class="stat">
+            <h3 class="stat__value">{{ displayedBusinesses() }}<span>+</span></h3>
+            <p class="stat__label">Businesses running BusinessOS</p>
           </div>
 
-          <div>
-            <h3>50K+</h3>
-            <p>Users</p>
+          <div class="stat">
+            <h3 class="stat__value">{{ displayedUsers() }}<span>+</span></h3>
+            <p class="stat__label">Daily active users</p>
           </div>
 
-          <div>
-            <h3>99.9%</h3>
-            <p>Uptime</p>
+          <div class="stat">
+            <h3 class="stat__value">{{ displayedUptime() }}<span>%</span></h3>
+            <p class="stat__label">Platform uptime</p>
           </div>
-
         </div>
-
       </div>
 
-      <div class="col-lg-6">
-
-        <div class="dashboard-mockup">
-
-          <div class="dashboard-header">
-            <div class="dot red"></div>
-            <div class="dot yellow"></div>
-            <div class="dot green"></div>
+      <div class="hero__visual">
+        <div class="ledger-panel">
+          <div class="ledger-panel__header">
+            <div class="ledger-panel__dots">
+              <span class="dot dot--red"></span>
+              <span class="dot dot--amber"></span>
+              <span class="dot dot--green"></span>
+            </div>
+            <span class="ledger-panel__title">
+              <i class="bi bi-activity"></i>
+              live.ledger
+            </span>
           </div>
 
-          <div class="dashboard-content">
-
-            <div class="metric-card">
-              <h6>Total Revenue</h6>
-              <h2>$28,450</h2>
+          <div class="ledger-panel__body">
+            <div class="ledger-track">
+              <div class="ledger-row" *ngFor="let event of ledgerLoop">
+                <span class="ledger-row__time">{{ event.time }}</span>
+                <span class="ledger-row__icon">
+                  <i class="bi" [ngClass]="event.icon"></i>
+                </span>
+                <span class="ledger-row__desc">{{ event.desc }}</span>
+                <span
+                  class="ledger-row__amount"
+                  [class.is-positive]="event.trend === 'up'"
+                  [class.is-negative]="event.trend === 'down'"
+                >
+                  {{ event.amount }}
+                </span>
+              </div>
             </div>
-
-            <div class="metric-card">
-              <h6>Orders</h6>
-              <h2>1,248</h2>
-            </div>
-
-            <div class="metric-card">
-              <h6>Customers</h6>
-              <h2>548</h2>
-            </div>
-
-            <div class="chart-placeholder"></div>
-
           </div>
 
+          <div class="ledger-panel__footer">
+            <span class="pulse-dot"></span>
+            Syncing across every module
+          </div>
         </div>
-
       </div>
 
     </div>
-
   </div>
-
 </section>
 
-<section id="features" class="features-section">
-
+<section id="modules" class="modules">
   <div class="container">
 
-    <div class="section-header">
-
-      <span>Features</span>
-
-      <h2>Everything You Need To Grow</h2>
-
-      <p>
-        Powerful modules designed to streamline
-        your daily operations.
-      </p>
-
+    <div class="section-head">
+      <span class="eyebrow">Modules</span>
+      <h2>Everything your business runs on</h2>
+      <p>Six connected modules. No exports, no re-keying data, no gaps between teams.</p>
     </div>
 
-    <div class="row g-4">
+    <div class="modules__grid">
 
-      <div class="col-md-6 col-lg-3">
-        <div class="feature-card">
-          <i class="bi bi-bar-chart"></i>
-          <h5>Analytics</h5>
-          <p>Real-time business insights.</p>
+      <article class="module-card module-card--featured">
+        <div class="module-card__top">
+          <span class="module-card__icon"><i class="bi bi-graph-up-arrow"></i></span>
+          <span class="module-card__tag">Core</span>
         </div>
-      </div>
+        <h3>Analytics</h3>
+        <p>Revenue, orders, and customer trends in one live view — updated as the business moves, not at month-end.</p>
+      </article>
 
-      <div class="col-md-6 col-lg-3">
-        <div class="feature-card">
-          <i class="bi bi-box-seam"></i>
-          <h5>Inventory</h5>
-          <p>Track stock with ease.</p>
+      <article class="module-card">
+        <div class="module-card__top">
+          <span class="module-card__icon"><i class="bi bi-boxes"></i></span>
         </div>
-      </div>
+        <h3>Inventory</h3>
+        <p>Stock levels, reorder points, and supplier records that stay in sync with every sale.</p>
+      </article>
 
-      <div class="col-md-6 col-lg-3">
-        <div class="feature-card">
-          <i class="bi bi-people"></i>
-          <h5>Customers</h5>
-          <p>Manage relationships effectively.</p>
+      <article class="module-card">
+        <div class="module-card__top">
+          <span class="module-card__icon"><i class="bi bi-people"></i></span>
         </div>
-      </div>
+        <h3>Customers</h3>
+        <p>A shared record of every account, conversation, and order history — no separate CRM to maintain.</p>
+      </article>
 
-      <div class="col-md-6 col-lg-3">
-        <div class="feature-card">
-          <i class="bi bi-cash-stack"></i>
-          <h5>Finance</h5>
-          <p>Control expenses and revenue.</p>
+      <article class="module-card">
+        <div class="module-card__top">
+          <span class="module-card__icon"><i class="bi bi-cash-stack"></i></span>
         </div>
-      </div>
+        <h3>Finance</h3>
+        <p>Invoices, expenses, and cash flow tracked against real orders, not spreadsheets you rebuild weekly.</p>
+      </article>
+
+      <article class="module-card">
+        <div class="module-card__top">
+          <span class="module-card__icon"><i class="bi bi-person-badge"></i></span>
+        </div>
+        <h3>Employees</h3>
+        <p>Roles, shifts, and permissions, so the right person sees the right module — and nothing else.</p>
+      </article>
+
+      <article class="module-card">
+        <div class="module-card__top">
+          <span class="module-card__icon"><i class="bi bi-kanban"></i></span>
+        </div>
+        <h3>Projects</h3>
+        <p>Tasks and timelines tied to the customers and invoices they belong to.</p>
+      </article>
 
     </div>
   </div>
 </section>
+
 <app-landing></app-landing>
 <app-testimonials></app-testimonials>
 <app-footer></app-footer>
