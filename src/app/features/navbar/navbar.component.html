@@ -5,127 +5,110 @@
   <div class="container">
 
     <!-- Logo -->
-
-    <a
-      routerLink="/home"
-      class="navbar-brand"
-    >
-      <div class="logo-circle">
-        B
-      </div>
-
-      <span class="brand-text">
-        BusinessOS
-      </span>
+    <a routerLink="/home" class="navbar-brand">
+      <div class="logo-circle">B</div>
+      <span class="brand-text">BusinessOS</span>
     </a>
 
     <!-- Desktop Navigation -->
-
     <div class="desktop-nav d-none d-lg-flex">
-
-      @for(item of navItems; track item.label) {
-
-      <a
-        [routerLink]="item.route"
-        routerLinkActive="active-link"
-        [routerLinkActiveOptions]="{ exact: true }"
-        class="nav-link-btn"
-      >
-        {{ item.label }}
-      </a>
-
+      @for (item of navItems; track item.label) {
+        <a
+          [routerLink]="item.route"
+          routerLinkActive="active-link"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="nav-link-btn"
+        >
+          {{ item.label }}
+        </a>
       }
-
     </div>
 
     <!-- Desktop Actions -->
-
     <div class="desktop-actions d-none d-lg-flex">
-
-      <a
-        routerLink="/auth/login"
-        class="btn btn-login"
-      >
+      <a routerLink="/auth/login" class="btn btn-login">
         Login
       </a>
 
-      <a
-        routerLink="/auth/register"
-        class="btn btn-primary-custom"
-      >
+      <a routerLink="/auth/register" class="btn btn-primary-custom">
         Get Started
       </a>
-
     </div>
 
-    <!-- Mobile Menu -->
-
+    <!-- Mobile Toggle -->
     <button
+      type="button"
       class="hamburger-btn d-lg-none"
+      [class.active]="isSidebarOpen()"
       (click)="toggleSidebar()"
+      [attr.aria-expanded]="isSidebarOpen()"
+      aria-label="Toggle navigation menu"
+      aria-controls="mobileSidebar"
     >
-      <i
-        class="bi"
-        [class.bi-list]="!isSidebarOpen()"
-        [class.bi-x-lg]="isSidebarOpen()"
-      ></i>
+      <span class="hamburger-line line-1"></span>
+      <span class="hamburger-line line-2"></span>
+      <span class="hamburger-line line-3"></span>
     </button>
 
   </div>
 </nav>
 
-@if(isSidebarOpen()) {
-
+<!-- Backdrop -->
 <div
   class="sidebar-backdrop"
+  [class.show]="isSidebarOpen()"
   (click)="closeSidebar()"
+  aria-hidden="true"
 ></div>
 
-}
-
+<!-- Mobile Sidebar -->
 <div
   class="mobile-sidebar"
+  id="mobileSidebar"
   [class.open]="isSidebarOpen()"
+  role="dialog"
+  aria-modal="true"
+  [attr.aria-hidden]="!isSidebarOpen()"
 >
-
+  <!-- Header -->
   <div class="sidebar-header">
-
     <a
       routerLink="/home"
       class="brand-side"
       (click)="closeSidebar()"
     >
-      <div class="logo-circle">
-        B
-      </div>
-
-      <span>
-        BusinessOS
-      </span>
+      <div class="logo-circle">B</div>
+      <span>BusinessOS</span>
     </a>
 
-  </div>
-
-  <div class="sidebar-links">
-
-    @for(item of navItems; track item.label) {
-
-    <a
-      [routerLink]="item.route"
-      routerLinkActive="active-sidebar-link"
-      [routerLinkActiveOptions]="{ exact: true }"
-      class="sidebar-link"
+    <button
+      type="button"
+      class="sidebar-close-btn"
       (click)="closeSidebar()"
+      aria-label="Close navigation menu"
     >
-      {{ item.label }}
-    </a>
-
-    }
-
+      <i class="bi bi-x-lg"></i>
+    </button>
   </div>
 
-  <div class="sidebar-footer">
+  <!-- Links -->
+  <div class="sidebar-links">
+    @for (item of navItems; track item.label) {
+      <a
+        [routerLink]="item.route"
+        routerLinkActive="active-sidebar-link"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="sidebar-link"
+        (click)="closeSidebar()"
+      >
+        <span>{{ item.label }}</span>
+        <i class="bi bi-chevron-right"></i>
+      </a>
+    }
+  </div>
 
+  <!-- Footer -->
+  <div class="sidebar-footer">
     <a
       routerLink="/auth/login"
       class="btn btn-login-mobile"
@@ -141,7 +124,5 @@
     >
       Get Started
     </a>
-
   </div>
-
-</div>
+</div> 
