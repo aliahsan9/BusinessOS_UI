@@ -5,23 +5,17 @@
 /* =========================
    NAVBAR
 ========================= */
-
 .business-navbar {
   height: 82px;
   transition: all .35s ease;
-
   background: transparent;
-
   z-index: 1050;
 
   &.scrolled {
     background: rgba(10, 10, 10, 0.88);
-
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
-
     border-bottom: 1px solid rgba(255,255,255,.08);
-
     box-shadow: 0 10px 35px rgba(0,0,0,.35);
   }
 }
@@ -29,36 +23,24 @@
 /* =========================
    BRAND
 ========================= */
-
 .navbar-brand,
 .brand-side {
   display: flex;
   align-items: center;
   gap: 12px;
-
   text-decoration: none;
 }
 
 .logo-circle {
   width: 42px;
   height: 42px;
-
   border-radius: 12px;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   font-weight: 700;
-
   color: white;
-
-  background: linear-gradient(
-    135deg,
-    #4f46e5,
-    #7c3aed
-  );
-
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
   box-shadow: 0 0 25px rgba(99,102,241,.4);
 }
 
@@ -72,22 +54,16 @@
 /* =========================
    DESKTOP NAV
 ========================= */
-
 .desktop-nav {
   gap: 8px;
 }
 
 .nav-link-btn {
   text-decoration: none;
-
   color: rgba(255,255,255,.8);
-
   padding: .8rem 1rem;
-
   border-radius: 10px;
-
   transition: .3s;
-
   font-weight: 500;
 
   &:hover {
@@ -98,52 +74,35 @@
 
 .active-link {
   color: white !important;
-
   background: rgba(255,255,255,.1);
 }
 
 /* =========================
    ACTION BUTTONS
 ========================= */
-
 .desktop-actions {
   gap: 12px;
 }
 
 .btn-login {
   color: white;
-
   border-radius: 12px;
-
   padding: .75rem 1.4rem;
-
   border: 1px solid rgba(255,255,255,.15);
-
   background: rgba(255,255,255,.05);
 }
 
 .btn-primary-custom {
   border: none;
-
   color: white;
-
   border-radius: 12px;
-
   padding: .75rem 1.4rem;
-
   font-weight: 600;
-
-  background: linear-gradient(
-    135deg,
-    #4f46e5,
-    #7c3aed
-  );
-
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
   transition: .3s ease;
 
   &:hover {
     transform: translateY(-2px);
-
     box-shadow: 0 10px 25px rgba(99,102,241,.4);
   }
 }
@@ -151,56 +110,51 @@
 /* =========================
    MOBILE BUTTON
 ========================= */
-
 .hamburger-btn {
   border: none;
-
   background: transparent;
-
   color: white;
-
   font-size: 2rem;
+  line-height: 1;
+  padding: 0.25rem 0.5rem;
+  transition: transform 0.2s ease;
+
+  &:focus {
+    outline: none;
+  }
 }
 
 /* =========================
    BACKDROP
 ========================= */
-
 .sidebar-backdrop {
   position: fixed;
-
   inset: 0;
-
   background: rgba(0,0,0,.6);
-
   backdrop-filter: blur(8px);
-
   z-index: 1048;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 /* =========================
    SIDEBAR
 ========================= */
-
 .mobile-sidebar {
   position: fixed;
-
   top: 0;
   right: -340px;
-
   width: 320px;
   height: 100vh;
-
   background: rgba(10,10,10,.96);
-
   backdrop-filter: blur(25px);
-
   border-left: 1px solid rgba(255,255,255,.08);
-
   z-index: 1051;
-
   transition: .35s ease;
-
   display: flex;
   flex-direction: column;
 
@@ -211,30 +165,22 @@
 
 .sidebar-header {
   padding: 2rem 1.5rem;
-
   border-bottom: 1px solid rgba(255,255,255,.08);
 }
 
 .sidebar-links {
   padding: 1.5rem;
-
   display: flex;
   flex-direction: column;
-
   gap: 10px;
 }
 
 .sidebar-link {
   text-decoration: none;
-
   color: white;
-
   padding: 1rem;
-
   border-radius: 14px;
-
   background: rgba(255,255,255,.04);
-
   transition: .3s;
 
   &:hover {
@@ -248,25 +194,51 @@
 
 .sidebar-footer {
   margin-top: auto;
-
   padding: 1.5rem;
-
   display: flex;
   flex-direction: column;
-
   gap: 12px;
 }
 
 .btn-login-mobile {
   color: white;
-
   text-align: center;
-
   padding: .9rem;
-
   border-radius: 12px;
-
   border: 1px solid rgba(255,255,255,.15);
-
   background: rgba(255,255,255,.05);
+}
+
+/* =========================
+   RESPONSIVE TWEAKS
+========================= */
+@media (max-width: 991.98px) {
+  .business-navbar {
+    height: 72px;
+  }
+  .logo-circle {
+    width: 36px;
+    height: 36px;
+    font-size: 0.9rem;
+  }
+  .brand-text,
+  .brand-side span {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .mobile-sidebar {
+    width: 280px;
+    right: -290px;
+  }
+  .sidebar-header {
+    padding: 1.5rem 1.2rem;
+  }
+  .sidebar-links {
+    padding: 1.2rem;
+  }
+  .sidebar-footer {
+    padding: 1.2rem;
+  }
 }

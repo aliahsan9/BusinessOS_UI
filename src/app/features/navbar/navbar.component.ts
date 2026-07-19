@@ -1,8 +1,4 @@
-import {
-  Component,
-  HostListener,
-  signal
-} from '@angular/core';
+import { Component, HostListener, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 
@@ -14,10 +10,7 @@ interface NavItem {
 @Component({
   selector: 'app-home-navbar',
   standalone: true,
-  imports: [
-    CommonModule,
-    RouterModule
-  ],
+  imports: [CommonModule, RouterModule],
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.scss']
 })
@@ -26,22 +19,10 @@ export class NavbarComponent {
   isSidebarOpen = signal(false);
 
   navItems: NavItem[] = [
-    {
-      label: 'Home',
-      route: '/'
-    },
-    {
-      label: 'About',
-      route: '/about'
-    },
-    {
-      label: 'Services',
-      route: '/services'
-    },
-    {
-      label: 'Contact',
-      route: '/contact'
-    }
+    { label: 'Home', route: '/' },
+    { label: 'About', route: '/about' },
+    { label: 'Services', route: '/services' },
+    { label: 'Contact', route: '/contact' }
   ];
 
   @HostListener('window:scroll')
