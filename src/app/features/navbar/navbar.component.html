@@ -1,128 +1,59 @@
-<nav
-  class="navbar navbar-expand-lg fixed-top business-navbar"
-  [class.scrolled]="isScrolled()"
->
+<nav class="navbar navbar-expand-lg fixed-top business-navbar" [class.scrolled]="isScrolled()">
   <div class="container">
 
-    <!-- Logo -->
+    <!-- Logo / Brand -->
     <a routerLink="/home" class="navbar-brand">
       <div class="logo-circle">B</div>
       <span class="brand-text">BusinessOS</span>
     </a>
 
-    <!-- Desktop Navigation -->
+    <!-- Desktop Navigation Links -->
     <div class="desktop-nav d-none d-lg-flex">
       @for (item of navItems; track item.label) {
-        <a
-          [routerLink]="item.route"
-          routerLinkActive="active-link"
-          [routerLinkActiveOptions]="{ exact: true }"
-          class="nav-link-btn"
-        >
+        <a [routerLink]="item.route" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: true }" class="nav-link-btn">
           {{ item.label }}
         </a>
       }
     </div>
 
-    <!-- Desktop Actions -->
+    <!-- Desktop Actions (Login / Get Started) -->
     <div class="desktop-actions d-none d-lg-flex">
-      <a routerLink="/auth/login" class="btn btn-login">
-        Login
-      </a>
-
-      <a routerLink="/auth/register" class="btn btn-primary-custom">
-        Get Started
-      </a>
+      <a routerLink="/auth/login" class="btn btn-login">Login</a>
+      <a routerLink="/auth/register" class="btn btn-primary-custom">Get Started</a>
     </div>
 
-    <!-- Mobile Toggle -->
-    <button
-      type="button"
-      class="hamburger-btn d-lg-none"
-      [class.active]="isSidebarOpen()"
-      (click)="toggleSidebar()"
-      [attr.aria-expanded]="isSidebarOpen()"
-      aria-label="Toggle navigation menu"
-      aria-controls="mobileSidebar"
-    >
-      <span class="hamburger-line line-1"></span>
-      <span class="hamburger-line line-2"></span>
-      <span class="hamburger-line line-3"></span>
+    <!-- Hamburger Button (visible on mobile) -->
+    <button class="hamburger-btn d-lg-none" (click)="toggleSidebar()" aria-label="Toggle navigation">
+      <i class="bi" [class.bi-list]="!isSidebarOpen()" [class.bi-x-lg]="isSidebarOpen()"></i>
     </button>
 
   </div>
 </nav>
 
-<!-- Backdrop -->
-<div
-  class="sidebar-backdrop"
-  [class.show]="isSidebarOpen()"
-  (click)="closeSidebar()"
-  aria-hidden="true"
-></div>
+<!-- Backdrop (appears when sidebar is open) -->
+@if (isSidebarOpen()) {
+  <div class="sidebar-backdrop" (click)="closeSidebar()"></div>
+}
 
-<!-- Mobile Sidebar -->
-<div
-  class="mobile-sidebar"
-  id="mobileSidebar"
-  [class.open]="isSidebarOpen()"
-  role="dialog"
-  aria-modal="true"
-  [attr.aria-hidden]="!isSidebarOpen()"
->
-  <!-- Header -->
+<!-- Mobile Sidebar (slides in from right) -->
+<div class="mobile-sidebar" [class.open]="isSidebarOpen()">
   <div class="sidebar-header">
-    <a
-      routerLink="/home"
-      class="brand-side"
-      (click)="closeSidebar()"
-    >
+    <a routerLink="/home" class="brand-side" (click)="closeSidebar()">
       <div class="logo-circle">B</div>
       <span>BusinessOS</span>
     </a>
-
-    <button
-      type="button"
-      class="sidebar-close-btn"
-      (click)="closeSidebar()"
-      aria-label="Close navigation menu"
-    >
-      <i class="bi bi-x-lg"></i>
-    </button>
   </div>
 
-  <!-- Links -->
   <div class="sidebar-links">
     @for (item of navItems; track item.label) {
-      <a
-        [routerLink]="item.route"
-        routerLinkActive="active-sidebar-link"
-        [routerLinkActiveOptions]="{ exact: true }"
-        class="sidebar-link"
-        (click)="closeSidebar()"
-      >
-        <span>{{ item.label }}</span>
-        <i class="bi bi-chevron-right"></i>
+      <a [routerLink]="item.route" routerLinkActive="active-sidebar-link" [routerLinkActiveOptions]="{ exact: true }" class="sidebar-link" (click)="closeSidebar()">
+        {{ item.label }}
       </a>
     }
   </div>
 
-  <!-- Footer -->
   <div class="sidebar-footer">
-    <a
-      routerLink="/auth/login"
-      class="btn btn-login-mobile"
-      (click)="closeSidebar()"
-    >
-      Login
-    </a>
-
-    <a
-      routerLink="/auth/register"
-      class="btn btn-primary-custom"
-      (click)="closeSidebar()"
-    >
-      Get Started
-    </a>
+    <a routerLink="/auth/login" class="btn btn-login-mobile" (click)="closeSidebar()">Login</a>
+    <a routerLink="/auth/register" class="btn btn-primary-custom" (click)="closeSidebar()">Get Started</a>
   </div>
-</div> 
+</div>

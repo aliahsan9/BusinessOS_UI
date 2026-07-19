@@ -1,14 +1,6 @@
-import {
-  Component,
-  HostListener,
-  signal,
-  effect,
-  DestroyRef,
-  inject
-} from '@angular/core';
+import { Component, HostListener, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, NavigationEnd, Router } from '@angular/router';
-import { filter } from 'rxjs/operators';
+import { RouterModule } from '@angular/router';
 
 interface NavItem {
   label: string;
@@ -23,9 +15,6 @@ interface NavItem {
   styleUrls: ['./navbar.component.scss']
 })
 export class NavbarComponent {
-  private router = inject(Router);
-  private destroyRef = inject(DestroyRef);
-
   isScrolled = signal(false);
   isSidebarOpen = signal(false);
 
@@ -36,30 +25,13 @@ export class NavbarComponent {
     { label: 'Contact', route: '/contact' }
   ];
 
-  constructor() {
-    // Lock body scroll while the sidebar is open
-    effect(() => {
-      document.body.style.overflow = this.isSidebarOpen() ? 'hidden' : '';
-    });
-
-    // Safety net: close sidebar on route change (e.g. programmatic navigation)
-    this.router.events
-      .pipe(filter(e => e instanceof NavigationEnd))
-      .subscribe(() => this.closeSidebar());
-  }
-
   @HostListener('window:scroll')
   onScroll(): void {
     this.isScrolled.set(window.scrollY > 20);
   }
 
-  @HostListener('document:keydown.escape')
-  onEscape(): void {
-    this.closeSidebar();
-  }
-
   toggleSidebar(): void {
-    this.isSidebarOpen.update(v => !v);
+    this.isSidebarOpen.update(value => !value);
   }
 
   closeSidebar(): void {
