@@ -11,33 +11,26 @@ import {
 } from '../../../core/models/ai.model';
 import { ROUTES } from '../../../core/constants/route.constants';
 import { AppBreadcrumbComponent } from '../../../shared/components/app-breadcrumb/app-breadcrumb.component';
-import { AppCardComponent } from '../../../shared/components/app-card/app-card.component';
 
-/**
- * Extends the base chat message with client-only state used to drive
- * the ChatGPT-style "typing" reveal animation. None of this is persisted -
- * it only controls how a message is progressively rendered on screen.
- */
 interface AiWorkspaceMessage extends AiChatMessage {
-  /** Text currently shown to the user while streaming is in progress. */
   displayContent?: string;
-  /** True while the assistant bubble is still being "typed" out. */
   isStreaming?: boolean;
 }
 
 @Component({
   selector: 'app-ai-workspace',
   standalone: true,
-  imports: [FormsModule, RouterLink, AppBreadcrumbComponent, AppCardComponent],
+  imports: [FormsModule, RouterLink, AppBreadcrumbComponent],
   templateUrl: './ai-workspace.component.html',
   styleUrl: './ai-workspace.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AiWorkspaceComponent implements OnInit, OnDestroy {
   private readonly aiChat = inject(AiChatService);
-  private readonly aiContext = inject(AiContextService);
 
   readonly routes = ROUTES;
+
+  // Signals
   readonly messages = signal<AiWorkspaceMessage[]>([]);
   readonly sessions = signal<AiConversationSession[]>([]);
   readonly suggestions = signal<AiSuggestionDto[]>([
@@ -47,11 +40,9 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
     { label: 'Top customers', message: 'Who are the top customers by revenue?' },
     { label: 'Focus today', message: 'What should I focus on today?' },
   ]);
-  readonly input = signal('');
 
-  /** True while we are waiting on the network call (shows the "thinking" indicator). */
+  readonly input = signal('');
   readonly loading = signal(false);
-  /** True while an assistant reply is being revealed character-by-character. */
   readonly streaming = signal(false);
   readonly sidebarOpen = signal(false);
 
@@ -60,7 +51,6 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
     { label: 'Workspace' },
   ];
 
-  /** Handle for the current typewriter animation so it can be cancelled/cleaned up. */
   private streamTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   ngOnInit(): void {
@@ -72,7 +62,7 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
   }
 
   toggleSidebar(): void {
-    this.sidebarOpen.update((open) => !open);
+    this.sidebarOpen.update((v) => !v);
   }
 
   send(text?: string): void {
@@ -81,14 +71,14 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
 
     this.input.set('');
     this.sidebarOpen.set(false);
-    this.push('user', message);
+    this.addMessage('user', message);
     this.loading.set(true);
 
     this.aiChat.chat(message).subscribe({
-      next: (response) => this.applyResponse(response),
+      next: (response) => this.handleResponse(response),
       error: () => {
         this.loading.set(false);
-        this.pushStreamed('Unable to reach AI Copilot. Please try again in a moment.');
+        this.addStreamedMessage('Unable to reach AI Copilot. Please try again.');
       },
     });
   }
@@ -101,19 +91,18 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
 
     this.aiChat.getConversation(sessionId).subscribe({
       next: (items) => {
-        const msgs: AiWorkspaceMessage[] = [];
-        for (const item of items) {
-          msgs.push({ role: 'user', content: item.prompt, timestamp: new Date(item.createdAt) });
-          msgs.push({
-            role: 'assistant',
+        const mapped = items.flatMap((item) => [
+          { role: 'user' as const, content: item.prompt, timestamp: new Date(item.createdAt) },
+          {
+            role: 'assistant' as const,
             content: item.response,
             displayContent: item.response,
             timestamp: new Date(item.createdAt),
             citations: item.citations,
             toolsUsed: item.toolsUsed,
-          });
-        }
-        this.messages.set(msgs);
+          },
+        ]);
+        this.messages.set(mapped);
       },
     });
   }
@@ -125,37 +114,30 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
     });
   }
 
-  private applyResponse(response: AiChatResponse): void {
+  private handleResponse(response: AiChatResponse): void {
     if (response.sessionId) this.aiChat.setSessionId(response.sessionId);
     this.loading.set(false);
-    this.pushStreamed(response.reply, response.citations, response.toolsUsed);
+    this.addStreamedMessage(response.reply, response.citations, response.toolsUsed);
     this.suggestions.set(response.suggestions.length ? response.suggestions : this.suggestions());
     this.refreshSessions();
   }
 
-  private push(role: 'user' | 'assistant', content: string): void {
-    this.messages.update((m) => [
-      ...m,
+  private addMessage(role: 'user' | 'assistant', content: string): void {
+    this.messages.update((msgs) => [
+      ...msgs,
       { role, content, displayContent: content, timestamp: new Date() },
     ]);
   }
 
-  /**
-   * Adds an assistant message and reveals its content progressively,
-   * similar to the streaming/typing effect used by other chat assistants.
-   * The underlying data (content, citations, toolsUsed) is set immediately;
-   * only the on-screen text is animated, so nothing about the app's
-   * data flow changes.
-   */
-  private pushStreamed(
+  private addStreamedMessage(
     content: string,
     citations?: AiChatMessage['citations'],
-    toolsUsed?: AiChatMessage['toolsUsed'],
+    toolsUsed?: AiChatMessage['toolsUsed']
   ): void {
     this.clearStreamTimer();
     this.streaming.set(true);
 
-    const message: AiWorkspaceMessage = {
+    const newMsg: AiWorkspaceMessage = {
       role: 'assistant',
       content,
       displayContent: '',
@@ -164,36 +146,37 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
       toolsUsed,
       isStreaming: true,
     };
-    this.messages.update((m) => [...m, message]);
+
+    this.messages.update((msgs) => [...msgs, newMsg]);
     const index = this.messages().length - 1;
 
-    const words = content.split(/(\s+)/); // keep whitespace tokens so spacing is preserved
+    const words = content.split(/(\s+)/);
     let cursor = 0;
 
-    const revealNext = () => {
-      cursor += 1;
+    const reveal = () => {
+      cursor++;
       const partial = words.slice(0, cursor).join('');
-      const done = cursor >= words.length;
+      const isDone = cursor >= words.length;
 
-      this.messages.update((m) =>
-        m.map((msg, i) =>
-          i === index ? { ...msg, displayContent: partial, isStreaming: !done } : msg,
-        ),
+      this.messages.update((msgs) =>
+        msgs.map((msg, i) =>
+          i === index ? { ...msg, displayContent: partial, isStreaming: !isDone } : msg
+        )
       );
 
-      if (!done) {
-        this.streamTimeoutId = setTimeout(revealNext, 18);
+      if (!isDone) {
+        this.streamTimeoutId = setTimeout(reveal, 16);
       } else {
         this.streaming.set(false);
         this.streamTimeoutId = null;
       }
     };
 
-    this.streamTimeoutId = setTimeout(revealNext, 18);
+    this.streamTimeoutId = setTimeout(reveal, 16);
   }
 
   private clearStreamTimer(): void {
-    if (this.streamTimeoutId !== null) {
+    if (this.streamTimeoutId) {
       clearTimeout(this.streamTimeoutId);
       this.streamTimeoutId = null;
     }
