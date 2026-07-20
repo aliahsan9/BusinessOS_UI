@@ -32,9 +32,47 @@ interface AiWorkspaceMessage extends AiChatMessage {
   displayContent?: string;
   /** True while the assistant bubble is still being "typed" out. */
   isStreaming?: boolean;
+  /**
+   * True when this message originated from (user) or was generated in
+   * response to (assistant) a voice interaction. Purely a UI hint used to
+   * show the mic/speaker badge and to decide whether to auto-read the
+   * assistant's reply aloud - it does not change what gets sent/persisted.
+   */
+  isVoice?: boolean;
 }
 
 const TYPE_SPEED_MS = 18;
+
+// Minimal local typings for the (still non-standard, vendor-prefixed on some
+// browsers) Web Speech API so we don't need to pull in extra @types.
+interface SpeechRecognitionAlternativeLike {
+  transcript: string;
+}
+interface SpeechRecognitionResultLike {
+  isFinal: boolean;
+  0: SpeechRecognitionAlternativeLike;
+  length: number;
+}
+interface SpeechRecognitionEventLike {
+  resultIndex: number;
+  results: { length: number; [index: number]: SpeechRecognitionResultLike };
+}
+interface SpeechRecognitionErrorEventLike {
+  error: string;
+}
+interface SpeechRecognitionLike extends EventTarget {
+  lang: string;
+  interimResults: boolean;
+  continuous: boolean;
+  maxAlternatives: number;
+  start(): void;
+  stop(): void;
+  abort(): void;
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEventLike) => void) | null;
+  onend: (() => void) | null;
+  onstart: (() => void) | null;
+}
 
 @Component({
   selector: 'app-ai-workspace',
@@ -72,6 +110,21 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
   readonly sidebarOpen = signal(false);
   readonly sessionsLoading = signal(false);
 
+  // --- Voice input/output state ------------------------------------------
+
+  /** True if this browser exposes SpeechRecognition (mic → text). */
+  readonly voiceInputSupported = signal(false);
+  /** True if this browser exposes speechSynthesis (text → spoken audio). */
+  readonly voiceOutputSupported = signal(false);
+  /** True while the mic is actively capturing speech. */
+  readonly isListening = signal(false);
+  /** Last mic/voice error, shown near the composer until dismissed/retried. */
+  readonly voiceError = signal<string | null>(null);
+  /** When on, assistant replies to voice messages are read aloud automatically. */
+  readonly autoSpeak = signal(false);
+  /** Which message (by index) is currently being read aloud, for the UI. */
+  readonly speakingIndex = signal<number | null>(null);
+
   readonly breadcrumbs = [
     { label: 'AI Copilot', route: ROUTES.ai.workspace },
     { label: 'Workspace' },
@@ -80,12 +133,24 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
   /** Handle for the current typewriter animation so it can be cancelled/cleaned up. */
   private streamTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
+  private recognition: SpeechRecognitionLike | null = null;
+  /** Accumulates the finalized transcript for the in-progress voice capture. */
+  private pendingVoiceTranscript = '';
+  /** Whether the most recently *sent* user message came in via voice. */
+  private lastInputWasVoice = false;
+
   ngOnInit(): void {
     this.refreshSessions();
+    this.setupSpeechRecognition();
+    this.voiceOutputSupported.set(typeof window !== 'undefined' && 'speechSynthesis' in window);
   }
 
   ngOnDestroy(): void {
     this.clearStreamTimer();
+    this.recognition?.abort();
+    if (this.voiceOutputSupported()) {
+      window.speechSynthesis.cancel();
+    }
   }
 
   toggleSidebar(): void {
@@ -95,6 +160,8 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
   /** Starts a brand-new conversation, clearing the transcript locally. */
   newChat(): void {
     this.clearStreamTimer();
+    this.stopListening();
+    this.stopSpeaking();
     this.activeSessionId.set(null);
     this.messages.set([]);
     this.input.set('');
@@ -102,14 +169,15 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
     this.sidebarOpen.set(false);
   }
 
-  send(text?: string): void {
+  send(text?: string, isVoice = false): void {
     const message = (text ?? this.input()).trim();
     if (!message || this.loading() || this.streaming()) return;
 
     this.input.set('');
     this.resizeComposer();
     this.sidebarOpen.set(false);
-    this.push('user', message);
+    this.lastInputWasVoice = isVoice;
+    this.push('user', message, isVoice);
     this.loading.set(true);
     this.scrollToBottom();
 
@@ -124,6 +192,8 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
 
   loadSession(sessionId: string): void {
     this.clearStreamTimer();
+    this.stopListening();
+    this.stopSpeaking();
     this.aiChat.setSessionId(sessionId);
     this.activeSessionId.set(sessionId);
     this.messages.set([]);
@@ -162,6 +232,147 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
     }
   }
 
+  // --- Voice input ---------------------------------------------------------
+
+  /** Wires up SpeechRecognition once; safe no-op if the browser doesn't support it. */
+  private setupSpeechRecognition(): void {
+    if (typeof window === 'undefined') return;
+
+    const SpeechRecognitionCtor: (new () => SpeechRecognitionLike) | undefined =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognitionCtor) {
+      this.voiceInputSupported.set(false);
+      return;
+    }
+
+    this.voiceInputSupported.set(true);
+
+    const recognition = new SpeechRecognitionCtor();
+    recognition.lang = 'en-US';
+    recognition.interimResults = true;
+    recognition.continuous = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onresult = (event: SpeechRecognitionEventLike) => {
+      let interim = '';
+      let final = '';
+
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i];
+        const transcript = result[0]?.transcript ?? '';
+        if (result.isFinal) {
+          final += transcript;
+        } else {
+          interim += transcript;
+        }
+      }
+
+      if (final) {
+        this.pendingVoiceTranscript = (this.pendingVoiceTranscript + ' ' + final).trim();
+      }
+
+      // Show live progress in the composer so the user can see what's being heard.
+      this.input.set((this.pendingVoiceTranscript + ' ' + interim).trim());
+      this.resizeComposer();
+    };
+
+    recognition.onerror = (event: SpeechRecognitionErrorEventLike) => {
+      this.isListening.set(false);
+      this.voiceError.set(this.describeVoiceError(event.error));
+    };
+
+    recognition.onend = () => {
+      this.isListening.set(false);
+      const transcript = this.pendingVoiceTranscript.trim();
+      this.pendingVoiceTranscript = '';
+
+      if (transcript) {
+        // Send exactly like a typed message - this is what makes voice
+        // messages persist to conversation history via the normal flow.
+        this.send(transcript, true);
+      }
+    };
+
+    this.recognition = recognition;
+  }
+
+  /** Starts or stops mic capture when the user taps the mic button. */
+  toggleVoiceInput(): void {
+    if (!this.voiceInputSupported() || this.loading() || this.streaming()) return;
+
+    if (this.isListening()) {
+      this.recognition?.stop();
+      return;
+    }
+
+    this.voiceError.set(null);
+    this.pendingVoiceTranscript = '';
+    this.input.set('');
+    this.stopSpeaking();
+
+    try {
+      this.recognition?.start();
+      this.isListening.set(true);
+    } catch {
+      this.isListening.set(false);
+      this.voiceError.set('Could not start the microphone. Please try again.');
+    }
+  }
+
+  private stopListening(): void {
+    if (this.isListening()) {
+      this.recognition?.stop();
+    }
+    this.isListening.set(false);
+    this.pendingVoiceTranscript = '';
+  }
+
+  private describeVoiceError(error: string): string {
+    switch (error) {
+      case 'not-allowed':
+      case 'service-not-allowed':
+        return 'Microphone access was blocked. Please allow mic permissions and try again.';
+      case 'no-speech':
+        return "Didn't catch that - please try speaking again.";
+      case 'audio-capture':
+        return 'No microphone was found on this device.';
+      case 'network':
+        return 'Voice recognition needs an internet connection.';
+      default:
+        return 'Voice input ran into a problem. Please try again.';
+    }
+  }
+
+  // --- Voice output (read replies aloud) -----------------------------------
+
+  toggleAutoSpeak(): void {
+    this.autoSpeak.update((v) => !v);
+    if (!this.autoSpeak()) {
+      this.stopSpeaking();
+    }
+  }
+
+  /** Reads a message's text aloud; used both for auto-speak and the manual "listen" button. */
+  speakMessage(index: number, text: string): void {
+    if (!this.voiceOutputSupported() || !text) return;
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1;
+    utterance.onstart = () => this.speakingIndex.set(index);
+    utterance.onend = () => this.speakingIndex.set(null);
+    utterance.onerror = () => this.speakingIndex.set(null);
+    window.speechSynthesis.speak(utterance);
+  }
+
+  stopSpeaking(): void {
+    if (this.voiceOutputSupported()) {
+      window.speechSynthesis.cancel();
+    }
+    this.speakingIndex.set(null);
+  }
+
   private resizeComposer(): void {
     const el = this.composerEl()?.nativeElement;
     if (!el) return;
@@ -190,15 +401,15 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
       this.activeSessionId.set(response.sessionId);
     }
     this.loading.set(false);
-    this.pushStreamed(response.reply, response.citations, response.toolsUsed);
+    this.pushStreamed(response.reply, response.citations, response.toolsUsed, this.lastInputWasVoice);
     this.suggestions.set(response.suggestions.length ? response.suggestions : this.suggestions());
     this.refreshSessions();
   }
 
-  private push(role: 'user' | 'assistant', content: string): void {
+  private push(role: 'user' | 'assistant', content: string, isVoice = false): void {
     this.messages.update((m) => [
       ...m,
-      { role, content, displayContent: content, timestamp: new Date() },
+      { role, content, displayContent: content, timestamp: new Date(), isVoice },
     ]);
     this.scrollToBottom();
   }
@@ -209,11 +420,15 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
    * The underlying data (content, citations, toolsUsed) is set immediately;
    * only the on-screen text is animated, so nothing about the app's
    * data flow changes.
+   *
+   * When `isVoice` is true (the user spoke their message) and auto-speak is
+   * enabled, the finished reply is also read aloud once typing completes.
    */
   private pushStreamed(
     content: string,
     citations?: AiChatMessage['citations'],
     toolsUsed?: AiChatMessage['toolsUsed'],
+    isVoice = false,
   ): void {
     this.clearStreamTimer();
     this.streaming.set(true);
@@ -226,6 +441,7 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
       citations,
       toolsUsed,
       isStreaming: true,
+      isVoice,
     };
     this.messages.update((m) => [...m, message]);
     const index = this.messages().length - 1;
@@ -251,6 +467,10 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
       } else {
         this.streaming.set(false);
         this.streamTimeoutId = null;
+
+        if (isVoice && this.autoSpeak()) {
+          this.speakMessage(index, content);
+        }
       }
     };
 

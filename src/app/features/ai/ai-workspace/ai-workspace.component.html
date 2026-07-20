@@ -91,6 +91,21 @@
           <h1>AI Copilot Workspace</h1>
           <p>Ask business questions, create records, and explore analytics with live tenant data.</p>
         </div>
+
+        @if (voiceOutputSupported()) {
+          <button
+            type="button"
+            class="auto-speak-toggle"
+            [class.auto-speak-toggle--active]="autoSpeak()"
+            [attr.aria-pressed]="autoSpeak()"
+            title="Read voice replies aloud automatically"
+            (click)="toggleAutoSpeak()"
+          >
+            <i class="bi" [class.bi-volume-up-fill]="autoSpeak()" [class.bi-volume-mute]="!autoSpeak()"></i>
+            <span class="d-none d-xl-inline">Auto-speak</span>
+          </button>
+        }
+
         <button type="button" class="new-chat-btn new-chat-btn--compact d-none d-lg-inline-flex" (click)="newChat()">
           <i class="bi bi-plus-lg"></i>
           New chat
@@ -105,6 +120,12 @@
             </div>
             <h2>How can I help today?</h2>
             <p>Try one of the suggested questions, or ask anything about your business data.</p>
+            @if (voiceInputSupported()) {
+              <p class="empty-state__voice-hint">
+                <i class="bi bi-mic-fill"></i>
+                Tip: tap the mic to ask by voice.
+              </p>
+            }
           </div>
         }
 
@@ -116,11 +137,26 @@
 
             <div class="message__content">
               <div class="bubble">
+                @if (msg.isVoice) {
+                  <i class="bi bi-mic-fill voice-badge" title="Sent by voice"></i>
+                }
                 <span>{{ msg.displayContent ?? msg.content }}</span>
                 @if (msg.isStreaming) {
                   <span class="caret" aria-hidden="true"></span>
                 }
               </div>
+
+              @if (msg.role === 'assistant' && !msg.isStreaming && voiceOutputSupported() && msg.content) {
+                <button
+                  type="button"
+                  class="listen-btn"
+                  [class.listen-btn--active]="speakingIndex() === $index"
+                  (click)="speakingIndex() === $index ? stopSpeaking() : speakMessage($index, msg.content)"
+                >
+                  <i class="bi" [class.bi-stop-circle]="speakingIndex() === $index" [class.bi-play-circle]="speakingIndex() !== $index"></i>
+                  {{ speakingIndex() === $index ? 'Stop' : 'Listen' }}
+                </button>
+              }
 
               @if (msg.toolsUsed?.length) {
                 <div class="tool-chips">
@@ -162,31 +198,58 @@
       </div>
 
       <footer class="composer">
-        <div class="composer__input-wrap">
-          <i class="bi bi-chat-dots composer__icon"></i>
-          <textarea
-            #composerEl
-            rows="1"
-            placeholder="Ask about revenue, invoices, projects, customers…"
-            [ngModel]="input()"
-            (ngModelChange)="onComposerInput($event)"
-            (keydown)="onComposerKeydown($event)"
-            [disabled]="loading()"
-          ></textarea>
-        </div>
-        <button
-          type="button"
-          class="composer__send"
-          (click)="send()"
-          [disabled]="loading() || !input().trim()"
-        >
-          @if (loading()) {
-            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-          } @else {
-            <i class="bi bi-send-fill"></i>
+        @if (voiceError()) {
+          <div class="voice-error" role="alert">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            {{ voiceError() }}
+          </div>
+        }
+
+        <div class="composer__row">
+          <div class="composer__input-wrap">
+            <i class="bi bi-chat-dots composer__icon"></i>
+            <textarea
+              #composerEl
+              rows="1"
+              [placeholder]="isListening() ? 'Listening… speak now' : 'Ask about revenue, invoices, projects, customers…'"
+              [ngModel]="input()"
+              (ngModelChange)="onComposerInput($event)"
+              (keydown)="onComposerKeydown($event)"
+              [disabled]="loading() || isListening()"
+            ></textarea>
+          </div>
+
+          @if (voiceInputSupported()) {
+            <button
+              type="button"
+              class="composer__mic"
+              [class.composer__mic--listening]="isListening()"
+              [attr.aria-pressed]="isListening()"
+              [disabled]="loading() || streaming()"
+              [title]="isListening() ? 'Stop listening' : 'Talk to AI Copilot'"
+              (click)="toggleVoiceInput()"
+            >
+              <i class="bi bi-mic-fill"></i>
+              @if (isListening()) {
+                <span class="composer__mic-pulse" aria-hidden="true"></span>
+              }
+            </button>
           }
-          <span class="d-none d-sm-inline">Send</span>
-        </button>
+
+          <button
+            type="button"
+            class="composer__send"
+            (click)="send()"
+            [disabled]="loading() || isListening() || !input().trim()"
+          >
+            @if (loading()) {
+              <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            } @else {
+              <i class="bi bi-send-fill"></i>
+            }
+            <span class="d-none d-sm-inline">Send</span>
+          </button>
+        </div>
       </footer>
     </section>
   </div>

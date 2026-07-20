@@ -14,6 +14,10 @@
 // above this component (top nav, page title, breadcrumb, paddings). Adjust
 // it here — or better, override it from the host layout — if your shell's
 // chrome height changes.
+//
+// VOICE: mic capture (composer__mic) and the assistant "listen" / header
+// "auto-speak" controls are additive UI only — they don't affect the
+// scrolling/layout mechanics above.
 // -----------------------------------------------------------------------------
 
 :host {
@@ -166,6 +170,34 @@
     flex: 0 0 auto;
     border-style: solid;
     padding: 0.5rem 0.85rem;
+  }
+}
+
+// Header toggle that controls whether voice replies are auto-read aloud.
+.auto-speak-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 0 0 auto;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+  border-radius: 999px;
+  padding: 0.45rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+
+  &:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+  }
+
+  &--active {
+    border-color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 10%, var(--color-bg));
+    color: var(--color-primary);
   }
 }
 
@@ -332,6 +364,15 @@
     font-size: 0.875rem;
     margin: 0;
   }
+
+  &__voice-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.6rem !important;
+    color: var(--color-primary);
+    font-weight: 600;
+  }
 }
 
 .message {
@@ -408,6 +449,42 @@
     display: flex;
     align-items: center;
     gap: 0.6rem;
+  }
+}
+
+// Small mic glyph shown on messages that were sent/answered via voice.
+.voice-badge {
+  margin-right: 0.35rem;
+  font-size: 0.78rem;
+  opacity: 0.8;
+  vertical-align: 1px;
+}
+
+// "Listen" / "Stop" control under assistant bubbles that support playback.
+.listen-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  align-self: flex-start;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+  }
+
+  &--active {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface));
   }
 }
 
@@ -509,12 +586,18 @@
 
 .composer {
   display: flex;
-  align-items: flex-end;
-  gap: 0.6rem;
+  flex-direction: column;
+  gap: 0.4rem;
   flex: 0 0 auto;
   padding: 0.9rem 1rem;
   border-top: 1px solid var(--color-border);
   background: var(--color-surface);
+
+  &__row {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.6rem;
+  }
 
   &__input-wrap {
     flex: 1;
@@ -565,6 +648,50 @@
     padding-bottom: 0.3rem;
   }
 
+  // Mic button that starts/stops speech-to-text capture for the composer.
+  &__mic {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 2.6rem;
+    height: 2.6rem;
+    border: 1px solid var(--color-border);
+    background: var(--color-bg);
+    color: var(--color-text-muted);
+    border-radius: 50%;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease, transform 0.15s ease;
+
+    &:hover:not(:disabled) {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+      transform: translateY(-1px);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &--listening {
+      border-color: transparent;
+      background: #dc3545;
+      color: #fff;
+    }
+  }
+
+  &__mic-pulse {
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 2px solid #dc3545;
+    animation: mic-pulse 1.2s ease-out infinite;
+    pointer-events: none;
+  }
+
   &__send {
     display: inline-flex;
     align-items: center;
@@ -589,6 +716,27 @@
       cursor: not-allowed;
     }
   }
+}
+
+@keyframes mic-pulse {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+.voice-error {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #dc3545;
+  padding: 0 0.2rem;
 }
 
 // -----------------------------------------------------------------------------
@@ -640,6 +788,10 @@
     p {
       display: none;
     }
+  }
+
+  .auto-speak-toggle span {
+    display: none;
   }
 
   .message__content {
