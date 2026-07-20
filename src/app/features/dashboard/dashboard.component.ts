@@ -31,7 +31,7 @@ type ProductSortField = 'productName' | 'totalQuantitySold' | 'totalRevenue';
     DatePipe,
     AppCurrencyPipe,
     DecimalPipe,
-    AppBreadcrumbComponent,
+    // AppBreadcrumbComponent,
     AppCardComponent,
     AppChartComponent,
     AppBadgeComponent,
