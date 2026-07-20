@@ -1,42 +1,125 @@
-<div class="dashboard page-container">
-  <div class="dashboard__header d-flex flex-column flex-md-row justify-content-between align-items-md-start gap-3">
+<main class="dashboard page-container">
+  <!-- Header -->
+  <header class="dashboard__header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
     <div class="dashboard__header-content">
-      <app-breadcrumb [items]="breadcrumbs" />
-      <h1 class="page-title">Dashboard</h1>
-      <p class="page-subtitle">Overview of your business performance</p>
+      <!-- <app-breadcrumb [items]="breadcrumbs" /> -->
+      <h1 class="page-title">
+        <i class="bi bi-speedometer2 dashboard__title-icon" aria-hidden="true"></i>
+        Dashboard
+      </h1>
     </div>
-    <div class="dashboard__period-select w-100 w-md-auto">
-      <label for="period-select">Time period</label>
-      <select id="period-select" class="form-select form-select-sm" [value]="period()" (change)="onPeriodChange($event)" aria-label="Select dashboard period">
-        @for (p of periods; track p.value) {
-          <option [value]="p.value">{{ p.label }}</option>
-        }
-      </select>
-    </div>  
-  </div>
 
+    <div class="dashboard__toolbar d-flex align-items-center gap-2 w-100 w-md-auto">
+      <!-- Segmented pill switcher: desktop / tablet -->
+      <div class="dashboard__period-pills d-none d-md-flex" role="tablist" aria-label="Select dashboard period">
+        @for (p of periods; track p.value) {
+          <button
+            type="button"
+            role="tab"
+            class="dashboard__period-pill"
+            [class.dashboard__period-pill--active]="p.value === period()"
+            [attr.aria-selected]="p.value === period()"
+            (click)="setPeriod(p.value)"
+          >
+            {{ p.label }}
+          </button>
+        }
+      </div>
+
+      <!-- Native select: compact / touch screens -->
+      <div class="dashboard__period-select d-md-none w-100">
+        <label for="period-select">
+          <i class="bi bi-calendar3" aria-hidden="true"></i>
+          Time period
+        </label>
+        <select
+          id="period-select"
+          class="form-select form-select-sm"
+          [value]="period()"
+          (change)="onPeriodChange($event)"
+          aria-label="Select dashboard period"
+        >
+          @for (p of periods; track p.value) {
+            <option [value]="p.value">{{ p.label }}</option>
+          }
+        </select>
+      </div>
+
+      <button
+        type="button"
+        class="btn btn-icon btn-outline-secondary dashboard__refresh-btn"
+        (click)="retry()"
+        [disabled]="loading()"
+        aria-label="Refresh dashboard data"
+        title="Refresh"
+      >
+        <i class="bi bi-arrow-clockwise" [class.dashboard__refresh-icon--spin]="loading()" aria-hidden="true"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Error state -->
   @if (error()) {
     <app-alert [message]="error()!" variant="danger" [dismissible]="false" />
-    <app-empty-state title="Unable to load dashboard" description="There was a problem fetching your data." actionLabel="Retry" (action)="retry()" />
-  } @else if (loading()) {
-    <div class="row g-3 dashboard__stats">
-      @for (i of [1,2,3,4]; track i) {
+    <app-empty-state
+      title="Unable to load dashboard"
+      description="There was a problem fetching your data. Check your connection and try again."
+      actionLabel="Retry"
+      (action)="retry()"
+    />
+  }
+
+  <!-- Loading state -->
+  @else if (loading()) {
+    <div class="row g-3 dashboard__stats" aria-live="polite" aria-busy="true">
+      @for (i of [1, 2, 3, 4]; track i) {
         <div class="col-6 col-md-3">
-          <app-skeleton variant="rect" height="120px" />
+          <app-skeleton variant="rect" height="128px" />
+        </div>
+      }
+    </div>
+    <div class="row g-3 dashboard__stats dashboard__stats--secondary">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div class="col-6 col-lg-3">
+          <app-skeleton variant="rect" height="84px" />
         </div>
       }
     </div>
     <div class="row g-4 dashboard__charts">
       <div class="col-12 col-lg-6">
-        <app-skeleton variant="rect" height="320px" />
+        <app-skeleton variant="rect" height="340px" />
       </div>
       <div class="col-12 col-lg-6">
-        <app-skeleton variant="rect" height="320px" />
+        <app-skeleton variant="rect" height="340px" />
       </div>
     </div>
-  } @else {
-    <!-- KPI Cards -->
-    <div class="row g-3 dashboard__stats">
+    <div class="row g-4 dashboard__widgets">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="col-12 col-md-6 col-xl-4">
+          <app-skeleton variant="rect" height="180px" />
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Loaded state -->
+  @else {
+    <!-- Quick-jump sub-nav -->
+    <nav class="dashboard__quicknav" aria-label="Jump to section">
+      <ul class="dashboard__quicknav-list">
+        @for (s of sections; track s.id) {
+          <li>
+            <button type="button" class="dashboard__quicknav-btn" (click)="scrollToSection(s.id)">
+              <i class="bi" [class]="s.icon" aria-hidden="true"></i>
+              {{ s.label }}
+            </button>
+          </li>
+        }
+      </ul>
+    </nav>
+
+    <!-- Primary KPI Cards -->
+    <section id="section-overview" class="row g-3 dashboard__stats dashboard__animate-in" aria-label="Key performance indicators">
       <div class="col-6 col-md-3">
         <div class="stat-card dashboard__stat dashboard__stat--revenue h-100">
           <div class="dashboard__stat-top">
@@ -77,10 +160,10 @@
           <span class="dashboard__stat-meta">Categories: {{ overview()?.totalCategories | number }}</span>
         </div>
       </div>
-    </div>
+    </section>
 
     <!-- Secondary KPIs -->
-    <div class="row g-3 dashboard__stats dashboard__stats--secondary">
+    <section class="row g-3 dashboard__stats dashboard__stats--secondary dashboard__animate-in" aria-label="Inventory and order health">
       <div class="col-6 col-lg-3">
         <div class="stat-card dashboard__stat dashboard__stat--compact h-100">
           <span class="dashboard__stat-label">Inventory Value</span>
@@ -105,10 +188,10 @@
           <span class="dashboard__stat-value dashboard__stat-value--sm dashboard__stat-value--success">{{ sales()?.completedOrders | number }}</span>
         </div>
       </div>
-    </div>
+    </section>
 
     <!-- Charts -->
-    <div class="row g-4 dashboard__charts">
+    <section id="section-trends" class="row g-4 dashboard__charts dashboard__animate-in" aria-label="Trends">
       <div class="col-12 col-lg-6">
         <app-card title="Revenue Trend" [subtitle]="revenueChart()?.dateRange?.period">
           @if (revenueChart()) {
@@ -127,11 +210,11 @@
           }
         </app-card>
       </div>
-    </div>
+    </section>
 
     <div class="row g-4 dashboard__grid">
       <!-- Inventory Status -->
-      <div class="col-12 col-lg-6">
+      <div id="section-inventory" class="col-12 col-lg-6 dashboard__animate-in">
         <app-card title="Inventory Status" subtitle="Stock levels overview">
           <div class="dashboard__inventory-summary row g-3 row-cols-2 row-cols-sm-3">
             <div class="col dashboard__inventory-item">
@@ -147,12 +230,13 @@
               <strong class="text-danger">{{ inventory()?.outOfStockCount | number }}</strong>
             </div>
           </div>
+
           @if (inventory()?.reorderRecommendations?.length) {
             <div class="dashboard__reorder-list">
-              <h4 class="h6">Reorder Recommendations</h4>
+              <h2 class="dashboard__section-heading">Reorder Recommendations</h2>
               @for (item of inventory()!.reorderRecommendations.slice(0, 5); track item.productId) {
                 <div class="dashboard__reorder-item">
-                  <span>{{ item.productName }}</span>
+                  <span class="dashboard__reorder-name">{{ item.productName }}</span>
                   <app-badge [label]="'Qty: ' + item.suggestedReorderQuantity" variant="warning" />
                 </div>
               }
@@ -162,20 +246,26 @@
       </div>
 
       <!-- Orders by Status -->
-      <div class="col-12 col-lg-6">
+      <div id="section-orders" class="col-12 col-lg-6 dashboard__animate-in">
         <app-card title="Orders Summary" subtitle="Status breakdown">
           @if (orders()?.ordersByStatus?.length) {
-            <div class="dashboard__status-list">
+            <ul class="dashboard__status-list list-unstyled">
               @for (status of orders()!.ordersByStatus; track status.status) {
-                <div class="dashboard__status-item">
+                <li class="dashboard__status-item">
                   <app-badge [label]="status.status" [variant]="getStatusVariant(status.status)" />
-                  <span class="dashboard__status-count">{{ status.count }}</span>
-                </div>
+                  <span class="dashboard__status-count">{{ status.count | number }}</span>
+                </li>
               }
-            </div>
+            </ul>
             <div class="dashboard__rates">
-              <span>Success rate: <strong>{{ orders()?.successRate | number:'1.0-1' }}%</strong></span>
-              <span>Cancellation: <strong>{{ orders()?.cancellationRate | number:'1.0-1' }}%</strong></span>
+              <span class="dashboard__rate dashboard__rate--success">
+                <i class="bi bi-check-circle" aria-hidden="true"></i>
+                Success rate <strong>{{ orders()?.successRate | number: '1.0-1' }}%</strong>
+              </span>
+              <span class="dashboard__rate dashboard__rate--danger">
+                <i class="bi bi-x-circle" aria-hidden="true"></i>
+                Cancellation <strong>{{ orders()?.cancellationRate | number: '1.0-1' }}%</strong>
+              </span>
             </div>
           } @else {
             <app-empty-state title="No orders yet" description="Order statistics will appear here." />
@@ -184,95 +274,165 @@
       </div>
 
       <!-- Top Customers -->
-      <div class="col-12 col-lg-6">
+      <div id="section-customers" class="col-12 col-lg-6 dashboard__animate-in">
         <app-card title="Top Customers" subtitle="By total spending">
-          @if (customers()?.topCustomers?.length) {
-            <div class="table-responsive-wrapper table-responsive">
-              <table class="table table-hover mb-0">
-                <thead>
-                  <tr>
-                    <th scope="col">Customer</th>
-                    <th scope="col">Orders</th>
-                    <th scope="col" class="text-end">Spending</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (customer of customers()!.topCustomers; track customer.customerId) {
+          @if (sortedTopCustomers(); as topCustomers) {
+            @if (topCustomers.length) {
+              <div class="table-responsive-wrapper table-responsive">
+                <table class="table table-hover align-middle mb-0 dashboard__table">
+                  <thead>
                     <tr>
-                      <td>
-                        <strong>{{ customer.fullName }}</strong>
-                        <br /><small class="text-muted">{{ customer.email }}</small>
-                      </td>
-                      <td>{{ customer.totalOrders }}</td>
-                      <td class="text-end">{{ customer.totalSpending | appCurrency }}</td>
+                      <th scope="col">
+                        <button type="button" class="dashboard__sort-btn" (click)="toggleCustomerSort('fullName')">
+                          Customer
+                          <i class="bi dashboard__sort-icon"
+                             [class.bi-arrow-down]="customerSortState().field === 'fullName' && customerSortState().direction === 'desc'"
+                             [class.bi-arrow-up]="customerSortState().field === 'fullName' && customerSortState().direction === 'asc'"
+                             [class.bi-arrow-down-up]="customerSortState().field !== 'fullName'"
+                             aria-hidden="true"></i>
+                        </button>
+                      </th>
+                      <th scope="col">
+                        <button type="button" class="dashboard__sort-btn" (click)="toggleCustomerSort('totalOrders')">
+                          Orders
+                          <i class="bi dashboard__sort-icon"
+                             [class.bi-arrow-down]="customerSortState().field === 'totalOrders' && customerSortState().direction === 'desc'"
+                             [class.bi-arrow-up]="customerSortState().field === 'totalOrders' && customerSortState().direction === 'asc'"
+                             [class.bi-arrow-down-up]="customerSortState().field !== 'totalOrders'"
+                             aria-hidden="true"></i>
+                        </button>
+                      </th>
+                      <th scope="col" class="text-end">
+                        <button type="button" class="dashboard__sort-btn dashboard__sort-btn--end" (click)="toggleCustomerSort('totalSpending')">
+                          Spending
+                          <i class="bi dashboard__sort-icon"
+                             [class.bi-arrow-down]="customerSortState().field === 'totalSpending' && customerSortState().direction === 'desc'"
+                             [class.bi-arrow-up]="customerSortState().field === 'totalSpending' && customerSortState().direction === 'asc'"
+                             [class.bi-arrow-down-up]="customerSortState().field !== 'totalSpending'"
+                             aria-hidden="true"></i>
+                        </button>
+                      </th>
                     </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          } @else {
-            <app-empty-state title="No customer data" />
+                  </thead>
+                  <tbody>
+                    @for (customer of topCustomers; track customer.customerId) {
+                      <tr>
+                        <td data-label="Customer">
+                          <strong>{{ customer.fullName }}</strong>
+                          <br /><small class="text-muted">{{ customer.email }}</small>
+                        </td>
+                        <td data-label="Orders">{{ customer.totalOrders | number }}</td>
+                        <td data-label="Spending" class="text-end">{{ customer.totalSpending | appCurrency }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            } @else {
+              <app-empty-state title="No customer data" />
+            }
           }
         </app-card>
       </div>
 
       <!-- Top Products -->
-      <div class="col-12 col-lg-6">
+      <div id="section-products" class="col-12 col-lg-6 dashboard__animate-in">
         <app-card title="Best Selling Products" subtitle="Top performers">
-          @if (products()?.bestSellingProducts?.length) {
-            <div class="table-responsive-wrapper table-responsive">
-              <table class="table table-hover mb-0">
-                <thead>
-                  <tr>
-                    <th scope="col">Product</th>
-                    <th scope="col">Sold</th>
-                    <th scope="col" class="text-end">Revenue</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (product of products()!.bestSellingProducts; track product.productId) {
+          @if (sortedBestSellingProducts(); as bestSellingProducts) {
+            @if (bestSellingProducts.length) {
+              <div class="table-responsive-wrapper table-responsive">
+                <table class="table table-hover align-middle mb-0 dashboard__table">
+                  <thead>
                     <tr>
-                      <td>
-                        <strong>{{ product.productName }}</strong>
-                        <br /><small class="text-muted">{{ product.sku }}</small>
-                      </td>
-                      <td>{{ product.totalQuantitySold }}</td>
-                      <td class="text-end">{{ product.totalRevenue | appCurrency }}</td>
+                      <th scope="col">
+                        <button type="button" class="dashboard__sort-btn" (click)="toggleProductSort('productName')">
+                          Product
+                          <i class="bi dashboard__sort-icon"
+                             [class.bi-arrow-down]="productSortState().field === 'productName' && productSortState().direction === 'desc'"
+                             [class.bi-arrow-up]="productSortState().field === 'productName' && productSortState().direction === 'asc'"
+                             [class.bi-arrow-down-up]="productSortState().field !== 'productName'"
+                             aria-hidden="true"></i>
+                        </button>
+                      </th>
+                      <th scope="col">
+                        <button type="button" class="dashboard__sort-btn" (click)="toggleProductSort('totalQuantitySold')">
+                          Sold
+                          <i class="bi dashboard__sort-icon"
+                             [class.bi-arrow-down]="productSortState().field === 'totalQuantitySold' && productSortState().direction === 'desc'"
+                             [class.bi-arrow-up]="productSortState().field === 'totalQuantitySold' && productSortState().direction === 'asc'"
+                             [class.bi-arrow-down-up]="productSortState().field !== 'totalQuantitySold'"
+                             aria-hidden="true"></i>
+                        </button>
+                      </th>
+                      <th scope="col" class="text-end">
+                        <button type="button" class="dashboard__sort-btn dashboard__sort-btn--end" (click)="toggleProductSort('totalRevenue')">
+                          Revenue
+                          <i class="bi dashboard__sort-icon"
+                             [class.bi-arrow-down]="productSortState().field === 'totalRevenue' && productSortState().direction === 'desc'"
+                             [class.bi-arrow-up]="productSortState().field === 'totalRevenue' && productSortState().direction === 'asc'"
+                             [class.bi-arrow-down-up]="productSortState().field !== 'totalRevenue'"
+                             aria-hidden="true"></i>
+                        </button>
+                      </th>
                     </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          } @else {
-            <app-empty-state title="No product data" />
+                  </thead>
+                  <tbody>
+                    @for (product of bestSellingProducts; track product.productId) {
+                      <tr>
+                        <td data-label="Product">
+                          <strong>{{ product.productName }}</strong>
+                          <br /><small class="text-muted">{{ product.sku }}</small>
+                        </td>
+                        <td data-label="Sold">{{ product.totalQuantitySold | number }}</td>
+                        <td data-label="Revenue" class="text-end">{{ product.totalRevenue | appCurrency }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            } @else {
+              <app-empty-state title="No product data" />
+            }
           }
         </app-card>
       </div>
     </div>
 
-    <div class="row g-4 dashboard__widgets">
+    <!-- Widgets -->
+    <section class="row g-4 dashboard__widgets dashboard__animate-in" aria-label="Notifications, logins and invoices">
       <div class="col-12 col-md-6 col-xl-4">
         <app-card title="Unread Notifications" subtitle="Requires your attention" class="h-100">
           <div class="dashboard__widget-stat">
-            <i class="bi bi-bell-fill dashboard__widget-icon" aria-hidden="true"></i>
-            <span>{{ unreadCount() }}</span>
+            <span class="dashboard__widget-icon-wrap" aria-hidden="true">
+              <i class="bi bi-bell-fill"></i>
+            </span>
+            <span class="dashboard__widget-number">{{ unreadCount() }}</span>
           </div>
-          <a class="btn btn-sm btn-outline-primary" [routerLink]="routes.notifications.list">Open inbox</a>
+          <a class="btn btn-sm btn-outline-primary" [routerLink]="routes.notifications.list">
+            Open inbox
+            <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
+          </a>
         </app-card>
       </div>
 
       <div class="col-12 col-md-6 col-xl-4">
         <app-card title="Recent Logins" subtitle="Latest sign-ins" class="h-100">
           @if (widgetsLoading()) {
-            <app-skeleton height="4rem" />
+            <div aria-live="polite" aria-busy="true">
+              @for (i of [1, 2, 3]; track i) {
+                <app-skeleton height="2.75rem" />
+              }
+            </div>
           } @else if (recentLogins().length === 0) {
             <app-empty-state title="No login activity" />
           } @else {
-            <ul class="dashboard__activity-list">
+            <ul class="dashboard__activity-list list-unstyled">
               @for (login of recentLogins(); track login.id) {
                 <li class="dashboard__activity-item">
-                  <i class="bi bi-box-arrow-in-right dashboard__activity-icon" aria-hidden="true"></i>
-                  <div>
+                  <span class="dashboard__activity-icon" aria-hidden="true">
+                    <i class="bi bi-box-arrow-in-right"></i>
+                  </span>
+                  <div class="dashboard__activity-body">
                     <strong>{{ login.userName }}</strong>
                     <div class="dashboard__activity-meta">{{ login.createdAt | date: 'medium' }}</div>
                   </div>
@@ -286,15 +446,21 @@
       <div class="col-12 col-md-6 col-xl-4">
         <app-card title="Latest Invoices" subtitle="Recently created invoices" class="h-100">
           @if (widgetsLoading()) {
-            <app-skeleton height="4rem" />
+            <div aria-live="polite" aria-busy="true">
+              @for (i of [1, 2, 3]; track i) {
+                <app-skeleton height="2.75rem" />
+              }
+            </div>
           } @else if (latestInvoices().length === 0) {
             <app-empty-state title="No invoices yet" />
           } @else {
-            <ul class="dashboard__activity-list">
+            <ul class="dashboard__activity-list list-unstyled">
               @for (invoice of latestInvoices(); track invoice.id) {
                 <li class="dashboard__activity-item">
-                  <i class="bi bi-receipt dashboard__activity-icon" aria-hidden="true"></i>
-                  <div class="flex-grow-1">
+                  <span class="dashboard__activity-icon" aria-hidden="true">
+                    <i class="bi bi-receipt"></i>
+                  </span>
+                  <div class="dashboard__activity-body flex-grow-1">
                     <strong>{{ invoice.invoiceNumber }}</strong>
                     <div class="dashboard__activity-meta">{{ invoice.status }} · {{ invoice.grandTotal | appCurrency }}</div>
                   </div>
@@ -305,23 +471,24 @@
           }
         </app-card>
       </div>
-    </div>
+    </section>
 
-    <app-card title="Recent Activity" subtitle="Latest actions across your business">
+    <!-- Recent Activity -->
+    <app-card id="section-activity" title="Recent Activity" subtitle="Latest actions across your business" class="dashboard__animate-in">
       @if (activityLoading()) {
-        <div class="loading-stack">
+        <div class="loading-stack" aria-live="polite" aria-busy="true">
           @for (i of [1, 2, 3]; track i) {
-            <app-skeleton height="3rem" />
+            <app-skeleton height="2.75rem" />
           }
         </div>
       } @else if (recentActivities().length === 0) {
         <app-empty-state title="No recent activity" description="Business actions will appear here." />
       } @else {
-        <ul class="dashboard__activity-list">
+        <ul class="dashboard__activity-list list-unstyled">
           @for (activity of recentActivities(); track activity.id) {
             <li class="dashboard__activity-item">
               <app-badge [label]="activity.entityType" [variant]="getStatusVariant(activity.entityType)" />
-              <div>
+              <div class="dashboard__activity-body">
                 <strong>{{ activity.description }}</strong>
                 <div class="dashboard__activity-meta">{{ activity.createdAt | date: 'medium' }}</div>
               </div>
@@ -329,10 +496,12 @@
           }
         </ul>
       }
-
       <div class="dashboard__activity-footer">
-        <a class="btn btn-sm btn-outline-primary" [routerLink]="routes.activity.list">View All</a>
+        <a class="btn btn-sm btn-outline-primary" [routerLink]="routes.activity.list">
+          View All
+          <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
+        </a>
       </div>
     </app-card>
   }
-</div>
+</main>

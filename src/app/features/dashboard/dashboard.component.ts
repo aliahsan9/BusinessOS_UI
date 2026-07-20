@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AppCurrencyPipe } from '../../shared/pipes/app-currency.pipe';
@@ -18,6 +18,11 @@ import { AppSkeletonComponent } from '../../shared/components/app-skeleton/app-s
 import { AppAlertComponent } from '../../shared/components/app-alert/app-alert.component';
 import { AppEmptyStateComponent } from '../../shared/components/app-empty-state/app-empty-state.component';
 
+type StatusVariant = 'primary' | 'success' | 'danger' | 'warning' | 'info' | 'neutral';
+type SortDirection = 'asc' | 'desc';
+type CustomerSortField = 'fullName' | 'totalOrders' | 'totalSpending';
+type ProductSortField = 'productName' | 'totalQuantitySold' | 'totalRevenue';
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -32,7 +37,7 @@ import { AppEmptyStateComponent } from '../../shared/components/app-empty-state/
     AppBadgeComponent,
     AppSkeletonComponent,
     AppAlertComponent,
-    AppEmptyStateComponent
+    AppEmptyStateComponent,
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
@@ -44,14 +49,37 @@ export class DashboardComponent implements OnInit {
   private readonly invoiceService = inject(InvoiceService);
   private readonly notificationState = inject(NotificationStateService);
 
+  // --- Widget data -----------------------------------------------------
   readonly recentActivities = signal<ActivityDto[]>([]);
   readonly recentLogins = signal<ActivityDto[]>([]);
   readonly latestInvoices = signal<InvoiceSummaryDto[]>([]);
   readonly activityLoading = signal(false);
   readonly widgetsLoading = signal(false);
-  readonly routes = ROUTES;
-  readonly unreadCount = this.notificationState.unreadCount;
 
+  // --- Static config -----------------------------------------------------
+  readonly routes = ROUTES;
+  readonly periods: ReadonlyArray<{ label: string; value: DashboardPeriod }> = [
+    { label: 'Today', value: DashboardPeriod.Today },
+    { label: 'Week', value: DashboardPeriod.Week },
+    { label: 'Month', value: DashboardPeriod.Month },
+    { label: 'Year', value: DashboardPeriod.Year },
+    { label: 'All', value: DashboardPeriod.All },
+  ];
+  readonly breadcrumbs = [{ label: 'Dashboard', route: '/dashboard' }, { label: 'Overview' }];
+
+  /** Quick-jump sections rendered as an in-page nav once the dashboard has loaded. */
+  readonly sections: ReadonlyArray<{ id: string; label: string; icon: string }> = [
+    { id: 'section-overview', label: 'Overview', icon: 'bi-grid-1x2' },
+    { id: 'section-trends', label: 'Trends', icon: 'bi-graph-up' },
+    { id: 'section-inventory', label: 'Inventory', icon: 'bi-box-seam' },
+    { id: 'section-orders', label: 'Orders', icon: 'bi-bag-check' },
+    { id: 'section-customers', label: 'Customers', icon: 'bi-people' },
+    { id: 'section-products', label: 'Products', icon: 'bi-star' },
+    { id: 'section-activity', label: 'Activity', icon: 'bi-clock-history' },
+  ];
+
+  // --- State passthroughs -----------------------------------------------------
+  readonly unreadCount = this.notificationState.unreadCount;
   readonly overview = this.dashboardState.overview;
   readonly sales = this.dashboardState.sales;
   readonly customers = this.dashboardState.customers;
@@ -64,15 +92,37 @@ export class DashboardComponent implements OnInit {
   readonly error = this.dashboardState.error;
   readonly period = this.dashboardState.period;
 
-  readonly periods = [
-    { label: 'Today', value: DashboardPeriod.Today },
-    { label: 'Week', value: DashboardPeriod.Week },
-    { label: 'Month', value: DashboardPeriod.Month },
-    { label: 'Year', value: DashboardPeriod.Year },
-    { label: 'All', value: DashboardPeriod.All }
-  ];
+  // --- Derived UI state (view-only, no new business logic) -----------------
+  readonly currentPeriodLabel = computed(
+    () => this.periods.find((p) => p.value === this.period())?.label ?? '',
+  );
 
-  readonly breadcrumbs = [{ label: 'Dashboard', route: '/dashboard' }, { label: 'Overview' }];
+  // --- Table sorting (client-side, view-only — underlying data is untouched) --
+  private readonly customerSort = signal<{ field: CustomerSortField; direction: SortDirection }>({
+    field: 'totalSpending',
+    direction: 'desc',
+  });
+  private readonly productSort = signal<{ field: ProductSortField; direction: SortDirection }>({
+    field: 'totalRevenue',
+    direction: 'desc',
+  });
+
+  readonly sortedTopCustomers = computed(() => {
+    const list = this.customers()?.topCustomers;
+    if (!list) return null;
+    const { field, direction } = this.customerSort();
+    return this.sortBy(list, field, direction);
+  });
+
+  readonly sortedBestSellingProducts = computed(() => {
+    const list = this.products()?.bestSellingProducts;
+    if (!list) return null;
+    const { field, direction } = this.productSort();
+    return this.sortBy(list, field, direction);
+  });
+
+  readonly customerSortState = this.customerSort.asReadonly();
+  readonly productSortState = this.productSort.asReadonly();
 
   ngOnInit(): void {
     this.dashboardState.loadDashboard();
@@ -122,12 +172,17 @@ export class DashboardComponent implements OnInit {
     this.dashboardState.setPeriod(value);
   }
 
+  /** Thin wrapper so the desktop pill switcher can set the period directly. */
+  setPeriod(value: DashboardPeriod): void {
+    this.dashboardState.setPeriod(value);
+  }
+
   retry(): void {
     this.dashboardState.loadDashboard(this.period());
   }
 
-  getStatusVariant(status: string): 'primary' | 'success' | 'danger' | 'warning' | 'info' | 'neutral' {
-    const map: Record<string, 'primary' | 'success' | 'danger' | 'warning' | 'info' | 'neutral'> = {
+  getStatusVariant(status: string): StatusVariant {
+    const map: Record<string, StatusVariant> = {
       Pending: 'warning',
       Confirmed: 'info',
       Processing: 'primary',
@@ -135,5 +190,55 @@ export class DashboardComponent implements OnInit {
       Cancelled: 'danger',
     };
     return map[status] ?? 'neutral';
+  }
+
+  toggleCustomerSort(field: CustomerSortField): void {
+    this.customerSort.update((current) => this.nextSortState(current, field));
+  }
+
+  toggleProductSort(field: ProductSortField): void {
+    this.productSort.update((current) => this.nextSortState(current, field));
+  }
+
+  /** Smooth-scrolls to a section, respecting the user's motion preference. */
+  scrollToSection(id: string): void {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    el.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' });
+  }
+
+  trackByIndex(index: number): number {
+    return index;
+  }
+
+  private nextSortState<TField extends string>(
+    current: { field: TField; direction: SortDirection },
+    field: TField,
+  ): { field: TField; direction: SortDirection } {
+    if (current.field !== field) {
+      return { field, direction: 'desc' };
+    }
+    return { field, direction: current.direction === 'desc' ? 'asc' : 'desc' };
+  }
+
+  private sortBy<T, K extends keyof T>(
+    list: readonly T[],
+    field: K,
+    direction: SortDirection,
+  ): T[] {
+    const copy = [...list];
+    copy.sort((a, b) => {
+      const va = a[field];
+      const vb = b[field];
+      let result = 0;
+      if (typeof va === 'number' && typeof vb === 'number') {
+        result = va - vb;
+      } else {
+        result = String(va ?? '').localeCompare(String(vb ?? ''));
+      }
+      return direction === 'asc' ? result : -result;
+    });
+    return copy;
   }
 }
