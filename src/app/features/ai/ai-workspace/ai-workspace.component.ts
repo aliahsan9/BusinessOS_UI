@@ -1,4 +1,13 @@
-import { ChangeDetectionStrategy, Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  OnDestroy,
+  OnInit,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AiChatService } from '../../../core/services/ai-chat.service';
@@ -25,6 +34,8 @@ interface AiWorkspaceMessage extends AiChatMessage {
   isStreaming?: boolean;
 }
 
+const TYPE_SPEED_MS = 18;
+
 @Component({
   selector: 'app-ai-workspace',
   standalone: true,
@@ -37,9 +48,13 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
   private readonly aiChat = inject(AiChatService);
   private readonly aiContext = inject(AiContextService);
 
+  private readonly messagesEl = viewChild<ElementRef<HTMLDivElement>>('messagesEl');
+  private readonly composerEl = viewChild<ElementRef<HTMLTextAreaElement>>('composerEl');
+
   readonly routes = ROUTES;
   readonly messages = signal<AiWorkspaceMessage[]>([]);
   readonly sessions = signal<AiConversationSession[]>([]);
+  readonly activeSessionId = signal<string | null>(null);
   readonly suggestions = signal<AiSuggestionDto[]>([
     { label: 'Revenue this month', message: 'What is our revenue this month?' },
     { label: 'Products sold', message: 'How many products sold this month?' },
@@ -47,6 +62,7 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
     { label: 'Top customers', message: 'Who are the top customers by revenue?' },
     { label: 'Focus today', message: 'What should I focus on today?' },
   ]);
+  private readonly defaultSuggestions = this.suggestions();
   readonly input = signal('');
 
   /** True while we are waiting on the network call (shows the "thinking" indicator). */
@@ -54,6 +70,7 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
   /** True while an assistant reply is being revealed character-by-character. */
   readonly streaming = signal(false);
   readonly sidebarOpen = signal(false);
+  readonly sessionsLoading = signal(false);
 
   readonly breadcrumbs = [
     { label: 'AI Copilot', route: ROUTES.ai.workspace },
@@ -75,14 +92,26 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
     this.sidebarOpen.update((open) => !open);
   }
 
+  /** Starts a brand-new conversation, clearing the transcript locally. */
+  newChat(): void {
+    this.clearStreamTimer();
+    this.activeSessionId.set(null);
+    this.messages.set([]);
+    this.input.set('');
+    this.suggestions.set(this.defaultSuggestions);
+    this.sidebarOpen.set(false);
+  }
+
   send(text?: string): void {
     const message = (text ?? this.input()).trim();
     if (!message || this.loading() || this.streaming()) return;
 
     this.input.set('');
+    this.resizeComposer();
     this.sidebarOpen.set(false);
     this.push('user', message);
     this.loading.set(true);
+    this.scrollToBottom();
 
     this.aiChat.chat(message).subscribe({
       next: (response) => this.applyResponse(response),
@@ -96,6 +125,7 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
   loadSession(sessionId: string): void {
     this.clearStreamTimer();
     this.aiChat.setSessionId(sessionId);
+    this.activeSessionId.set(sessionId);
     this.messages.set([]);
     this.sidebarOpen.set(false);
 
@@ -114,19 +144,51 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
           });
         }
         this.messages.set(msgs);
+        this.scrollToBottom();
       },
     });
   }
 
+  /** Grows/shrinks the composer textarea to fit its content, capped by CSS max-height. */
+  onComposerInput(value: string): void {
+    this.input.set(value);
+    this.resizeComposer();
+  }
+
+  onComposerKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      this.send();
+    }
+  }
+
+  private resizeComposer(): void {
+    const el = this.composerEl()?.nativeElement;
+    if (!el) return;
+    // Reset first so shrinking (e.g. after send) is measured correctly.
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  }
+
   private refreshSessions(): void {
+    this.sessionsLoading.set(true);
     this.aiChat.listConversations(30).subscribe({
-      next: (sessions) => this.sessions.set(sessions),
-      error: () => this.sessions.set([]),
+      next: (sessions) => {
+        this.sessions.set(sessions);
+        this.sessionsLoading.set(false);
+      },
+      error: () => {
+        this.sessions.set([]);
+        this.sessionsLoading.set(false);
+      },
     });
   }
 
   private applyResponse(response: AiChatResponse): void {
-    if (response.sessionId) this.aiChat.setSessionId(response.sessionId);
+    if (response.sessionId) {
+      this.aiChat.setSessionId(response.sessionId);
+      this.activeSessionId.set(response.sessionId);
+    }
     this.loading.set(false);
     this.pushStreamed(response.reply, response.citations, response.toolsUsed);
     this.suggestions.set(response.suggestions.length ? response.suggestions : this.suggestions());
@@ -138,6 +200,7 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
       ...m,
       { role, content, displayContent: content, timestamp: new Date() },
     ]);
+    this.scrollToBottom();
   }
 
   /**
@@ -166,6 +229,7 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
     };
     this.messages.update((m) => [...m, message]);
     const index = this.messages().length - 1;
+    this.scrollToBottom();
 
     const words = content.split(/(\s+)/); // keep whitespace tokens so spacing is preserved
     let cursor = 0;
@@ -180,16 +244,17 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
           i === index ? { ...msg, displayContent: partial, isStreaming: !done } : msg,
         ),
       );
+      this.scrollToBottom();
 
       if (!done) {
-        this.streamTimeoutId = setTimeout(revealNext, 18);
+        this.streamTimeoutId = setTimeout(revealNext, TYPE_SPEED_MS);
       } else {
         this.streaming.set(false);
         this.streamTimeoutId = null;
       }
     };
 
-    this.streamTimeoutId = setTimeout(revealNext, 18);
+    this.streamTimeoutId = setTimeout(revealNext, TYPE_SPEED_MS);
   }
 
   private clearStreamTimer(): void {
@@ -198,5 +263,19 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
       this.streamTimeoutId = null;
     }
     this.streaming.set(false);
+  }
+
+  /**
+   * Keeps the transcript pinned to the latest message. This is what lets
+   * `.messages` grow internally (with its own scrollbar) instead of the
+   * whole page stretching as the conversation gets longer.
+   */
+  private scrollToBottom(): void {
+    queueMicrotask(() => {
+      const el = this.messagesEl()?.nativeElement;
+      if (el) {
+        el.scrollTop = el.scrollHeight;
+      }
+    });
   }
 }

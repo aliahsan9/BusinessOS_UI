@@ -7,149 +7,187 @@
       <i class="bi bi-layout-sidebar-inset"></i>
       <span>Conversations</span>
     </button>
+    <button type="button" class="btn btn-primary btn-sm" (click)="newChat()">
+      <i class="bi bi-plus-lg"></i>
+      <span>New chat</span>
+    </button>
   </div>
 
-  <aside class="ai-workspace__sidebar" [class.ai-workspace__sidebar--open]="sidebarOpen()">
-    <div class="ai-workspace__sidebar-header d-lg-none">
-      <span class="fw-semibold">Menu</span>
-      <button type="button" class="btn-close" aria-label="Close" (click)="toggleSidebar()"></button>
-    </div>
-
-    <app-card title="Conversations">
-      <div class="d-flex align-items-center gap-2 mb-2 text-secondary">
-        <i class="bi bi-clock-history"></i>
-        <span class="small">Recent sessions</span>
+  <div class="ai-workspace__body">
+    <aside class="ai-workspace__sidebar" [class.ai-workspace__sidebar--open]="sidebarOpen()">
+      <div class="ai-workspace__sidebar-header d-lg-none">
+        <span class="fw-semibold">Menu</span>
+        <button type="button" class="btn-close" aria-label="Close" (click)="toggleSidebar()"></button>
       </div>
 
-      @if (sessions().length === 0) {
-        <p class="muted mb-0">
-          <i class="bi bi-chat-square-dots me-1"></i>
-          No saved conversations yet.
-        </p>
-      }
-      @for (session of sessions(); track session.id) {
-        <button type="button" class="session-item" (click)="loadSession(session.id)">
-          <i class="bi bi-chat-left-text session-item__icon"></i>
-          <span class="session-item__body">
-            <strong>{{ session.title }}</strong>
-            <small>{{ session.messageCount }} messages</small>
-          </span>
-        </button>
-      }
-    </app-card>
+      <button type="button" class="new-chat-btn d-none d-lg-flex" (click)="newChat()">
+        <i class="bi bi-plus-lg"></i>
+        New chat
+      </button>
 
-    <app-card title="Suggested questions">
-      @for (s of suggestions(); track s.label) {
-        <button type="button" class="suggestion" (click)="send(s.message)">
-          <i class="bi bi-stars suggestion__icon"></i>
-          {{ s.label }}
-        </button>
-      }
-    </app-card>
-
-    <a [routerLink]="routes.ai.diagnostics" class="diagnostics-link">
-      <i class="bi bi-activity"></i>
-      AI Diagnostics
-    </a>
-  </aside>
-
-  <!-- Backdrop for the mobile offcanvas sidebar -->
-  @if (sidebarOpen()) {
-    <div class="ai-workspace__backdrop d-lg-none" (click)="toggleSidebar()"></div>
-  }
-
-  <section class="ai-workspace__main">
-    <header class="ai-workspace__header">
-      <div class="ai-workspace__header-icon">
-        <i class="bi bi-cpu"></i>
-      </div>
-      <div>
-        <h1>AI Copilot Workspace</h1>
-        <p>Ask business questions, create records, and explore analytics with live tenant data.</p>
-      </div>
-    </header>
-
-    <div class="messages">
-      @if (messages().length === 0) {
-        <div class="empty-state">
-          <div class="empty-state__icon">
-            <i class="bi bi-stars"></i>
-          </div>
-          <h2>How can I help today?</h2>
-          <p>Try one of the suggested questions, or ask anything about your business data.</p>
+      <app-card title="Conversations">
+        <div class="d-flex align-items-center gap-2 mb-2 text-secondary">
+          <i class="bi bi-clock-history"></i>
+          <span class="small">Recent sessions</span>
         </div>
-      }
 
-      @for (msg of messages(); track $index) {
-        <div class="message" [class.message--user]="msg.role === 'user'">
-          <div class="avatar" [class.avatar--assistant]="msg.role === 'assistant'">
-            <i class="bi" [class.bi-person-fill]="msg.role === 'user'" [class.bi-cpu-fill]="msg.role === 'assistant'"></i>
-          </div>
-
-          <div class="message__content">
-            <div class="bubble">
-              <span>{{ msg.displayContent ?? msg.content }}</span>
-              @if (msg.isStreaming) {
-                <span class="caret" aria-hidden="true"></span>
+        <div class="session-list">
+          @if (sessionsLoading()) {
+            <div class="session-skeleton">
+              @for (i of [1, 2, 3]; track i) {
+                <div class="session-skeleton__row"></div>
               }
             </div>
+          } @else if (sessions().length === 0) {
+            <p class="muted mb-0">
+              <i class="bi bi-chat-square-dots me-1"></i>
+              No saved conversations yet.
+            </p>
+          } @else {
+            @for (session of sessions(); track session.id) {
+              <button
+                type="button"
+                class="session-item"
+                [class.session-item--active]="session.id === activeSessionId()"
+                (click)="loadSession(session.id)"
+              >
+                <i class="bi bi-chat-left-text session-item__icon"></i>
+                <span class="session-item__body">
+                  <strong>{{ session.title }}</strong>
+                  <small>{{ session.messageCount }} messages</small>
+                </span>
+              </button>
+            }
+          }
+        </div>
+      </app-card>
 
-            @if (msg.citations?.length) {
-              <div class="citations">
-                @for (c of msg.citations; track c.title) {
-                  <span class="citation-chip">
-                    <i class="bi bi-file-earmark-text"></i>
-                    {{ c.title }} <em>({{ c.documentType }})</em>
-                  </span>
+      <app-card title="Suggested questions">
+        @for (s of suggestions(); track s.label) {
+          <button type="button" class="suggestion" (click)="send(s.message)">
+            <i class="bi bi-stars suggestion__icon"></i>
+            {{ s.label }}
+          </button>
+        }
+      </app-card>
+
+      <a [routerLink]="routes.ai.diagnostics" class="diagnostics-link">
+        <i class="bi bi-activity"></i>
+        AI Diagnostics
+      </a>
+    </aside>
+
+    <!-- Backdrop for the mobile offcanvas sidebar -->
+    @if (sidebarOpen()) {
+      <div class="ai-workspace__backdrop d-lg-none" (click)="toggleSidebar()"></div>
+    }
+
+    <section class="ai-workspace__main">
+      <header class="ai-workspace__header">
+        <div class="ai-workspace__header-icon">
+          <i class="bi bi-cpu"></i>
+        </div>
+        <div class="ai-workspace__header-text">
+          <h1>AI Copilot Workspace</h1>
+          <p>Ask business questions, create records, and explore analytics with live tenant data.</p>
+        </div>
+        <button type="button" class="new-chat-btn new-chat-btn--compact d-none d-lg-inline-flex" (click)="newChat()">
+          <i class="bi bi-plus-lg"></i>
+          New chat
+        </button>
+      </header>
+
+      <div class="messages" #messagesEl>
+        @if (messages().length === 0) {
+          <div class="empty-state">
+            <div class="empty-state__icon">
+              <i class="bi bi-stars"></i>
+            </div>
+            <h2>How can I help today?</h2>
+            <p>Try one of the suggested questions, or ask anything about your business data.</p>
+          </div>
+        }
+
+        @for (msg of messages(); track $index) {
+          <div class="message" [class.message--user]="msg.role === 'user'">
+            <div class="avatar" [class.avatar--assistant]="msg.role === 'assistant'">
+              <i class="bi" [class.bi-person-fill]="msg.role === 'user'" [class.bi-cpu-fill]="msg.role === 'assistant'"></i>
+            </div>
+
+            <div class="message__content">
+              <div class="bubble">
+                <span>{{ msg.displayContent ?? msg.content }}</span>
+                @if (msg.isStreaming) {
+                  <span class="caret" aria-hidden="true"></span>
                 }
               </div>
-            }
-          </div>
-        </div>
-      }
 
-      @if (loading()) {
-        <div class="message">
-          <div class="avatar avatar--assistant">
-            <i class="bi bi-cpu-fill"></i>
-          </div>
-          <div class="message__content">
-            <div class="bubble bubble--thinking">
-              <span class="thinking-dots" aria-live="polite" aria-label="AI Copilot is thinking">
-                <span></span><span></span><span></span>
-              </span>
-              <span class="thinking-label">Running tools and retrieving business data…</span>
+              @if (msg.toolsUsed?.length) {
+                <div class="tool-chips">
+                  @for (t of msg.toolsUsed; track t) {
+                    <span class="tool-chip"><i class="bi bi-tools"></i>{{ t }}</span>
+                  }
+                </div>
+              }
+
+              @if (msg.citations?.length) {
+                <div class="citations">
+                  @for (c of msg.citations; track c.title) {
+                    <span class="citation-chip">
+                      <i class="bi bi-file-earmark-text"></i>
+                      {{ c.title }} <em>({{ c.documentType }})</em>
+                    </span>
+                  }
+                </div>
+              }
             </div>
           </div>
-        </div>
-      }
-    </div>
-
-    <footer class="composer">
-      <div class="composer__input-wrap">
-        <i class="bi bi-chat-dots composer__icon"></i>
-        <input
-          type="text"
-          placeholder="Ask about revenue, invoices, projects, customers…"
-          [ngModel]="input()"
-          (ngModelChange)="input.set($event)"
-          (keydown.enter)="send()"
-          [disabled]="loading()"
-        />
-      </div>
-      <button
-        type="button"
-        class="composer__send"
-        (click)="send()"
-        [disabled]="loading() || !input().trim()"
-      >
-        @if (loading()) {
-          <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-        } @else {
-          <i class="bi bi-send-fill"></i>
         }
-        <span class="d-none d-sm-inline">Send</span>
-      </button>
-    </footer>
-  </section>
+
+        @if (loading()) {
+          <div class="message">
+            <div class="avatar avatar--assistant">
+              <i class="bi bi-cpu-fill"></i>
+            </div>
+            <div class="message__content">
+              <div class="bubble bubble--thinking">
+                <span class="thinking-dots" aria-live="polite" aria-label="AI Copilot is thinking">
+                  <span></span><span></span><span></span>
+                </span>
+                <span class="thinking-label">Running tools and retrieving business data…</span>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      <footer class="composer">
+        <div class="composer__input-wrap">
+          <i class="bi bi-chat-dots composer__icon"></i>
+          <textarea
+            #composerEl
+            rows="1"
+            placeholder="Ask about revenue, invoices, projects, customers…"
+            [ngModel]="input()"
+            (ngModelChange)="onComposerInput($event)"
+            (keydown)="onComposerKeydown($event)"
+            [disabled]="loading()"
+          ></textarea>
+        </div>
+        <button
+          type="button"
+          class="composer__send"
+          (click)="send()"
+          [disabled]="loading() || !input().trim()"
+        >
+          @if (loading()) {
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+          } @else {
+            <i class="bi bi-send-fill"></i>
+          }
+          <span class="d-none d-sm-inline">Send</span>
+        </button>
+      </footer>
+    </section>
+  </div>
 </div>
