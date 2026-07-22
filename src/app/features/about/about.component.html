@@ -1,206 +1,186 @@
 <app-home-navbar></app-home-navbar>
-<section
-  id="about"
-  class="about-section"
->
+
+<section id="about" class="about-section">
   <div class="container">
 
-    <!-- Header -->
-
-    <div class="section-header">
-
-      <span class="section-badge">
-        About BusinessOS
-      </span>
-
-      <h2>
-        Built For Modern Businesses
-      </h2>
-
-      <p>
-        BusinessOS is a complete business management platform
-        designed to help organizations streamline operations,
-        automate workflows, improve visibility, and accelerate
-        growth from a single intelligent dashboard.
-      </p>
-
+    <!-- OS status bar -->
+    <div class="os-shell">
+      <div class="os-shell__lights">
+        <span></span><span></span><span></span>
+      </div>
+      <div class="os-shell__title">
+        <i class="bi bi-window-stack"></i>
+        BusinessOS — About
+      </div>
+      <div class="os-shell__meta">
+        <span class="os-shell__version">v2.4.1</span>
+        <span class="os-shell__clock">{{ clock }}</span>
+      </div>
     </div>
 
-    <!-- Main Content -->
+    <!-- Header -->
+    <div class="section-header">
+      <span class="section-badge">
+        <i class="bi bi-terminal-fill"></i>
+        System overview
+      </span>
 
-    <div class="row align-items-center g-5">
+      <h2>One operating system.<br class="d-none d-md-block" /> Every part of the business.</h2>
 
-      <!-- Left -->
+      <p>
+        BusinessOS is a complete business management platform designed to help
+        organizations streamline operations, automate workflows, improve
+        visibility, and accelerate growth from a single intelligent dashboard.
+      </p>
+    </div>
 
+    <!-- Main content -->
+    <div class="row align-items-stretch g-4 g-lg-5 intro-row">
+
+      <!-- Left: copy + running processes -->
       <div class="col-lg-6">
-
-        <div class="content-card">
-
-          <h3>
-            One Platform. Complete Control.
-          </h3>
+        <div class="content-card h-100">
+          <h3>One platform. Complete control.</h3>
 
           <p>
-            Running a business often requires multiple tools,
-            disconnected spreadsheets, and time-consuming
-            manual processes. BusinessOS eliminates that
-            complexity by bringing every critical business
+            Running a business often requires multiple tools, disconnected
+            spreadsheets, and time-consuming manual processes. BusinessOS
+            eliminates that complexity by bringing every critical business
             function into one centralized ecosystem.
           </p>
 
           <p>
-            From inventory management and customer tracking
-            to sales, finance, reporting, analytics, and
-            team collaboration, BusinessOS empowers
-            organizations to make faster and smarter decisions.
+            From inventory management and customer tracking to sales,
+            finance, reporting, and team collaboration, BusinessOS empowers
+            organizations to make faster, smarter decisions.
           </p>
 
-          <div class="features-grid">
-
-            <div class="feature-item">
-              ✓ Inventory Management
+          <div class="process-list" role="list" aria-label="BusinessOS modules, running">
+            <div class="process-row" role="listitem" *ngFor="let cap of capabilities">
+              <span class="process-row__icon"><i class="bi" [ngClass]="cap.icon"></i></span>
+              <span class="process-row__text">
+                <strong>{{ cap.name }}</strong>
+                <small>{{ cap.description }}</small>
+              </span>
+              <span class="process-row__status">
+                <i class="bi bi-play-circle-fill"></i>
+                Running
+              </span>
             </div>
-
-            <div class="feature-item">
-              ✓ Sales Automation
-            </div>
-
-            <div class="feature-item">
-              ✓ Customer CRM
-            </div>
-
-            <div class="feature-item">
-              ✓ Financial Tracking
-            </div>
-
-            <div class="feature-item">
-              ✓ Team Collaboration
-            </div>
-
-            <div class="feature-item">
-              ✓ Business Analytics
-            </div>
-
           </div>
-
         </div>
-
       </div>
 
-      <!-- Right -->
-
+      <!-- Right: interactive module switcher -->
       <div class="col-lg-6">
+        <div class="showcase-card h-100">
 
-        <div class="showcase-card">
+          <!-- Dock -->
+          <div class="os-dock" role="tablist" aria-label="Switch BusinessOS module preview">
+            <button
+              type="button"
+              class="os-dock__item"
+              *ngFor="let mod of modules"
+              [class.is-active]="mod.id === activeModuleId"
+              role="tab"
+              [attr.aria-selected]="mod.id === activeModuleId"
+              [attr.aria-controls]="'panel-' + mod.id"
+              (click)="setActiveModule(mod.id)"
+            >
+              <i class="bi" [ngClass]="mod.icon"></i>
+              <span>{{ mod.name }}</span>
+            </button>
+          </div>
 
-          <div class="dashboard-window">
-
+          <!-- Window -->
+          <div
+            class="dashboard-window"
+            [id]="'panel-' + activeModule.id"
+            role="tabpanel"
+          >
             <div class="window-header">
-              <span></span>
-              <span></span>
-              <span></span>
+              <span></span><span></span><span></span>
+              <span class="window-header__label">
+                <i class="bi" [ngClass]="activeModule.icon"></i>
+                {{ activeModule.name }}
+              </span>
             </div>
 
             <div class="dashboard-content">
+              <p class="dashboard-tagline">{{ activeModule.tagline }}</p>
 
-              <div class="metric-card">
-                <small>Revenue</small>
-                <h4>$128K</h4>
+              <div class="metric-grid">
+                <div class="metric-card" *ngFor="let metric of activeModule.metrics">
+                  <small>{{ metric.label }}</small>
+                  <h4>
+                    {{ metric.value }}
+                    <span class="metric-card__trend" *ngIf="metric.trend">{{ metric.trend }}</span>
+                  </h4>
+                </div>
               </div>
 
-              <div class="metric-card">
-                <small>Orders</small>
-                <h4>4,268</h4>
+              <div class="mini-table">
+                <div class="mini-table__row" *ngFor="let row of activeModule.rows">
+                  <div class="mini-table__primary">
+                    <strong>{{ row.primary }}</strong>
+                    <small>{{ row.secondary }}</small>
+                  </div>
+                  <span class="mini-table__status" [ngClass]="row.statusClass">{{ row.status }}</span>
+                </div>
               </div>
-
-              <div class="metric-card">
-                <small>Customers</small>
-                <h4>2,391</h4>
-              </div>
-
-              <div class="metric-card">
-                <small>Growth</small>
-                <h4>+24%</h4>
-              </div>
-
             </div>
-
           </div>
 
         </div>
-
       </div>
 
     </div>
 
     <!-- Stats -->
-
-    <div class="stats-wrapper">
-
-      <div
-        class="stat-card"
-        *ngFor="let stat of stats"
-      >
-        <h3>
-          {{ stat.value }}
-        </h3>
-
-        <p>
-          {{ stat.label }}
-        </p>
+    <div class="stats-wrapper" #statsWrapper>
+      <div class="stat-widget" *ngFor="let stat of stats; let i = index">
+        <div class="stat-widget__icon"><i class="bi" [ngClass]="stat.icon"></i></div>
+        <h3>{{ displayedStats[i] }}</h3>
+        <p>{{ stat.label }}</p>
       </div>
-
     </div>
 
-    <!-- Mission Vision -->
-
+    <!-- Mission / Vision -->
     <div class="row g-4 mission-section">
-
       <div class="col-lg-6">
-
-        <div class="mission-card">
-
-          <div class="icon">
+        <div class="terminal-panel">
+          <div class="terminal-panel__prompt">
+            <i class="bi bi-chevron-right"></i>
+            businessos --show mission
           </div>
-
-          <h4>
-            Our Mission
-          </h4>
-
+          <div class="terminal-panel__icon"><i class="bi bi-bullseye"></i></div>
+          <h4>Our mission</h4>
           <p>
-            To simplify business management by providing
-            a unified platform that empowers organizations
-            to operate efficiently, make data-driven decisions,
-            and scale confidently.
+            To simplify business management by providing a unified platform
+            that empowers organizations to operate efficiently, make
+            data-driven decisions, and scale confidently.
           </p>
-
         </div>
-
       </div>
 
       <div class="col-lg-6">
-
-        <div class="mission-card">
-
-          <div class="icon">
+        <div class="terminal-panel">
+          <div class="terminal-panel__prompt">
+            <i class="bi bi-chevron-right"></i>
+            businessos --show vision
           </div>
-
-          <h4>
-            Our Vision
-          </h4>
-
+          <div class="terminal-panel__icon"><i class="bi bi-rocket-takeoff-fill"></i></div>
+          <h4>Our vision</h4>
           <p>
-            To become the operating system for businesses
-            worldwide, enabling companies of every size to
-            achieve operational excellence and sustainable growth.
+            To become the operating system for businesses worldwide,
+            enabling companies of every size to achieve operational
+            excellence and sustainable growth.
           </p>
-
         </div>
-
       </div>
-
     </div>
 
   </div>
 </section>
+
 <app-footer></app-footer>
