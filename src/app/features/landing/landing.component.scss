@@ -1,190 +1,478 @@
-.landing-section {
-  position: relative;
-  padding: 120px 0;
-   background:
-    radial-gradient(
-      circle at top right,
-      rgba(7, 4, 56, 0.12),
-      transparent 35%
-    ),
-    radial-gradient(
-      circle at bottom left,
-      rgba(24, 4, 59, 0.12),
-      transparent 35%
-    ),
-    #070707;
-  overflow: hidden;
+// Fonts — for best performance, move these two lines into index.html
+// <link> tags instead of an SCSS @import. Left here so the component
+// works standalone.
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Mono:wght@500;600&family=Inter:wght@400;500;600&display=swap');
+
+:host {
+  display: block;
+
+  // ---- Design tokens ---------------------------------------------------
+  --bos-bg: #0a0d16;
+  --bos-bg-elevated: #10141f;
+  --bos-surface: rgba(255, 255, 255, 0.03);
+  --bos-border: rgba(255, 255, 255, 0.08);
+  --bos-border-strong: rgba(61, 220, 151, 0.35);
+
+  --bos-text-primary: #f2f4f8;
+  --bos-text-secondary: #8890a4;
+  --bos-text-muted: #565e72;
+
+  --bos-signal: #3ddc97;
+  --bos-signal-dim: rgba(61, 220, 151, 0.12);
+  --bos-alert: #ffb020;
+  --bos-alert-dim: rgba(255, 176, 32, 0.12);
+
+  --bos-font-display: 'Space Grotesk', 'Segoe UI', sans-serif;
+  --bos-font-body: 'Inter', 'Segoe UI', sans-serif;
+  --bos-font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
 }
 
-.section-header {
+.bos-section {
+  position: relative;
+  padding: 110px 0;
+  background:
+    linear-gradient(var(--bos-border) 1px, transparent 1px) 0 0 / 100% 64px,
+    radial-gradient(circle at 12% 8%, rgba(61, 220, 151, 0.08), transparent 40%),
+    radial-gradient(circle at 88% 82%, rgba(255, 176, 32, 0.06), transparent 40%),
+    var(--bos-bg);
+  background-blend-mode: normal, screen, screen, normal;
+  overflow: hidden;
+  font-family: var(--bos-font-body);
+}
+
+// ---- Status strip --------------------------------------------------------
+.bos-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  max-width: 980px;
+  margin: 0 auto 56px;
+  padding: 12px 20px;
+  border: 1px solid var(--bos-border);
+  border-radius: 12px;
+  background: var(--bos-bg-elevated);
+}
+
+.bos-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bos-chrome-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+
+  &--mint {
+    background: var(--bos-signal);
+  }
+
+  &--amber {
+    background: var(--bos-alert);
+  }
+
+  &--dim {
+    background: var(--bos-text-muted);
+  }
+}
+
+.bos-topbar-label {
+  font-family: var(--bos-font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  color: var(--bos-text-secondary);
+  margin-left: 4px;
+}
+
+.bos-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--bos-font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  color: var(--bos-signal);
+}
+
+.bos-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--bos-signal);
+  box-shadow: 0 0 0 0 rgba(61, 220, 151, 0.6);
+  animation: bos-pulse 2.4s ease-out infinite;
+}
+
+// ---- Header ---------------------------------------------------------------
+.bos-header {
   max-width: 850px;
   margin: auto;
 }
 
-.section-badge {
-  display: inline-block;
-  padding: 10px 18px;
-  border-radius: 50px;
-  margin-bottom: 20px;
-  background: rgba(255, 193, 7, 0.15);
-  border: 1px solid rgba(255, 193, 7, 0.25);
-  color: #ffc107;
-  font-weight: 600;
-  font-size: .9rem;
-}
-
-.section-title {
-  color: white;
-  font-size: clamp(2.2rem, 5vw, 4rem);
-  font-weight: 800;
-  margin-bottom: 24px;
+.bos-title {
+  font-family: var(--bos-font-display);
+  color: var(--bos-text-primary);
+  font-size: clamp(2.1rem, 4.6vw, 3.6rem);
+  font-weight: 700;
+  margin-bottom: 22px;
   line-height: 1.2;
+  letter-spacing: -0.01em;
 
   span {
-    color: #ffc107;
+    color: var(--bos-signal);
   }
 }
 
-.section-description {
-  color: #94a3b8;
-  font-size: 1.1rem;
+.bos-description {
+  color: var(--bos-text-secondary);
+  font-size: 1.08rem;
   line-height: 1.8;
 }
 
-.feature-card {
+// ---- Module cards (process-window chrome) ---------------------------------
+.bos-card {
   height: 100%;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 24px;
-  padding: 35px;
-  transition: .35s ease;
-  backdrop-filter: blur(20px);
+  border: 1px solid var(--bos-border);
+  border-radius: 16px;
+  background: var(--bos-surface);
+  backdrop-filter: blur(16px);
+  overflow: hidden;
+  transition: transform 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
+
+  opacity: 0;
+  transform: translateY(22px);
+
+  &.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
 
   &:hover {
-    transform: translateY(-10px);
-    border-color: rgba(255,193,7,.4);
-  }
-
-  h4 {
-    color: white;
-    margin: 20px 0;
-    font-weight: 700;
-  }
-
-  p {
-    color: #94a3b8;
-    line-height: 1.8;
-    margin-bottom: 0;
+    transform: translateY(-6px);
+    border-color: var(--bos-border-strong);
+    box-shadow: 0 24px 48px -28px rgba(61, 220, 151, 0.25);
   }
 }
 
-.feature-icon {
-  width: 70px;
-  height: 70px;
-  border-radius: 18px;
+.bos-card-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--bos-border);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.bos-card-process {
+  font-family: var(--bos-font-mono);
+  font-size: 0.76rem;
+  color: var(--bos-text-secondary);
+  letter-spacing: 0.02em;
+}
+
+.bos-card-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--bos-font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  color: var(--bos-signal);
+
+  &--amber {
+    color: var(--bos-alert);
+  }
+}
+
+.bos-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--bos-signal);
+  animation: bos-pulse-small 2.2s ease-out infinite;
+
+  &--amber {
+    background: var(--bos-alert);
+    animation-name: bos-pulse-small-amber;
+  }
+}
+
+.bos-card-body {
+  padding: 28px 28px 32px;
+}
+
+.bos-card-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-
-  background: linear-gradient(
-    135deg,
-    #ffc107,
-    #ff9800
-  );
+  margin-bottom: 20px;
+  background: var(--bos-signal-dim);
+  border: 1px solid rgba(61, 220, 151, 0.25);
 
   i {
-    color: #fff;
-    font-size: 1.8rem;
+    color: var(--bos-signal);
+    font-size: 1.5rem;
+  }
+
+  &--amber {
+    background: var(--bos-alert-dim);
+    border-color: rgba(255, 176, 32, 0.25);
+
+    i {
+      color: var(--bos-alert);
+    }
   }
 }
 
-.why-businessos {
-  margin-top: 120px;
+.bos-card h4 {
+  font-family: var(--bos-font-display);
+  color: var(--bos-text-primary);
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 12px;
 }
 
-.why-businessos h3 {
-  color: white;
-  font-size: 2.5rem;
-  font-weight: 800;
-  margin-bottom: 25px;
+.bos-card p {
+  color: var(--bos-text-secondary);
+  line-height: 1.75;
+  font-size: 0.95rem;
+  margin-bottom: 0;
 }
 
-.why-businessos p {
-  color: #94a3b8;
+// ---- Why BusinessOS ---------------------------------------------------------
+.bos-why {
+  margin-top: 130px;
+}
+
+.bos-eyebrow {
+  display: inline-block;
+  font-family: var(--bos-font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  color: var(--bos-signal);
+  margin-bottom: 16px;
+}
+
+.bos-why-content {
+  opacity: 0;
+  transform: translateY(22px);
+
+  &.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+}
+
+.bos-why h3 {
+  font-family: var(--bos-font-display);
+  color: var(--bos-text-primary);
+  font-size: 2.3rem;
+  font-weight: 700;
+  margin-bottom: 22px;
+  letter-spacing: -0.01em;
+}
+
+.bos-why p {
+  color: var(--bos-text-secondary);
   line-height: 1.9;
-  margin-bottom: 30px;
+  margin-bottom: 28px;
 }
 
-.benefits-list {
+.bos-benefits {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 13px;
 }
 
-.benefit-item {
-  color: white;
+.bos-benefit {
+  color: var(--bos-text-primary);
   font-weight: 500;
   display: flex;
   align-items: center;
   gap: 12px;
+  font-size: 0.98rem;
+}
 
-  i {
-    color: #ffc107;
+.bos-benefit-mark {
+  font-family: var(--bos-font-mono);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--bos-signal);
+  background: var(--bos-signal-dim);
+  border: 1px solid rgba(61, 220, 151, 0.3);
+  border-radius: 5px;
+  padding: 2px 6px;
+  flex-shrink: 0;
+}
+
+// ---- Taskbar / system monitor panel ------------------------------------------
+.bos-taskbar {
+  border: 1px solid var(--bos-border);
+  border-radius: 16px;
+  background: var(--bos-bg-elevated);
+  overflow: hidden;
+
+  opacity: 0;
+  transform: translateY(22px);
+
+  &.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.6s ease, transform 0.6s ease;
   }
 }
 
-.stats-wrapper {
+.bos-taskbar-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 22px;
+  border-bottom: 1px solid var(--bos-border);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.bos-taskbar-widgets {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 24px;
 }
 
-.stat-card {
-  padding: 35px;
-  border-radius: 24px;
-
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.08);
-
+.bos-widget {
+  padding: 32px 24px;
   text-align: center;
+  border-right: 1px solid var(--bos-border);
+  border-bottom: 1px solid var(--bos-border);
 
-  h2 {
-    color: #ffc107;
-    font-size: 3rem;
-    font-weight: 800;
-    margin-bottom: 10px;
+  &:nth-child(2n) {
+    border-right: none;
   }
 
-  span {
-    color: white;
-    font-weight: 500;
+  &:nth-last-child(-n + 2) {
+    border-bottom: none;
   }
 }
 
-@media (max-width: 991px) {
-  .why-businessos {
-    margin-top: 80px;
+.bos-widget-value {
+  display: block;
+  font-family: var(--bos-font-display);
+  color: var(--bos-signal);
+  font-size: 2.4rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
+}
+
+.bos-widget-label {
+  display: block;
+  font-family: var(--bos-font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--bos-text-secondary);
+}
+
+// ---- Motion -----------------------------------------------------------------
+@keyframes bos-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(61, 220, 151, 0.55);
+  }
+  100% {
+    box-shadow: 0 0 0 8px rgba(61, 220, 151, 0);
+  }
+}
+
+@keyframes bos-pulse-small {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@keyframes bos-pulse-small-amber {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bos-card,
+  .bos-why-content,
+  .bos-taskbar {
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
   }
 
-  .stats-wrapper {
-    margin-top: 40px;
+  .bos-status-dot,
+  .bos-dot {
+    animation: none !important;
+  }
+}
+
+// ---- Responsive ---------------------------------------------------------------
+@media (max-width: 991px) {
+  .bos-why {
+    margin-top: 90px;
+  }
+
+  .bos-taskbar {
+    margin-top: 8px;
+  }
+}
+
+@media (max-width: 767px) {
+  .bos-topbar {
+    justify-content: flex-start;
+  }
+
+  .bos-taskbar-widgets {
+    grid-template-columns: 1fr;
+  }
+
+  .bos-widget {
+    border-right: none;
+    border-bottom: 1px solid var(--bos-border);
+
+    &:nth-last-child(-n + 2) {
+      border-bottom: 1px solid var(--bos-border);
+    }
+
+    &:last-child {
+      border-bottom: none;
+    }
   }
 }
 
 @media (max-width: 576px) {
-  .landing-section {
-    padding: 80px 0;
+  .bos-section {
+    padding: 72px 0;
   }
 
-  .feature-card {
-    padding: 25px;
+  .bos-card-body {
+    padding: 24px 20px 28px;
   }
 
-  .stats-wrapper {
-    grid-template-columns: 1fr;
+  .bos-why h3 {
+    font-size: 1.85rem;
   }
 
-  .why-businessos h3 {
-    font-size: 2rem;
+  .bos-widget {
+    padding: 26px 20px;
   }
 }

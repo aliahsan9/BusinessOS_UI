@@ -1,18 +1,28 @@
-<section class="landing-section">
+<section class="bos-section">
   <div class="container">
 
-    <!-- Section Header -->
-    <div class="section-header text-center">
-      <span class="section-badge">
-        BUSINESS OPERATING SYSTEM
-      </span>
+    <!-- System status strip -->
+    <div class="bos-topbar">
+      <div class="bos-topbar-left">
+        <span class="bos-chrome-dot bos-chrome-dot--mint"></span>
+        <span class="bos-chrome-dot bos-chrome-dot--amber"></span>
+        <span class="bos-chrome-dot bos-chrome-dot--dim"></span>
+        <span class="bos-topbar-label">BUSINESS_OS // SYSTEM_OVERVIEW</span>
+      </div>
+      <div class="bos-topbar-right">
+        <span class="bos-status-dot"></span>
+        <span>OPERATIONAL</span>
+      </div>
+    </div>
 
-      <h2 class="section-title">
+    <!-- Section Header -->
+    <div class="bos-header text-center">
+      <h2 class="bos-title">
         Everything Your Business Needs,
         <span>In One Powerful Platform</span>
       </h2>
 
-      <p class="section-description">
+      <p class="bos-description">
         BusinessOS is an all-in-one business management platform designed
         to help startups, SMEs, retail stores, wholesalers, service
         providers, and enterprises streamline operations, improve
@@ -21,190 +31,215 @@
       </p>
     </div>
 
-    <!-- Main Features -->
+    <!-- Modules -->
     <div class="row g-4 mt-5">
 
       <div class="col-lg-4 col-md-6">
-        <div class="feature-card">
-          <div class="feature-icon">
-            <i class="bi bi-box-seam"></i>
+        <article class="bos-card" #revealEl data-reveal-delay="0">
+          <div class="bos-card-bar">
+            <span class="bos-card-process">inventory.sys</span>
+            <span class="bos-card-status">
+              <i class="bos-dot"></i>ACTIVE
+            </span>
           </div>
-
-          <h4>Inventory Management</h4>
-
-          <p>
-            Monitor stock levels, track product movements, manage SKUs,
-            automate low-stock alerts, and maintain accurate inventory
-            records across your business.
-          </p>
-        </div>
+          <div class="bos-card-body">
+            <div class="bos-card-icon">
+              <i class="bi bi-box-seam"></i>
+            </div>
+            <h4>Inventory Management</h4>
+            <p>
+              Monitor stock levels, track product movements, manage SKUs,
+              automate low-stock alerts, and maintain accurate inventory
+              records across your business.
+            </p>
+          </div>
+        </article>
       </div>
 
       <div class="col-lg-4 col-md-6">
-        <div class="feature-card">
-          <div class="feature-icon">
-            <i class="bi bi-cart-check"></i>
+        <article class="bos-card" #revealEl data-reveal-delay="60">
+          <div class="bos-card-bar">
+            <span class="bos-card-process">sales.sys</span>
+            <span class="bos-card-status">
+              <i class="bos-dot"></i>ACTIVE
+            </span>
           </div>
-
-          <h4>Sales & Orders</h4>
-
-          <p>
-            Create invoices, manage customer orders, monitor revenue,
-            track payments, and gain real-time insights into sales
-            performance.
-          </p>
-        </div>
+          <div class="bos-card-body">
+            <div class="bos-card-icon">
+              <i class="bi bi-cart-check"></i>
+            </div>
+            <h4>Sales &amp; Orders</h4>
+            <p>
+              Create invoices, manage customer orders, monitor revenue,
+              track payments, and gain real-time insights into sales
+              performance.
+            </p>
+          </div>
+        </article>
       </div>
 
       <div class="col-lg-4 col-md-6">
-        <div class="feature-card">
-          <div class="feature-icon">
-            <i class="bi bi-people"></i>
+        <article class="bos-card" #revealEl data-reveal-delay="120">
+          <div class="bos-card-bar">
+            <span class="bos-card-process">crm.sys</span>
+            <span class="bos-card-status">
+              <i class="bos-dot"></i>ACTIVE
+            </span>
           </div>
-
-          <h4>Customer Management</h4>
-
-          <p>
-            Build stronger customer relationships with centralized
-            customer profiles, purchase history, communication records,
-            and loyalty tracking.
-          </p>
-        </div>
+          <div class="bos-card-body">
+            <div class="bos-card-icon">
+              <i class="bi bi-people"></i>
+            </div>
+            <h4>Customer Management</h4>
+            <p>
+              Build stronger customer relationships with centralized
+              customer profiles, purchase history, communication records,
+              and loyalty tracking.
+            </p>
+          </div>
+        </article>
       </div>
 
       <div class="col-lg-4 col-md-6">
-        <div class="feature-card">
-          <div class="feature-icon">
-            <i class="bi bi-building"></i>
+        <article class="bos-card" #revealEl data-reveal-delay="180">
+          <div class="bos-card-bar">
+            <span class="bos-card-process">vendors.sys</span>
+            <span class="bos-card-status">
+              <i class="bos-dot"></i>ACTIVE
+            </span>
           </div>
-
-          <h4>Supplier Management</h4>
-
-          <p>
-            Organize supplier information, monitor purchase orders,
-            track deliveries, and maintain smooth procurement workflows.
-          </p>
-        </div>
+          <div class="bos-card-body">
+            <div class="bos-card-icon">
+              <i class="bi bi-building"></i>
+            </div>
+            <h4>Supplier Management</h4>
+            <p>
+              Organize supplier information, monitor purchase orders,
+              track deliveries, and maintain smooth procurement workflows.
+            </p>
+          </div>
+        </article>
       </div>
 
       <div class="col-lg-4 col-md-6">
-        <div class="feature-card">
-          <div class="feature-icon">
-            <i class="bi bi-bar-chart"></i>
+        <article class="bos-card" #revealEl data-reveal-delay="240">
+          <div class="bos-card-bar">
+            <span class="bos-card-process">analytics.sys</span>
+            <span class="bos-card-status">
+              <i class="bos-dot"></i>ACTIVE
+            </span>
           </div>
-
-          <h4>Reports & Analytics</h4>
-
-          <p>
-            Generate business reports, monitor KPIs, analyze trends,
-            and make data-driven decisions through interactive
-            dashboards.
-          </p>
-        </div>
+          <div class="bos-card-body">
+            <div class="bos-card-icon">
+              <i class="bi bi-bar-chart"></i>
+            </div>
+            <h4>Reports &amp; Analytics</h4>
+            <p>
+              Generate business reports, monitor KPIs, analyze trends,
+              and make data-driven decisions through interactive
+              dashboards.
+            </p>
+          </div>
+        </article>
       </div>
 
       <div class="col-lg-4 col-md-6">
-        <div class="feature-card">
-          <div class="feature-icon">
-            <i class="bi bi-shield-check"></i>
+        <article class="bos-card bos-card--secured" #revealEl data-reveal-delay="300">
+          <div class="bos-card-bar">
+            <span class="bos-card-process">security.sys</span>
+            <span class="bos-card-status bos-card-status--amber">
+              <i class="bos-dot bos-dot--amber"></i>SECURED
+            </span>
           </div>
-
-          <h4>Role-Based Security</h4>
-
-          <p>
-            Protect business data with advanced authentication,
-            permissions, role management, and secure access control.
-          </p>
-        </div>
+          <div class="bos-card-body">
+            <div class="bos-card-icon bos-card-icon--amber">
+              <i class="bi bi-shield-check"></i>
+            </div>
+            <h4>Role-Based Security</h4>
+            <p>
+              Protect business data with advanced authentication,
+              permissions, role management, and secure access control.
+            </p>
+          </div>
+        </article>
       </div>
 
     </div>
 
     <!-- Why BusinessOS -->
-    <div class="why-businessos">
-
-      <div class="row align-items-center">
+    <div class="bos-why">
+      <div class="row align-items-center g-5">
 
         <div class="col-lg-6">
+          <div class="bos-why-content" #revealEl data-reveal-delay="0">
+            <span class="bos-eyebrow">// why_businessos</span>
+            <h3>Built For Modern Businesses</h3>
 
-          <h3>
-            Built For Modern Businesses
-          </h3>
+            <p>
+              BusinessOS eliminates the need for multiple disconnected
+              tools by providing a centralized platform where businesses
+              can manage operations, inventory, sales, customers,
+              suppliers, reporting, and growth strategies from a
+              single dashboard.
+            </p>
 
-          <p>
-            BusinessOS eliminates the need for multiple disconnected
-            tools by providing a centralized platform where businesses
-            can manage operations, inventory, sales, customers,
-            suppliers, reporting, and growth strategies from a
-            single dashboard.
-          </p>
-
-          <div class="benefits-list">
-
-            <div class="benefit-item">
-              <i class="bi bi-check-circle-fill"></i>
-              Real-time business insights
-            </div>
-
-            <div class="benefit-item">
-              <i class="bi bi-check-circle-fill"></i>
-              Faster operational workflows
-            </div>
-
-            <div class="benefit-item">
-              <i class="bi bi-check-circle-fill"></i>
-              Reduced manual work
-            </div>
-
-            <div class="benefit-item">
-              <i class="bi bi-check-circle-fill"></i>
-              Scalable architecture
-            </div>
-
-            <div class="benefit-item">
-              <i class="bi bi-check-circle-fill"></i>
-              Enterprise-grade security
-            </div>
-
-            <div class="benefit-item">
-              <i class="bi bi-check-circle-fill"></i>
-              Cloud-ready infrastructure
-            </div>
-
+            <ul class="bos-benefits">
+              <li class="bos-benefit">
+                <span class="bos-benefit-mark">[OK]</span>
+                Real-time business insights
+              </li>
+              <li class="bos-benefit">
+                <span class="bos-benefit-mark">[OK]</span>
+                Faster operational workflows
+              </li>
+              <li class="bos-benefit">
+                <span class="bos-benefit-mark">[OK]</span>
+                Reduced manual work
+              </li>
+              <li class="bos-benefit">
+                <span class="bos-benefit-mark">[OK]</span>
+                Scalable architecture
+              </li>
+              <li class="bos-benefit">
+                <span class="bos-benefit-mark">[OK]</span>
+                Enterprise-grade security
+              </li>
+              <li class="bos-benefit">
+                <span class="bos-benefit-mark">[OK]</span>
+                Cloud-ready infrastructure
+              </li>
+            </ul>
           </div>
-
         </div>
 
         <div class="col-lg-6">
-
-          <div class="stats-wrapper">
-
-            <div class="stat-card">
-              <h2>100%</h2>
-              <span>Digital Operations</span>
+          <div class="bos-taskbar" #revealEl data-reveal-delay="120">
+            <div class="bos-taskbar-head">
+              <span class="bos-chrome-dot bos-chrome-dot--mint"></span>
+              <span class="bos-topbar-label">SYSTEM_MONITOR</span>
             </div>
-
-            <div class="stat-card">
-              <h2>24/7</h2>
-              <span>Business Monitoring</span>
+            <div class="bos-taskbar-widgets">
+              <div class="bos-widget">
+                <span class="bos-widget-value">100%</span>
+                <span class="bos-widget-label">Digital Operations</span>
+              </div>
+              <div class="bos-widget">
+                <span class="bos-widget-value">24/7</span>
+                <span class="bos-widget-label">Business Monitoring</span>
+              </div>
+              <div class="bos-widget">
+                <span class="bos-widget-value">50%</span>
+                <span class="bos-widget-label">Faster Processes</span>
+              </div>
+              <div class="bos-widget">
+                <span class="bos-widget-value">1</span>
+                <span class="bos-widget-label">Unified Platform</span>
+              </div>
             </div>
-
-            <div class="stat-card">
-              <h2>50%</h2>
-              <span>Faster Processes</span>
-            </div>
-
-            <div class="stat-card">
-              <h2>1</h2>
-              <span>Unified Platform</span>
-            </div>
-
           </div>
-
         </div>
 
       </div>
-
     </div>
 
   </div>
