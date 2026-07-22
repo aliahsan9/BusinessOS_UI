@@ -190,8 +190,12 @@
 }
 
 // ---------------------------------------------------------------------
-// Ledger panel (signature element)
+// Ledger panel (signature element) — now tilts toward the cursor
 // ---------------------------------------------------------------------
+
+.hero__visual {
+  perspective: 1200px;
+}
 
 .ledger-panel {
   background: var(--surface);
@@ -199,6 +203,13 @@
   border-radius: 14px;
   overflow: hidden;
   box-shadow: 0 40px 80px -30px rgba(0, 0, 0, 0.65);
+  transform-style: preserve-3d;
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+  will-change: transform;
+
+  &:hover {
+    box-shadow: 0 48px 90px -28px rgba(242, 169, 59, 0.22);
+  }
 }
 
 .ledger-panel__header {
@@ -254,6 +265,10 @@
   animation: ledger-scroll 18s linear infinite;
 }
 
+.ledger-panel:hover .ledger-track {
+  animation-play-state: paused;
+}
+
 @keyframes ledger-scroll {
   from { transform: translateY(0); }
   to { transform: translateY(-50%); }
@@ -267,6 +282,11 @@
   padding: 0.85rem 1.25rem;
   border-bottom: 1px solid var(--border);
   font-size: 0.85rem;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.03);
+  }
 }
 
 .ledger-row__time {
@@ -323,7 +343,7 @@
 }
 
 // ---------------------------------------------------------------------
-// Modules
+// Modules — interactive: click/keyboard to expand a live metric line
 // ---------------------------------------------------------------------
 
 .modules {
@@ -361,7 +381,17 @@
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 1.75rem;
-  transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease;
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+
+  opacity: 0;
+  transform: translateY(18px);
+
+  &.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.55s ease, transform 0.55s ease;
+  }
 
   h3 {
     font-family: var(--font-display);
@@ -381,6 +411,17 @@
     border-color: var(--border-strong);
     background: var(--surface-2);
     transform: translateY(-3px);
+  }
+
+  &.is-active {
+    border-color: var(--amber);
+    background: var(--surface-2);
+    box-shadow: 0 20px 44px -26px rgba(242, 169, 59, 0.4);
+
+    .module-card__icon {
+      background: var(--amber);
+      color: #17140b;
+    }
   }
 }
 
@@ -407,6 +448,7 @@
   background: var(--amber-dim);
   color: var(--amber);
   font-size: 1.15rem;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
 .module-card__tag {
@@ -420,6 +462,32 @@
   padding: 0.2rem 0.5rem;
 }
 
+.module-card__expand {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 0.3s ease, opacity 0.25s ease, margin-top 0.3s ease;
+  margin-top: 0;
+}
+
+.module-card.is-active .module-card__expand {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  margin-top: 0.9rem;
+}
+
+.module-card__metric {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--amber);
+  padding-top: 0.9rem;
+  border-top: 1px solid rgba(242, 169, 59, 0.2);
+}
+
 // ---------------------------------------------------------------------
 // Motion & accessibility
 // ---------------------------------------------------------------------
@@ -427,7 +495,11 @@
 @media (prefers-reduced-motion: reduce) {
   .ledger-track { animation: none; }
   .pulse-dot { animation: none; }
-  .btn-cta, .btn-ghost, .module-card { transition: none; }
+  .btn-cta, .btn-ghost, .module-card, .ledger-panel { transition: none; }
+  .module-card {
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }
 
 *:focus-visible {

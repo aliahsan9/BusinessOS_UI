@@ -4,14 +4,16 @@ import {
   Component,
   ElementRef,
   OnDestroy,
+  QueryList,
   ViewChild,
+  ViewChildren,
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { TestimonialsComponent } from '../testimonials/testimonials.component';
-import { FooterComponent } from '../footer/footer.component'; 
+import { FooterComponent } from '../footer/footer.component';
 import { LandingComponent } from '../landing/landing.component';
 
 interface LedgerEvent {
@@ -20,6 +22,15 @@ interface LedgerEvent {
   amount: string;
   icon: string;
   trend: 'up' | 'down' | 'neutral';
+}
+
+interface ModuleItem {
+  id: string;
+  icon: string;
+  title: string;
+  description: string;
+  metric: string;
+  tag?: string;
 }
 
 @Component({
@@ -32,6 +43,8 @@ interface LedgerEvent {
 })
 export class HomeComponent implements AfterViewInit, OnDestroy {
   @ViewChild('statsRef') statsRef?: ElementRef<HTMLElement>;
+  @ViewChild('ledgerPanel') ledgerPanel?: ElementRef<HTMLElement>;
+  @ViewChildren('revealEl') private revealEls!: QueryList<ElementRef<HTMLElement>>;
 
   // Target values for the hero stats. Kept as plain numbers so the
   // count-up animation can format them for display.
@@ -45,6 +58,10 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
 
   private statsAnimated = false;
   private statsObserver?: IntersectionObserver;
+  private cardsObserver?: IntersectionObserver;
+  private readonly prefersReducedMotion =
+    typeof window !== 'undefined' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   readonly ledgerEvents: LedgerEvent[] = [
     { time: '09:41', desc: 'Invoice #1042 paid — Horizon Coffee', amount: '+$2,400', icon: 'bi-receipt', trend: 'up' },
@@ -62,7 +79,93 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     return [...this.ledgerEvents, ...this.ledgerEvents];
   }
 
+  readonly modules: ModuleItem[] = [
+    {
+      id: 'analytics',
+      icon: 'bi-graph-up-arrow',
+      tag: 'Core',
+      title: 'Analytics',
+      description: 'Revenue, orders, and customer trends in one live view — updated as the business moves, not at month-end.',
+      metric: 'Dashboards refresh in real time, no exports needed',
+    },
+    {
+      id: 'inventory',
+      icon: 'bi-boxes',
+      title: 'Inventory',
+      description: 'Stock levels, reorder points, and supplier records that stay in sync with every sale.',
+      metric: 'Low-stock alerts fire the moment a sale clears',
+    },
+    {
+      id: 'customers',
+      icon: 'bi-people',
+      title: 'Customers',
+      description: 'A shared record of every account, conversation, and order history — no separate CRM to maintain.',
+      metric: 'One profile, every order and message attached',
+    },
+    {
+      id: 'finance',
+      icon: 'bi-cash-stack',
+      title: 'Finance',
+      description: 'Invoices, expenses, and cash flow tracked against real orders, not spreadsheets you rebuild weekly.',
+      metric: 'Cash flow tied directly to live order data',
+    },
+    {
+      id: 'employees',
+      icon: 'bi-person-badge',
+      title: 'Employees',
+      description: 'Roles, shifts, and permissions, so the right person sees the right module — and nothing else.',
+      metric: 'Granular, role-based access per module',
+    },
+    {
+      id: 'projects',
+      icon: 'bi-kanban',
+      title: 'Projects',
+      description: 'Tasks and timelines tied to the customers and invoices they belong to.',
+      metric: 'Every task linked back to its invoice',
+    },
+  ];
+
+  activeModule = signal<string>('analytics');
+  tiltStyle = signal<string>('');
+
+  selectModule(id: string): void {
+    this.activeModule.set(this.activeModule() === id ? '' : id);
+  }
+
+  onPanelMouseMove(event: MouseEvent): void {
+    if (this.prefersReducedMotion || !this.ledgerPanel) {
+      return;
+    }
+
+    const rect = this.ledgerPanel.nativeElement.getBoundingClientRect();
+    const x = (event.clientX - rect.left) / rect.width - 0.5;
+    const y = (event.clientY - rect.top) / rect.height - 0.5;
+
+    const rotateY = x * 8;
+    const rotateX = y * -8;
+
+    this.tiltStyle.set(
+      `transform: perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.01, 1.01, 1.01);`
+    );
+  }
+
+  resetTilt(): void {
+    this.tiltStyle.set(
+      'transform: perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1);'
+    );
+  }
+
   ngAfterViewInit(): void {
+    this.setUpStatsObserver();
+    this.setUpCardsReveal();
+  }
+
+  ngOnDestroy(): void {
+    this.statsObserver?.disconnect();
+    this.cardsObserver?.disconnect();
+  }
+
+  private setUpStatsObserver(): void {
     if (!this.statsRef || this.statsAnimated) {
       return;
     }
@@ -82,16 +185,36 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     this.statsObserver.observe(this.statsRef.nativeElement);
   }
 
-  ngOnDestroy(): void {
-    this.statsObserver?.disconnect();
+  private setUpCardsReveal(): void {
+    if (!this.revealEls) {
+      return;
+    }
+
+    if (this.prefersReducedMotion) {
+      this.revealEls.forEach((el) => el.nativeElement.classList.add('is-visible'));
+      return;
+    }
+
+    this.cardsObserver = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) {
+            continue;
+          }
+          const el = entry.target as HTMLElement;
+          const delay = Number(el.dataset['revealDelay'] ?? 0);
+          setTimeout(() => el.classList.add('is-visible'), delay);
+          this.cardsObserver?.unobserve(el);
+        }
+      },
+      { threshold: 0.15, rootMargin: '0px 0px -60px 0px' }
+    );
+
+    this.revealEls.forEach((el) => this.cardsObserver?.observe(el.nativeElement));
   }
 
   private animateStats(): void {
-    const prefersReducedMotion = window.matchMedia(
-      '(prefers-reduced-motion: reduce)'
-    ).matches;
-
-    if (prefersReducedMotion) {
+    if (this.prefersReducedMotion) {
       this.displayedBusinesses.set(this.formatCompact(this.businessesTarget));
       this.displayedUsers.set(this.formatCompact(this.usersTarget));
       this.displayedUptime.set(this.uptimeTarget.toFixed(1));

@@ -51,7 +51,13 @@
       </div>
 
       <div class="hero__visual">
-        <div class="ledger-panel">
+        <div
+          class="ledger-panel"
+          #ledgerPanel
+          [attr.style]="tiltStyle()"
+          (mousemove)="onPanelMouseMove($event)"
+          (mouseleave)="resetTilt()"
+        >
           <div class="ledger-panel__header">
             <div class="ledger-panel__dots">
               <span class="dot dot--red"></span>
@@ -100,58 +106,38 @@
     <div class="section-head">
       <span class="eyebrow">Modules</span>
       <h2>Everything your business runs on</h2>
-      <p>Six connected modules. No exports, no re-keying data, no gaps between teams.</p>
+      <p>Six connected modules. No exports, no re-keying data, no gaps between teams. Tap a module to see what it tracks.</p>
     </div>
 
     <div class="modules__grid">
 
-      <article class="module-card module-card--featured">
+      <article
+        *ngFor="let m of modules; let i = index"
+        class="module-card"
+        [class.module-card--featured]="m.id === 'analytics'"
+        [class.is-active]="activeModule() === m.id"
+        role="button"
+        tabindex="0"
+        [attr.aria-expanded]="activeModule() === m.id"
+        #revealEl
+        [attr.data-reveal-delay]="i * 60"
+        (click)="selectModule(m.id)"
+        (keydown.enter)="selectModule(m.id)"
+        (keydown.space)="selectModule(m.id); $event.preventDefault()"
+      >
         <div class="module-card__top">
-          <span class="module-card__icon"><i class="bi bi-graph-up-arrow"></i></span>
-          <span class="module-card__tag">Core</span>
+          <span class="module-card__icon"><i class="bi" [ngClass]="m.icon"></i></span>
+          <span class="module-card__tag" *ngIf="m.tag">{{ m.tag }}</span>
         </div>
-        <h3>Analytics</h3>
-        <p>Revenue, orders, and customer trends in one live view — updated as the business moves, not at month-end.</p>
-      </article>
+        <h3>{{ m.title }}</h3>
+        <p>{{ m.description }}</p>
 
-      <article class="module-card">
-        <div class="module-card__top">
-          <span class="module-card__icon"><i class="bi bi-boxes"></i></span>
+        <div class="module-card__expand">
+          <span class="module-card__metric">
+            <i class="bi bi-lightning-charge-fill"></i>
+            {{ m.metric }}
+          </span>
         </div>
-        <h3>Inventory</h3>
-        <p>Stock levels, reorder points, and supplier records that stay in sync with every sale.</p>
-      </article>
-
-      <article class="module-card">
-        <div class="module-card__top">
-          <span class="module-card__icon"><i class="bi bi-people"></i></span>
-        </div>
-        <h3>Customers</h3>
-        <p>A shared record of every account, conversation, and order history — no separate CRM to maintain.</p>
-      </article>
-
-      <article class="module-card">
-        <div class="module-card__top">
-          <span class="module-card__icon"><i class="bi bi-cash-stack"></i></span>
-        </div>
-        <h3>Finance</h3>
-        <p>Invoices, expenses, and cash flow tracked against real orders, not spreadsheets you rebuild weekly.</p>
-      </article>
-
-      <article class="module-card">
-        <div class="module-card__top">
-          <span class="module-card__icon"><i class="bi bi-person-badge"></i></span>
-        </div>
-        <h3>Employees</h3>
-        <p>Roles, shifts, and permissions, so the right person sees the right module — and nothing else.</p>
-      </article>
-
-      <article class="module-card">
-        <div class="module-card__top">
-          <span class="module-card__icon"><i class="bi bi-kanban"></i></span>
-        </div>
-        <h3>Projects</h3>
-        <p>Tasks and timelines tied to the customers and invoices they belong to.</p>
       </article>
 
     </div>
