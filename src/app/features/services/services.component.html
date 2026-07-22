@@ -1,121 +1,89 @@
 <app-home-navbar></app-home-navbar>
-<section class="services-section">
+
+<section class="services-hero">
   <div class="container">
-
-    <div class="section-header text-center">
-      <span class="section-badge">What I Offer</span>
-
-      <h2 class="section-title">
-        Professional Software Development Services
-      </h2>
-
-      <p class="section-description">
-        I help businesses transform ideas into scalable, secure, and
-        high-performance digital products using modern technologies and
-        industry best practices.
-      </p>
+    <div class="terminal-badge">
+      <span class="terminal-dot terminal-dot--red"></span>
+      <span class="terminal-dot terminal-dot--amber"></span>
+      <span class="terminal-dot terminal-dot--cyan"></span>
+      <span class="terminal-cmd">$ {{ typedCommand() }}<span class="terminal-cursor"></span></span>
     </div>
 
-    <div class="row g-4">
+    <h1 class="hero-title">
+      Professional Software Development Services
+    </h1>
 
-      <!-- Service 1 -->
-      <div class="col-lg-4 col-md-6">
-        <div class="service-card h-100">
-          <div class="service-icon">
-            <i class="bi bi-window-stack"></i>
-          </div>
+    <p class="hero-description">
+      I help businesses turn ideas into scalable, secure, high-performance
+      digital products &mdash; built on modern technologies and practices
+      that hold up after launch.
+    </p>
 
-          <h4>Web Application Development</h4>
-
-          <p>
-            Modern, responsive, and scalable web applications using
-            Angular, .NET Core, SQL Server, and cloud technologies.
-          </p>
-        </div>
-      </div>
-
-      <!-- Service 2 -->
-      <div class="col-lg-4 col-md-6">
-        <div class="service-card h-100">
-          <div class="service-icon">
-            <i class="bi bi-diagram-3"></i>
-          </div>
-
-          <h4>Enterprise Solutions</h4>
-
-          <p>
-            Business systems, dashboards, ERP modules, and custom software
-            tailored to organizational workflows.
-          </p>
-        </div>
-      </div>
-
-      <!-- Service 3 -->
-      <div class="col-lg-4 col-md-6">
-        <div class="service-card h-100">
-          <div class="service-icon">
-            <i class="bi bi-cloud-check"></i>
-          </div>
-
-          <h4>API Development</h4>
-
-          <p>
-            Secure REST APIs, authentication, authorization, and seamless
-            integrations with third-party services.
-          </p>
-        </div>
-      </div>
-
-      <!-- Service 4 -->
-      <div class="col-lg-4 col-md-6">
-        <div class="service-card h-100">
-          <div class="service-icon">
-            <i class="bi bi-cpu"></i>
-          </div>
-
-          <h4>AI & RAG Solutions</h4>
-
-          <p>
-            Intelligent applications powered by AI, semantic search,
-            embeddings, vector databases, and RAG pipelines.
-          </p>
-        </div>
-      </div>
-
-      <!-- Service 5 -->
-      <div class="col-lg-4 col-md-6">
-        <div class="service-card h-100">
-          <div class="service-icon">
-            <i class="bi bi-phone"></i>
-          </div>
-
-          <h4>Responsive UI Development</h4>
-
-          <p>
-            Fast, accessible, SEO-friendly interfaces designed for all
-            devices and screen sizes.
-          </p>
-        </div>
-      </div>
-
-      <!-- Service 6 -->
-      <div class="col-lg-4 col-md-6">
-        <div class="service-card h-100">
-          <div class="service-icon">
-            <i class="bi bi-shield-check"></i>
-          </div>
-
-          <h4>Software Architecture</h4>
-
-          <p>
-            Clean Architecture, Modular Monoliths, Domain-Driven Design,
-            and maintainable enterprise-grade systems.
-          </p>
-        </div>
-      </div>
-
+    <div class="filter-bar" role="tablist" aria-label="Filter services by category">
+      <button
+        type="button"
+        class="filter-chip"
+        *ngFor="let category of categories()"
+        [class.active]="activeCategory() === category"
+        (click)="setCategory(category)"
+        role="tab"
+        [attr.aria-selected]="activeCategory() === category">
+        {{ category }}
+      </button>
     </div>
-
   </div>
 </section>
+
+<section class="services-grid-section">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-lg-4 col-md-6" *ngFor="let service of filteredServices(); trackBy: trackById">
+        <article class="service-card" [class.is-expanded]="isExpanded(service.id)">
+
+          <div class="service-card__top">
+            <span class="service-card__tag">{{ service.category }}</span>
+            <span class="service-card__icon">
+              <i [class]="service.icon"></i>
+            </span>
+          </div>
+
+          <h3 class="service-card__title">{{ service.title }}</h3>
+          <p class="service-card__tagline">{{ service.tagline }}</p>
+          <p class="service-card__description">{{ service.description }}</p>
+
+          <button
+            type="button"
+            class="service-card__toggle"
+            (click)="toggleExpand(service.id)"
+            [attr.aria-expanded]="isExpanded(service.id)"
+            [attr.aria-controls]="service.id + '-stack'">
+            <span>{{ isExpanded(service.id) ? 'Hide stack' : 'View stack' }}</span>
+            <i class="bi" [class.bi-chevron-down]="!isExpanded(service.id)" [class.bi-chevron-up]="isExpanded(service.id)"></i>
+          </button>
+
+          <div class="service-card__stack" [id]="service.id + '-stack'" *ngIf="isExpanded(service.id)">
+            <span class="stack-chip" *ngFor="let tech of service.stack">{{ tech }}</span>
+          </div>
+
+        </article>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-band">
+  <div class="container text-center">
+    <span class="cta-band__eyebrow">Let&rsquo;s build it</span>
+    <h2 class="cta-band__title">Have a project in mind?</h2>
+    <p class="cta-band__description">
+      Tell me what you&rsquo;re trying to build, and I&rsquo;ll help you figure out
+      the right way to build it.
+    </p>
+    <a routerLink="/contact" class="cta-band__button">
+      Start a conversation
+      <i class="bi bi-arrow-right"></i>
+    </a>
+  </div>
+</section>
+
 <app-footer></app-footer>
