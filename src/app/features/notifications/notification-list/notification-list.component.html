@@ -4,12 +4,15 @@
 
 @if (error()) {
   <app-alert variant="danger" [message]="error()!" [dismissible]="false" />
-  <div class="mb-3"><app-button label="Retry" [variant]="ButtonVariant.Outline" (clicked)="retry()" /></div>
+  <div class="mb-3">
+    <app-button label="Retry" [variant]="ButtonVariant.Outline" (clicked)="retry()" />
+  </div>
 }
 
 <div class="toolbar">
   <label class="checkbox-label">
     <input type="checkbox" [ngModel]="unreadOnly()" (ngModelChange)="unreadOnly.set($event); onFilterChange()" />
+    <i class="bi bi-envelope" aria-hidden="true"></i>
     Unread only
   </label>
   <app-button label="Mark All Read" [variant]="ButtonVariant.Outline" (clicked)="markAllRead()" />
@@ -22,25 +25,43 @@
     }
   </div>
 } @else if (items().length === 0) {
-  <app-empty-state icon="🔔" title="No notifications" description="You're all caught up." />
+  <app-empty-state icon="bi-bell-slash" title="No notifications" description="You're all caught up." />
 } @else {
   <div class="notification-list">
     @for (item of items(); track item.id) {
       <article class="notification-item" [class.notification-item--unread]="!item.isRead">
-        <div class="notification-item__header">
-          <strong>{{ item.title }}</strong>
-          @if (!item.isRead) {
-            <app-badge label="Unread" variant="primary" />
-          }
-        </div>
-        <p>{{ item.message }}</p>
-        <div class="notification-item__meta">
-          <span>{{ item.type }}</span>
-          <span>{{ item.createdAt | date: 'medium' }}</span>
-          @if (!item.isRead) {
-            <button type="button" class="link-primary" (click)="markRead(item)">Mark read</button>
-          }
-          <button type="button" class="link-danger" (click)="deleteItem(item)">Delete</button>
+        <span class="notification-item__icon" [class.notification-item__icon--unread]="!item.isRead" aria-hidden="true">
+          <i class="bi" [class]="typeIcon(item.type)"></i>
+        </span>
+
+        <div class="notification-item__body">
+          <div class="notification-item__header">
+            <strong>{{ item.title }}</strong>
+            @if (!item.isRead) {
+              <app-badge label="Unread" variant="primary" />
+            }
+          </div>
+          <p>{{ item.message }}</p>
+          <div class="notification-item__meta">
+            <span class="notification-item__type">
+              <i class="bi bi-tag" aria-hidden="true"></i>
+              {{ item.type }}
+            </span>
+            <span>
+              <i class="bi bi-clock" aria-hidden="true"></i>
+              {{ item.createdAt | date: 'medium' }}
+            </span>
+            @if (!item.isRead) {
+              <button type="button" class="link-primary" (click)="markRead(item)">
+                <i class="bi bi-check2" aria-hidden="true"></i>
+                Mark read
+              </button>
+            }
+            <button type="button" class="link-danger" (click)="deleteItem(item)">
+              <i class="bi bi-trash3" aria-hidden="true"></i>
+              Delete
+            </button>
+          </div>
         </div>
       </article>
     }

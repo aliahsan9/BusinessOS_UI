@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { RouterLink, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { NotificationCenterService } from '../../../core/services/notification-center.service';
@@ -20,7 +20,7 @@ import { AppAlertComponent } from '../../../shared/components/app-alert/app-aler
   selector: 'app-notification-list',
   standalone: true,
   imports: [
-    RouterLink,
+    RouterModule,
     FormsModule,
     DatePipe,
     AppBreadcrumbComponent,
@@ -51,7 +51,20 @@ export class NotificationListComponent implements OnInit {
   readonly unreadOnly = signal(false);
   readonly routes = ROUTES;
   readonly breadcrumbs = [{ label: 'Notifications', route: ROUTES.notifications.list }];
-  readonly headerActions = [{ label: 'Settings', route: ROUTES.notifications.settings, icon: '⚙️' }];
+  readonly headerActions = [{ label: 'Settings', route: ROUTES.notifications.settings, icon: 'bi-gear' }];
+
+  /** Maps a notification type to a Bootstrap Icon class, with a sensible default for unmapped types. */
+  private readonly typeIconMap: Record<string, string> = {
+    Info: 'bi-info-circle',
+    Success: 'bi-check-circle',
+    Warning: 'bi-exclamation-triangle',
+    Error: 'bi-x-circle',
+    System: 'bi-gear',
+    Task: 'bi-list-check',
+    Invoice: 'bi-receipt',
+    Project: 'bi-kanban',
+    Customer: 'bi-person',
+  };
 
   ngOnInit(): void {
     this.load();
@@ -118,5 +131,10 @@ export class NotificationListComponent implements OnInit {
 
   retry(): void {
     this.load();
+  }
+
+  /** Bootstrap Icon class for a given notification type, with a sensible default for unmapped types. */
+  typeIcon(type: string): string {
+    return this.typeIconMap[type] ?? 'bi-bell';
   }
 }
