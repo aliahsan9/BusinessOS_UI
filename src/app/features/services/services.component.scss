@@ -1,23 +1,23 @@
 // ---------------------------------------------------------------------------
 // Design tokens — "blueprint / terminal" system
 // ---------------------------------------------------------------------------
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 :host {
-  --bp-bg: #0a0e1a;
-  --bp-panel: #0f1729;
-  --bp-panel-alt: #131c33;
-  --bp-grid-line: rgba(94, 168, 255, 0.06);
-  --bp-ink: #e8edf7;
-  --bp-muted: #8a96af;
-  --bp-cyan: #4fd8c4;
-  --bp-cyan-soft: rgba(79, 216, 196, 0.14);
-  --bp-amber: #f5a94e;
-  --bp-red: #f2545b;
-  --bp-border: rgba(79, 216, 196, 0.18);
+  --bp-bg: #0a0d12;
+  --bp-panel: #10141c;
+  --bp-panel-alt: #151a24;
+  --bp-grid-line: rgba(23, 217, 180, 0.06);
+  --bp-ink: #eef1f6;
+  --bp-muted: #8a93a6;
+  --bp-cyan: #17d9b4;
+  --bp-cyan-soft: rgba(23, 217, 180, 0.14);
+  --bp-amber: #ffb238;
+  --bp-red: #ff5d5d;
+  --bp-border: rgba(23, 217, 180, 0.18);
   --bp-radius: 18px;
-  --font-display: 'Space Grotesk', 'Segoe UI', sans-serif;
-  --font-body: 'Inter', 'Segoe UI', sans-serif;
+  --font-display: 'Plus Jakarta Sans', 'Segoe UI', sans-serif;
+  --font-body: 'Plus Jakarta Sans', 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
 
   display: block;
@@ -51,7 +51,7 @@
     right: -10%;
     width: 620px;
     height: 620px;
-    background: radial-gradient(circle, rgba(79, 216, 196, 0.14), transparent 65%);
+    background: radial-gradient(circle, rgba(23, 217, 180, 0.14), transparent 65%);
     pointer-events: none;
   }
 
@@ -62,7 +62,7 @@
     left: -10%;
     width: 520px;
     height: 520px;
-    background: radial-gradient(circle, rgba(245, 169, 78, 0.1), transparent 65%);
+    background: radial-gradient(circle, rgba(255, 178, 56, 0.1), transparent 65%);
     pointer-events: none;
   }
 
@@ -359,7 +359,7 @@
   padding: 14px 30px;
   border-radius: 999px;
   background: var(--bp-cyan);
-  color: #06131a;
+  color: #071310;
   font-family: var(--font-body);
   font-weight: 600;
   text-decoration: none;
@@ -369,8 +369,8 @@
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 16px 32px rgba(79, 216, 196, 0.25);
-    color: #06131a;
+    box-shadow: 0 16px 32px rgba(23, 217, 180, 0.25);
+    color: #071310;
 
     i { transform: translateX(3px); }
   }

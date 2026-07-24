@@ -1,3 +1,22 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+:host {
+  --bg: #0a0d12;
+  --panel: #10141c;
+  --panel-alt: #151a24;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.15);
+  --text: #eef1f6;
+  --text-muted: #8a93a6;
+  --teal: #17d9b4;
+  --teal-dim: rgba(23, 217, 180, 0.12);
+  --amber: #ffb238;
+  --amber-dim: rgba(255, 178, 56, 0.08);
+  --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+}
+
 .testimonials-section {
   position: relative;
 
@@ -6,17 +25,18 @@
   background:
     radial-gradient(
       circle at top left,
-      rgba(79, 70, 229, 0.15),
+      rgba(23, 217, 180, 0.1),
       transparent 40%
     ),
     radial-gradient(
       circle at bottom right,
-      rgba(124, 58, 237, 0.15),
+      rgba(255, 178, 56, 0.08),
       transparent 40%
     ),
-    #070707;
+    var(--bg);
 
   overflow: hidden;
+  font-family: var(--font-body);
 }
 
 .section-header {
@@ -24,14 +44,15 @@
   margin-bottom: 70px;
 
   h2 {
-    color: #fff;
+    color: var(--text);
+    font-family: var(--font-display);
     font-size: clamp(2.2rem, 5vw, 3.8rem);
     font-weight: 800;
     margin-bottom: 15px;
   }
 
   p {
-    color: rgba(255,255,255,.65);
+    color: var(--text-muted);
     max-width: 750px;
     margin: auto;
     font-size: 1.05rem;
@@ -47,12 +68,13 @@
 
   border-radius: 50px;
 
-  color: #facc15;
+  color: var(--amber);
 
-  border: 1px solid rgba(250,204,21,.2);
+  border: 1px solid rgba(255, 178, 56, 0.25);
 
-  background: rgba(250,204,21,.08);
+  background: var(--amber-dim);
 
+  font-family: var(--font-mono);
   font-size: .85rem;
   font-weight: 600;
 }
@@ -64,39 +86,40 @@
 
   border-radius: 24px;
 
-  background: rgba(255,255,255,.04);
+  background: var(--panel);
 
   backdrop-filter: blur(16px);
 
-  border: 1px solid rgba(255,255,255,.08);
+  border: 1px solid var(--border);
 
   transition: all .35s ease;
 
   &:hover {
     transform: translateY(-8px);
 
-    border-color: rgba(255,255,255,.15);
+    border-color: var(--border-strong);
 
     box-shadow:
-      0 25px 60px rgba(0,0,0,.4);
+      0 25px 60px rgba(0,0,0,.4),
+      0 0 0 1px rgba(23, 217, 180, 0.12);
   }
 }
 
 .stars {
   font-size: 1.15rem;
 
-  color: #facc15;
+  color: var(--amber);
 
   letter-spacing: 3px;
 
   margin-bottom: 18px;
 
   text-shadow:
-    0 0 12px rgba(250,204,21,.6);
+    0 0 12px rgba(255, 178, 56, 0.55);
 }
 
 .review {
-  color: rgba(255,255,255,.8);
+  color: var(--text-muted);
 
   line-height: 1.8;
 
@@ -118,18 +141,19 @@
 
     border-radius: 50%;
 
-    border: 2px solid rgba(255,255,255,.15);
+    border: 2px solid var(--border-strong);
   }
 
   h5 {
     margin: 0;
-    color: white;
+    color: var(--text);
+    font-family: var(--font-display);
     font-size: 1rem;
     font-weight: 700;
   }
 
   span {
-    color: rgba(255,255,255,.6);
+    color: var(--text-muted);
     font-size: .9rem;
   }
 }
