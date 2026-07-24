@@ -83,6 +83,26 @@ export class AnalyticsComponent implements OnInit {
     { label: 'Business Analytics' },
   ];
 
+  /** Maps a KPI card key to a professional Bootstrap Icon class (falls back to a generic chart icon). */
+  private readonly statIconMap: Record<string, string> = {
+    revenue: 'bi-cash-stack',
+    expenses: 'bi-wallet2',
+    profit: 'bi-graph-up-arrow',
+    projects: 'bi-kanban',
+    tasks: 'bi-list-check',
+    completedTasks: 'bi-check2-square',
+    customers: 'bi-people',
+    invoices: 'bi-receipt',
+  };
+
+  /** Maps a recent-activity type to a Bootstrap Icon class (falls back to a generic info icon). */
+  private readonly activityIconMap: Record<string, string> = {
+    Customer: 'bi-person',
+    Project: 'bi-kanban',
+    Task: 'bi-list-check',
+    Invoice: 'bi-receipt',
+  };
+
   ngOnInit(): void {
     this.analyticsState.loadAnalytics();
   }
@@ -155,6 +175,23 @@ export class AnalyticsComponent implements OnInit {
     if (growth > 0) return 'analytics__growth--up';
     if (growth < 0) return 'analytics__growth--down';
     return 'analytics__growth--neutral';
+  }
+
+  /** Bootstrap Icon class for the growth trend arrow shown next to each KPI's percentage change. */
+  growthIcon(growth: number): string {
+    if (growth > 0) return 'bi-arrow-up-right';
+    if (growth < 0) return 'bi-arrow-down-right';
+    return 'bi-dash-lg';
+  }
+
+  /** Bootstrap Icon class for a given KPI card key, with a sensible default for unmapped keys. */
+  statIcon(key: string): string {
+    return this.statIconMap[key] ?? 'bi-bar-chart-line';
+  }
+
+  /** Bootstrap Icon class for a given recent-activity type, with a sensible default for unmapped types. */
+  activityIcon(type: string): string {
+    return this.activityIconMap[type] ?? 'bi-info-circle';
   }
 
   activityBadgeVariant(type: string): 'primary' | 'success' | 'danger' | 'warning' | 'info' | 'neutral' {
