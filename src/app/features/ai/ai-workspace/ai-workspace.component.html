@@ -106,6 +106,18 @@
           </button>
         }
 
+        @if (canRegenerate()) {
+          <button
+            type="button"
+            class="new-chat-btn new-chat-btn--compact d-none d-lg-inline-flex"
+            title="Regenerate last response"
+            (click)="regenerateLast()"
+          >
+            <i class="bi bi-arrow-repeat"></i>
+            Regen
+          </button>
+        }
+
         <button type="button" class="new-chat-btn new-chat-btn--compact d-none d-lg-inline-flex" (click)="newChat()">
           <i class="bi bi-plus-lg"></i>
           New chat
@@ -140,9 +152,15 @@
                 @if (msg.isVoice) {
                   <i class="bi bi-mic-fill voice-badge" title="Sent by voice"></i>
                 }
-                <span>{{ msg.displayContent ?? msg.content }}</span>
-                @if (msg.isStreaming) {
-                  <span class="caret" aria-hidden="true"></span>
+                @if (msg.isStreaming && !(msg.displayContent ?? msg.content)) {
+                  <span class="thinking-dots" aria-live="polite" aria-label="AI Copilot is thinking">
+                    <span></span><span></span><span></span>
+                  </span>
+                } @else {
+                  <span>{{ msg.displayContent ?? msg.content }}</span>
+                  @if (msg.isStreaming) {
+                    <span class="caret" aria-hidden="true"></span>
+                  }
                 }
               </div>
 
@@ -168,30 +186,31 @@
 
               @if (msg.citations?.length) {
                 <div class="citations">
-                  @for (c of msg.citations; track c.title) {
-                    <span class="citation-chip">
-                      <i class="bi bi-file-earmark-text"></i>
-                      {{ c.title }} <em>({{ c.documentType }})</em>
-                    </span>
+                  <button type="button" class="citations-toggle" (click)="toggleCitations($index)">
+                    <i class="bi bi-journal-text"></i>
+                    Sources ({{ msg.citations!.length }})
+                    <span>{{ expandedCitations()[$index] ? 'Hide' : 'Show' }}</span>
+                  </button>
+
+                  @if (expandedCitations()[$index]) {
+                    @for (source of citationSources(msg); track source.documentName + $index) {
+                      <div class="citation-detail">
+                        <span class="citation-chip">
+                          <i class="bi bi-file-earmark-text"></i>
+                          {{ source.documentName }}
+                          <em>({{ source.entityType }} · {{ formatScore(source.similarityScore) }})</em>
+                        </span>
+                        @if (source.preview) {
+                          <small class="citation-preview">{{ source.preview }}</small>
+                        }
+                        @if (formatMetadata(source.metadata); as meta) {
+                          <small class="citation-meta">{{ meta }}</small>
+                        }
+                      </div>
+                    }
                   }
                 </div>
               }
-            </div>
-          </div>
-        }
-
-        @if (loading()) {
-          <div class="message">
-            <div class="avatar avatar--assistant">
-              <i class="bi bi-cpu-fill"></i>
-            </div>
-            <div class="message__content">
-              <div class="bubble bubble--thinking">
-                <span class="thinking-dots" aria-live="polite" aria-label="AI Copilot is thinking">
-                  <span></span><span></span><span></span>
-                </span>
-                <span class="thinking-label">Running tools and retrieving business data…</span>
-              </div>
             </div>
           </div>
         }
@@ -236,19 +255,27 @@
             </button>
           }
 
-          <button
-            type="button"
-            class="composer__send"
-            (click)="send()"
-            [disabled]="loading() || isListening() || !input().trim()"
-          >
-            @if (loading()) {
-              <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-            } @else {
+          @if (loading() || streaming()) {
+            <button
+              type="button"
+              class="composer__send composer__send--stop"
+              (click)="stopGeneration()"
+              title="Stop generation"
+            >
+              <i class="bi bi-stop-fill"></i>
+              <span class="d-none d-sm-inline">Stop</span>
+            </button>
+          } @else {
+            <button
+              type="button"
+              class="composer__send"
+              (click)="send()"
+              [disabled]="isListening() || !input().trim()"
+            >
               <i class="bi bi-send-fill"></i>
-            }
-            <span class="d-none d-sm-inline">Send</span>
-          </button>
+              <span class="d-none d-sm-inline">Send</span>
+            </button>
+          }
         </div>
       </footer>
     </section>

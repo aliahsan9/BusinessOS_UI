@@ -14,6 +14,27 @@
     </div>
 
     <div class="ai-chat__header-actions">
+      <button
+        type="button"
+        class="ai-chat__workspace-link"
+        (click)="newConversation()"
+        [disabled]="loading()"
+        title="Start a new conversation"
+      >
+        New
+      </button>
+
+      @if (canRegenerate()) {
+        <button
+          type="button"
+          class="ai-chat__workspace-link"
+          (click)="regenerateLast()"
+          title="Regenerate last response"
+        >
+          Regen
+        </button>
+      }
+
       <a
         class="ai-chat__workspace-link"
         [routerLink]="workspaceRoute"
@@ -69,7 +90,13 @@
         [class.ai-chat__message--user]="msg.role === 'user'"
       >
         <div class="ai-chat__bubble">
-          {{ msg.content }}
+          @if (msg.streaming && !msg.content) {
+            <span class="ai-chat__typing-dots" aria-live="polite" aria-label="AI is typing">
+              <span></span><span></span><span></span>
+            </span>
+          } @else {
+            {{ msg.content }}@if (msg.streaming) {<span class="ai-chat__caret" aria-hidden="true"></span>}
+          }
 
           @if (msg.role === 'assistant' && sourcesSummary(msg)) {
             <div class="ai-chat__sources">
@@ -80,13 +107,28 @@
 
           @if (msg.citations && msg.citations.length > 0) {
             <div class="ai-chat__citations">
-              <strong>Sources</strong>
+              <button
+                type="button"
+                class="ai-chat__citations-toggle"
+                (click)="toggleCitations($index)"
+              >
+                <strong>Sources</strong>
+                <span>{{ expandedCitations()[$index] ? 'Hide' : 'Show' }} ({{ msg.citations.length }})</span>
+              </button>
 
-              @for (citation of msg.citations; track citation.title) {
-                <div class="ai-chat__citation">
-                  <span>{{ citation.title }}</span>
-                  <small>{{ citation.documentType }}</small>
-                </div>
+              @if (expandedCitations()[$index]) {
+                @for (source of citationSources(msg); track source.documentName + $index) {
+                  <div class="ai-chat__citation">
+                    <span>{{ source.documentName }}</span>
+                    <small>{{ source.entityType }} · {{ formatScore(source.similarityScore) }}</small>
+                    @if (source.preview) {
+                      <small class="ai-chat__citation-preview">{{ source.preview }}</small>
+                    }
+                    @if (formatMetadata(source.metadata); as meta) {
+                      <small class="ai-chat__citation-meta">{{ meta }}</small>
+                    }
+                  </div>
+                }
               }
             </div>
           }
@@ -112,12 +154,6 @@
             </button>
           }
         </div>
-      </div>
-    }
-
-    @if (loading()) {
-      <div class="ai-chat__typing">
-        Retrieving business data and generating answer...
       </div>
     }
   </div>
@@ -187,12 +223,18 @@
       [disabled]="loading()"
     />
 
-    <button
-      type="button"
-      (click)="sendMessage()"
-      [disabled]="loading() || !inputText().trim()"
-    >
-      Send
-    </button>
+    @if (loading()) {
+      <button type="button" class="ai-chat__stop" (click)="stopGeneration()">
+        Stop
+      </button>
+    } @else {
+      <button
+        type="button"
+        (click)="sendMessage()"
+        [disabled]="!inputText().trim()"
+      >
+        Send
+      </button>
+    }
   </footer>
 </div>

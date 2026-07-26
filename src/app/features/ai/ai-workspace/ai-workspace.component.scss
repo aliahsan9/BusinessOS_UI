@@ -552,6 +552,47 @@
   gap: 0.35rem;
 }
 
+.citations {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.citations-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.72rem;
+  cursor: pointer;
+
+  span {
+    opacity: 0.8;
+  }
+}
+
+.citation-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  max-width: 100%;
+}
+
+.citation-preview,
+.citation-meta {
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  padding-left: 0.25rem;
+}
+
 .tool-chip,
 .citation-chip {
   display: inline-flex;
@@ -714,6 +755,10 @@
     &:disabled {
       opacity: 0.55;
       cursor: not-allowed;
+    }
+
+    &--stop {
+      background: color-mix(in srgb, var(--color-danger, #dc2626) 85%, #000);
     }
   }
 }

@@ -16,10 +16,14 @@ export interface AiChatRequest {
   invoiceId?: string | null;
   projectId?: string | null;
   sessionId?: string | null;
+  /** Alias for sessionId when backend returns/accepts conversationId. */
+  conversationId?: string | null;
 }
 
 export interface AiCopilotChatRequest extends AiChatRequest {
   stream?: boolean;
+  /** When true, asks the backend to regenerate the last assistant reply. */
+  regenerate?: boolean;
 }
 
 export interface AiRetrievedSources {
@@ -27,6 +31,8 @@ export interface AiRetrievedSources {
   orders: number;
   invoices: number;
   projects: number;
+  /** Optional additional entity counts returned by hybrid/semantic retrieval. */
+  documents?: number;
 }
 
 export interface AiActionResult {
@@ -44,6 +50,26 @@ export interface AiCitation {
   sourceId?: string | null;
   excerpt?: string | null;
   score: number;
+  /** Prefer when backend sends an explicit document display name. */
+  documentName?: string | null;
+  /** Prefer when backend sends entity type separately from documentType. */
+  entityType?: string | null;
+  /** Prefer when backend sends similarityScore instead of/in addition to score. */
+  similarityScore?: number | null;
+  /** Free-form retrieval metadata from Qdrant / hybrid search. */
+  metadata?: Record<string, unknown> | null;
+  /** Prefer when backend sends preview instead of/in addition to excerpt. */
+  preview?: string | null;
+}
+
+/** Normalized source document view for citation panels. */
+export interface AiSourceDocument {
+  documentName: string;
+  entityType: string;
+  similarityScore: number;
+  metadata?: Record<string, unknown> | null;
+  preview?: string | null;
+  sourceId?: string | null;
 }
 
 export interface AiCopilotDiagnostics {
@@ -58,9 +84,12 @@ export interface AiCopilotDiagnostics {
 export interface AiChatResponse {
   reply: string;
   sessionId?: string | null;
+  /** Alias for sessionId when backend uses conversationId. */
+  conversationId?: string | null;
   intent?: string | null;
   toolsUsed?: string[];
   citations?: AiCitation[];
+  sourceDocuments?: AiSourceDocument[];
   suggestions: AiSuggestionDto[];
   quickActions: AiQuickActionDto[];
   searchResults: AiSearchResultDto[];
@@ -105,6 +134,8 @@ export interface AiConversationSession {
   title: string;
   lastActivityAt: string;
   messageCount: number;
+  /** Optional preview of the last turn for sidebar summaries. */
+  lastMessagePreview?: string | null;
 }
 
 export interface AiConversationMessage {
@@ -159,4 +190,28 @@ export interface AiStreamChunk {
   type: string;
   content?: string | null;
   finalResponse?: AiChatResponse | null;
+  error?: string | null;
+  sessionId?: string | null;
+  conversationId?: string | null;
+}
+
+/** Convenience aliases matching backend/domain naming without replacing existing types. */
+export type Conversation = AiConversationSession;
+export type ConversationSummary = AiConversationSession;
+export type ChatMessage = AiChatMessage;
+export type Citation = AiCitation;
+export type SourceDocument = AiSourceDocument;
+export type ChatRequest = AiCopilotChatRequest;
+export type ChatResponse = AiChatResponse;
+export type StreamingChunk = AiStreamChunk;
+
+export class AiStreamError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+    readonly aborted = false,
+  ) {
+    super(message);
+    this.name = 'AiStreamError';
+  }
 }

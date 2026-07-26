@@ -6,18 +6,25 @@ import {
   OnInit,
   inject,
   signal,
+  computed,
   viewChild,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 import { AiChatService } from '../../../core/services/ai-chat.service';
-import { AiContextService } from '../../../core/services/ai-context.service';
+import { AiRetrievalService } from '../../../core/services/ai-retrieval.service';
+import { NotificationService } from '../../../core/services/notification.service';
 import {
   AiChatMessage,
   AiChatResponse,
+  AiCitation,
   AiConversationSession,
+  AiSourceDocument,
+  AiStreamError,
   AiSuggestionDto,
 } from '../../../core/models/ai.model';
+import { ApiError } from '../../../core/models/api-error.model';
 import { ROUTES } from '../../../core/constants/route.constants';
 import { AppBreadcrumbComponent } from '../../../shared/components/app-breadcrumb/app-breadcrumb.component';
 import { AppCardComponent } from '../../../shared/components/app-card/app-card.component';
@@ -84,7 +91,8 @@ interface SpeechRecognitionLike extends EventTarget {
 })
 export class AiWorkspaceComponent implements OnInit, OnDestroy {
   private readonly aiChat = inject(AiChatService);
-  private readonly aiContext = inject(AiContextService);
+  private readonly aiRetrieval = inject(AiRetrievalService);
+  private readonly notification = inject(NotificationService);
 
   private readonly messagesEl = viewChild<ElementRef<HTMLDivElement>>('messagesEl');
   private readonly composerEl = viewChild<ElementRef<HTMLTextAreaElement>>('composerEl');
@@ -102,6 +110,7 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
   ]);
   private readonly defaultSuggestions = this.suggestions();
   readonly input = signal('');
+  readonly expandedCitations = signal<Record<number, boolean>>({});
 
   /** True while we are waiting on the network call (shows the "thinking" indicator). */
   readonly loading = signal(false);
@@ -109,6 +118,10 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
   readonly streaming = signal(false);
   readonly sidebarOpen = signal(false);
   readonly sessionsLoading = signal(false);
+  readonly canRegenerate = computed(() => {
+    const msgs = this.messages();
+    return !this.loading() && !this.streaming() && msgs.some((m) => m.role === 'user');
+  });
 
   // --- Voice input/output state ------------------------------------------
 
@@ -147,6 +160,7 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.clearStreamTimer();
+    this.aiChat.stopGeneration();
     this.recognition?.abort();
     if (this.voiceOutputSupported()) {
       window.speechSynthesis.cancel();
@@ -160,43 +174,81 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
   /** Starts a brand-new conversation, clearing the transcript locally. */
   newChat(): void {
     this.clearStreamTimer();
+    this.aiChat.stopGeneration();
+    this.aiChat.clearSession();
     this.stopListening();
     this.stopSpeaking();
     this.activeSessionId.set(null);
     this.messages.set([]);
     this.input.set('');
     this.suggestions.set(this.defaultSuggestions);
+    this.expandedCitations.set({});
+    this.loading.set(false);
+    this.streaming.set(false);
     this.sidebarOpen.set(false);
   }
 
-  send(text?: string, isVoice = false): void {
+  send(text?: string, isVoice = false, options?: { regenerate?: boolean }): void {
     const message = (text ?? this.input()).trim();
     if (!message || this.loading() || this.streaming()) return;
 
-    this.input.set('');
-    this.resizeComposer();
+    if (!options?.regenerate) {
+      this.input.set('');
+      this.resizeComposer();
+      this.push('user', message, isVoice);
+    }
+
     this.sidebarOpen.set(false);
     this.lastInputWasVoice = isVoice;
-    this.push('user', message, isVoice);
     this.loading.set(true);
     this.scrollToBottom();
+    void this.sendStreaming(message, options?.regenerate);
+  }
 
-    this.aiChat.chat(message).subscribe({
-      next: (response) => this.applyResponse(response),
-      error: () => {
-        this.loading.set(false);
-        this.pushStreamed('Unable to reach AI Copilot. Please try again in a moment.');
-      },
+  stopGeneration(): void {
+    this.aiChat.stopGeneration();
+    this.clearStreamTimer();
+    this.loading.set(false);
+    this.streaming.set(false);
+    this.messages.update((msgs) =>
+      msgs.map((msg) =>
+        msg.isStreaming
+          ? {
+              ...msg,
+              isStreaming: false,
+              displayContent: msg.displayContent || msg.content || 'Generation stopped.',
+              content: msg.content || 'Generation stopped.',
+            }
+          : msg,
+      ),
+    );
+  }
+
+  regenerateLast(): void {
+    const lastUser = [...this.messages()].reverse().find((m) => m.role === 'user');
+    if (!lastUser || this.loading() || this.streaming()) return;
+
+    this.clearStreamTimer();
+    this.messages.update((msgs) => {
+      const copy = [...msgs];
+      while (copy.length && copy[copy.length - 1].role === 'assistant') {
+        copy.pop();
+      }
+      return copy;
     });
+
+    this.send(lastUser.content, false, { regenerate: true });
   }
 
   loadSession(sessionId: string): void {
     this.clearStreamTimer();
+    this.aiChat.stopGeneration();
     this.stopListening();
     this.stopSpeaking();
     this.aiChat.setSessionId(sessionId);
     this.activeSessionId.set(sessionId);
     this.messages.set([]);
+    this.expandedCitations.set({});
     this.sidebarOpen.set(false);
 
     this.aiChat.getConversation(sessionId).subscribe({
@@ -216,7 +268,29 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
         this.messages.set(msgs);
         this.scrollToBottom();
       },
+      error: (err: ApiError) => {
+        this.notification.error('Could not load conversation', err.detail ?? err.title);
+      },
     });
+  }
+
+  toggleCitations(messageIndex: number): void {
+    this.expandedCitations.update((state) => ({
+      ...state,
+      [messageIndex]: !state[messageIndex],
+    }));
+  }
+
+  citationSources(msg: AiChatMessage): AiSourceDocument[] {
+    return (msg.citations ?? []).map((c) => this.aiRetrieval.toSourceDocument(c));
+  }
+
+  formatScore(score: number): string {
+    return this.aiRetrieval.formatSimilarity(score);
+  }
+
+  formatMetadata(metadata: Record<string, unknown> | null | undefined): string | null {
+    return this.aiRetrieval.formatMetadata(metadata);
   }
 
   /** Grows/shrinks the composer textarea to fit its content, capped by CSS max-height. */
@@ -395,15 +469,211 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
     });
   }
 
-  private applyResponse(response: AiChatResponse): void {
-    if (response.sessionId) {
-      this.aiChat.setSessionId(response.sessionId);
-      this.activeSessionId.set(response.sessionId);
+  private async sendStreaming(message: string, regenerate = false): Promise<void> {
+    const streamMsg: AiWorkspaceMessage = {
+      role: 'assistant',
+      content: '',
+      displayContent: '',
+      timestamp: new Date(),
+      isStreaming: true,
+      isVoice: this.lastInputWasVoice,
+    };
+    this.messages.update((m) => [...m, streamMsg]);
+    const msgIndex = this.messages().length - 1;
+    this.streaming.set(true);
+    this.scrollToBottom();
+
+    try {
+      for await (const chunk of this.aiChat.streamWithFallback(message, { regenerate })) {
+        if ((chunk.type === 'token' || chunk.type === 'delta') && chunk.content) {
+          this.loading.set(false);
+          this.messages.update((msgs) => {
+            const copy = [...msgs];
+            const nextContent = (copy[msgIndex].content || '') + chunk.content;
+            copy[msgIndex] = {
+              ...copy[msgIndex],
+              content: nextContent,
+              displayContent: nextContent,
+              isStreaming: true,
+            };
+            return copy;
+          });
+          this.scrollToBottom();
+        }
+
+        if (chunk.type === 'done') {
+          if (chunk.finalResponse) {
+            this.applyFinalResponse(chunk.finalResponse, msgIndex);
+          } else if (chunk.content) {
+            this.messages.update((msgs) => {
+              const copy = [...msgs];
+              copy[msgIndex] = {
+                ...copy[msgIndex],
+                content: chunk.content || copy[msgIndex].content,
+                displayContent: chunk.content || copy[msgIndex].displayContent,
+                isStreaming: false,
+              };
+              return copy;
+            });
+            this.streaming.set(false);
+          }
+        }
+      }
+
+      this.messages.update((msgs) => {
+        const copy = [...msgs];
+        if (copy[msgIndex]?.isStreaming) {
+          const text =
+            copy[msgIndex].content ||
+            'Sorry, I could not generate a response. Please try again.';
+          copy[msgIndex] = {
+            ...copy[msgIndex],
+            content: text,
+            displayContent: text,
+            isStreaming: false,
+          };
+        }
+        return copy;
+      });
+    } catch (err) {
+      if (err instanceof AiStreamError && err.aborted) {
+        this.messages.update((msgs) => {
+          const copy = [...msgs];
+          const current = copy[msgIndex];
+          copy[msgIndex] = {
+            ...current,
+            content: current.content || 'Generation stopped.',
+            displayContent: current.displayContent || current.content || 'Generation stopped.',
+            isStreaming: false,
+          };
+          return copy;
+        });
+        return;
+      }
+
+      try {
+        const response = await firstValueFrom(this.aiChat.chat(message, { regenerate }));
+        this.applyFinalResponse(this.aiChat.normalizeResponse(response), msgIndex, true);
+      } catch (fallbackErr) {
+        this.loading.set(false);
+        this.streaming.set(false);
+        this.messages.update((msgs) => {
+          const copy = [...msgs];
+          copy[msgIndex] = {
+            ...copy[msgIndex],
+            content: 'Unable to reach AI Copilot. Please try again in a moment.',
+            displayContent: 'Unable to reach AI Copilot. Please try again in a moment.',
+            isStreaming: false,
+          };
+          return copy;
+        });
+        this.notifyError(fallbackErr);
+      }
+    } finally {
+      this.loading.set(false);
+      if (!this.streamTimeoutId) {
+        this.streaming.set(false);
+      }
+      this.messages.update((msgs) =>
+        msgs.map((msg, i) =>
+          i === msgIndex && msg.isStreaming ? { ...msg, isStreaming: false } : msg,
+        ),
+      );
     }
+  }
+
+  private applyFinalResponse(response: AiChatResponse, msgIndex: number, animateFallback = false): void {
+    const sessionId = this.aiChat.resolveSessionId(response);
+    if (sessionId) {
+      this.aiChat.setSessionId(sessionId);
+      this.activeSessionId.set(sessionId);
+    }
+
+    const citations = this.mergeCitations(response);
+    const reply = response.reply || this.messages()[msgIndex]?.content || '';
+
     this.loading.set(false);
-    this.pushStreamed(response.reply, response.citations, response.toolsUsed, this.lastInputWasVoice);
+
+    if (animateFallback && reply) {
+      this.messages.update((msgs) => {
+        const copy = [...msgs];
+        copy[msgIndex] = {
+          ...copy[msgIndex],
+          content: reply,
+          displayContent: '',
+          citations,
+          toolsUsed: response.toolsUsed,
+          sources: response.sources,
+          isStreaming: true,
+          isVoice: this.lastInputWasVoice,
+        };
+        return copy;
+      });
+      this.animateReveal(msgIndex, reply);
+    } else {
+      this.messages.update((msgs) => {
+        const copy = [...msgs];
+        copy[msgIndex] = {
+          ...copy[msgIndex],
+          content: reply,
+          displayContent: reply,
+          citations,
+          toolsUsed: response.toolsUsed,
+          sources: response.sources,
+          isStreaming: false,
+          isVoice: this.lastInputWasVoice,
+        };
+        return copy;
+      });
+      this.streaming.set(false);
+
+      if (this.lastInputWasVoice && this.autoSpeak()) {
+        this.speakMessage(msgIndex, reply);
+      }
+    }
+
     this.suggestions.set(response.suggestions.length ? response.suggestions : this.suggestions());
     this.refreshSessions();
+    this.scrollToBottom();
+  }
+
+  private mergeCitations(response: AiChatResponse): AiCitation[] {
+    const fromCitations = response.citations ?? [];
+    if (fromCitations.length || !response.sourceDocuments?.length) {
+      return fromCitations;
+    }
+
+    return response.sourceDocuments.map((doc) => ({
+      title: doc.documentName,
+      documentType: doc.entityType,
+      sourceId: doc.sourceId,
+      excerpt: doc.preview,
+      score: doc.similarityScore,
+      documentName: doc.documentName,
+      entityType: doc.entityType,
+      similarityScore: doc.similarityScore,
+      metadata: doc.metadata,
+      preview: doc.preview,
+    }));
+  }
+
+  private notifyError(err: unknown): void {
+    if (err instanceof AiStreamError) {
+      if (err.status === 0) {
+        this.notification.error('Network error', err.message);
+      } else if (err.status === 403) {
+        this.notification.error('Access denied', err.message);
+      } else if (err.status >= 500) {
+        this.notification.error('AI server error', err.message);
+      }
+      return;
+    }
+    if (err && typeof err === 'object' && 'status' in err) {
+      const apiErr = err as ApiError;
+      if (apiErr.status === 404 || apiErr.status === 408) {
+        this.notification.error(apiErr.title, apiErr.detail);
+      }
+    }
   }
 
   private push(role: 'user' | 'assistant', content: string, isVoice = false): void {
@@ -414,40 +684,12 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
     this.scrollToBottom();
   }
 
-  /**
-   * Adds an assistant message and reveals its content progressively,
-   * similar to the streaming/typing effect used by other chat assistants.
-   * The underlying data (content, citations, toolsUsed) is set immediately;
-   * only the on-screen text is animated, so nothing about the app's
-   * data flow changes.
-   *
-   * When `isVoice` is true (the user spoke their message) and auto-speak is
-   * enabled, the finished reply is also read aloud once typing completes.
-   */
-  private pushStreamed(
-    content: string,
-    citations?: AiChatMessage['citations'],
-    toolsUsed?: AiChatMessage['toolsUsed'],
-    isVoice = false,
-  ): void {
+  /** Client-side reveal used only when falling back from SSE to a full HTTP reply. */
+  private animateReveal(index: number, content: string): void {
     this.clearStreamTimer();
     this.streaming.set(true);
 
-    const message: AiWorkspaceMessage = {
-      role: 'assistant',
-      content,
-      displayContent: '',
-      timestamp: new Date(),
-      citations,
-      toolsUsed,
-      isStreaming: true,
-      isVoice,
-    };
-    this.messages.update((m) => [...m, message]);
-    const index = this.messages().length - 1;
-    this.scrollToBottom();
-
-    const words = content.split(/(\s+)/); // keep whitespace tokens so spacing is preserved
+    const words = content.split(/(\s+)/);
     let cursor = 0;
 
     const revealNext = () => {
@@ -468,7 +710,7 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
         this.streaming.set(false);
         this.streamTimeoutId = null;
 
-        if (isVoice && this.autoSpeak()) {
+        if (this.lastInputWasVoice && this.autoSpeak()) {
           this.speakMessage(index, content);
         }
       }

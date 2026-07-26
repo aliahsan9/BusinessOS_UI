@@ -69,7 +69,10 @@ function toApiError(error: HttpErrorResponse): ApiError {
 
 export const loadingInterceptor: HttpInterceptorFn = (req, next) => {
   const loadingService = inject(LoadingService);
-  const skipLoading = req.headers.has('X-Skip-Loading');
+  const skipLoading =
+    req.headers.has('X-Skip-Loading') ||
+    req.url.includes('/ai/chat') ||
+    req.url.includes('/ai/conversations');
 
   if (!skipLoading) {
     loadingService.show();
