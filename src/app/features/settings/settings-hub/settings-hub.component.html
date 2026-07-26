@@ -134,10 +134,50 @@
                   Show Suggestions
                 </label>
               </div>
-              <p class="text-muted">When disabled, the floating BusinessOS AI widget will be hidden. Suggestions control context-aware prompts in the chat.</p>
+              <p class="text-muted">When disabled, the floating Sophia widget will be hidden. Suggestions control context-aware prompts in the chat.</p>
               @if (canUpdate) {
                 <div class="form-actions"><app-button label="Save" type="submit" [loading]="saving()" /></div>
               }
+            </form>
+          </app-card>
+
+          <app-card title="Sophia Voice" subtitle="Voice language and spoken replies for your AI employee.">
+            <form [formGroup]="voiceForm" (ngSubmit)="saveVoicePreferences()">
+              <fieldset class="voice-lang">
+                <legend>Voice Language</legend>
+                <label class="toggle-item">
+                  <input type="radio" formControlName="language" value="en" />
+                  English
+                </label>
+                <label class="toggle-item">
+                  <input type="radio" formControlName="language" value="ur" />
+                  Urdu
+                </label>
+              </fieldset>
+
+              <div class="toggle-list mt-3">
+                <label class="toggle-item">
+                  <input type="checkbox" formControlName="autoSpeak" />
+                  Auto-speak Sophia's replies
+                </label>
+                <label class="toggle-item">
+                  <input type="checkbox" formControlName="continuousListening" />
+                  Continuous listening mode
+                </label>
+              </div>
+
+              <div class="mt-3">
+                <label class="form-label" for="preferredAgent">Preferred employee</label>
+                <select id="preferredAgent" class="form-select" formControlName="preferredAgentKey">
+                  @for (emp of employees(); track emp.key) {
+                    <option [value]="emp.key">{{ emp.displayName }} — {{ emp.roleTitle }}</option>
+                  }
+                </select>
+              </div>
+
+              <div class="form-actions">
+                <app-button label="Save voice preferences" type="submit" [loading]="voiceSaving()" />
+              </div>
             </form>
           </app-card>
         }

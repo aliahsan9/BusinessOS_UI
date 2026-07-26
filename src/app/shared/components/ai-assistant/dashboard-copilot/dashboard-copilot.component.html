@@ -1,4 +1,31 @@
-<app-card title="AI Copilot Insights">
+<section class="ask-sophia" aria-label="Ask Sophia">
+  <div class="ask-sophia__hero">
+    <div class="ask-sophia__avatar" aria-hidden="true">S</div>
+    <div class="ask-sophia__intro">
+      <h2>Ask Sophia</h2>
+      <p>{{ askSophia()?.greeting || 'Your Senior Business Analyst is ready to help.' }}</p>
+    </div>
+    <button type="button" class="ask-sophia__talk" (click)="openSophia()">
+      <i class="bi bi-mic-fill" aria-hidden="true"></i>
+      Talk to Sophia
+    </button>
+  </div>
+
+  @if (askSophia()?.suggestions?.length) {
+    <div class="ask-sophia__chips">
+      @for (item of askSophia()!.suggestions; track item.label) {
+        <button type="button" class="ask-sophia__chip" (click)="openSophia(item.message)">
+          @if (item.icon) {
+            <span>{{ item.icon }}</span>
+          }
+          {{ item.label }}
+        </button>
+      }
+    </div>
+  }
+</section>
+
+<app-card title="Business insights" subtitle="Live signals Sophia is watching">
   @if (loading()) {
     <p class="muted">Analyzing your business…</p>
   } @else {

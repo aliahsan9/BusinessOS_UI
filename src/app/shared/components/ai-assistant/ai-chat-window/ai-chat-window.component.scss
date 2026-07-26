@@ -21,9 +21,228 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem 1.25rem;
-    background: linear-gradient(135deg, var(--color-primary), color-mix(in srgb, var(--color-primary) 55%, #7c3aed));
+    gap: 0.75rem;
+    padding: 0.9rem 1rem;
+    background:
+      radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--color-primary) 35%, transparent), transparent 55%),
+      linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 92%, #0f172a), color-mix(in srgb, var(--color-primary) 55%, #0b1220));
     color: var(--text-on-primary-color, #fff);
+  }
+
+  &__identity {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+  }
+
+  &__avatar {
+    position: relative;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.18);
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+  }
+
+  &__avatar-initials {
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 0.02em;
+  }
+
+  &__avatar-pulse {
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+  }
+
+  &__avatar[data-state='listening'] .ai-chat__avatar-pulse,
+  &__avatar[data-state='speaking'] .ai-chat__avatar-pulse,
+  &__avatar[data-state='processing'] .ai-chat__avatar-pulse,
+  &__avatar[data-state='working'] .ai-chat__avatar-pulse {
+    border-color: rgba(255, 255, 255, 0.55);
+    animation: sophia-pulse 1.4s ease-out infinite;
+  }
+
+  &__name {
+    display: block;
+    font-size: 1rem;
+    line-height: 1.2;
+  }
+
+  &__status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.2rem;
+    font-size: 0.68rem;
+    opacity: 0.92;
+  }
+
+  &__status-dot {
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: 50%;
+    background: #86efac;
+  }
+
+  &__status[data-state='listening'] .ai-chat__status-dot,
+  &__status[data-state='speaking'] .ai-chat__status-dot {
+    background: #fde68a;
+    animation: sophia-blink 1s infinite;
+  }
+
+  &__status[data-state='processing'] .ai-chat__status-dot,
+  &__status[data-state='working'] .ai-chat__status-dot {
+    background: #93c5fd;
+    animation: sophia-blink 0.8s infinite;
+  }
+
+  &__lang {
+    margin-left: 0.15rem;
+    padding: 0.05rem 0.35rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.16);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+
+  &__workflow {
+    padding: 0.65rem 1rem;
+    border-bottom: 1px solid var(--color-border);
+    background: color-mix(in srgb, var(--color-primary) 6%, var(--color-surface));
+
+    ul {
+      list-style: none;
+      margin: 0.35rem 0 0;
+      padding: 0;
+      display: grid;
+      gap: 0.3rem;
+    }
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.78rem;
+      color: var(--color-text-muted);
+    }
+  }
+
+  &__workflow-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-primary);
+  }
+
+  &__workflow-icon {
+    width: 1rem;
+    text-align: center;
+    font-weight: 700;
+  }
+
+  &__workflow-step--done {
+    color: var(--color-text);
+  }
+
+  &__workflow-step--active {
+    color: var(--color-primary);
+    font-weight: 600;
+  }
+
+  &__interim {
+    padding: 0.4rem 1rem;
+    font-size: 0.8rem;
+    font-style: italic;
+    color: var(--color-text-muted);
+    border-top: 1px dashed var(--color-border);
+    background: var(--color-surface);
+  }
+
+  &__voice-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.45rem 1rem;
+    border-top: 1px solid var(--color-border);
+    background: var(--color-bg);
+  }
+
+  &__voice-hint {
+    font-size: 0.72rem;
+    color: var(--color-text-muted);
+  }
+
+  &__wave {
+    display: inline-flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 16px;
+
+    span {
+      width: 3px;
+      height: 4px;
+      border-radius: 2px;
+      background: color-mix(in srgb, var(--color-primary) 55%, #94a3b8);
+      opacity: 0.45;
+    }
+  }
+
+  &__voice-bar[data-state='listening'] .ai-chat__wave span,
+  &__voice-bar[data-state='speaking'] .ai-chat__wave span,
+  &__voice-bar[data-state='processing'] .ai-chat__wave span,
+  &__voice-bar[data-state='working'] .ai-chat__wave span {
+    opacity: 1;
+    animation: sophia-wave 0.9s ease-in-out infinite;
+
+    &:nth-child(2) { animation-delay: 0.1s; }
+    &:nth-child(3) { animation-delay: 0.2s; }
+    &:nth-child(4) { animation-delay: 0.3s; }
+    &:nth-child(5) { animation-delay: 0.4s; }
+  }
+
+  &__voice-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  &__mic,
+  &__icon-btn {
+    width: 2.35rem;
+    height: 2.35rem;
+    border: 1px solid var(--color-border);
+    border-radius: 50%;
+    background: var(--color-bg);
+    color: var(--color-text);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    flex-shrink: 0;
+
+    &:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    &:hover:not(:disabled) {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+  }
+
+  &__mic--active {
+    background: color-mix(in srgb, var(--color-danger, #dc2626) 12%, var(--color-bg));
+    border-color: var(--color-danger, #dc2626);
+    color: var(--color-danger, #dc2626);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-danger, #dc2626) 18%, transparent);
   }
 
   &__header-actions {
@@ -383,6 +602,7 @@
 
   &__input {
     display: flex;
+    align-items: center;
     gap: 0.5rem;
     padding: 0.75rem 1rem;
     border-top: 1px solid var(--color-border);
@@ -390,6 +610,7 @@
 
     input {
       flex: 1;
+      min-width: 0;
       border: 1px solid var(--color-border);
       border-radius: var(--radius-md);
       padding: 0.625rem 0.875rem;
@@ -410,6 +631,7 @@
       padding: 0 1rem;
       font-weight: 600;
       cursor: pointer;
+      height: 2.35rem;
 
       &:disabled {
         opacity: 0.5;
@@ -457,6 +679,37 @@
   }
 }
 
+@keyframes sophia-wave {
+  0%,
+  100% {
+    height: 4px;
+  }
+  50% {
+    height: 14px;
+  }
+}
+
+@keyframes sophia-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.25);
+    opacity: 0;
+  }
+}
+
+@keyframes sophia-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
 @media (max-width: 767.98px) {
   .ai-chat {
     width: 100%;
@@ -476,21 +729,28 @@
     justify-content: flex-end;
   }
 
-  .ai-chat__search {
-    padding: 0.5rem 0.75rem;
-    gap: 0.4rem;
-  }
-
   .ai-chat__messages {
     padding: 0.75rem;
   }
 
   .ai-chat__input {
+    flex-wrap: wrap;
     padding: 0.65rem 0.75rem;
     padding-bottom: max(0.65rem, env(safe-area-inset-bottom, 0px));
 
     input {
-      font-size: 1rem; // avoid iOS zoom on focus
+      order: 1;
+      flex: 1 1 100%;
+      font-size: 1rem;
+    }
+
+    .ai-chat__voice-controls {
+      order: 2;
+    }
+
+    > button {
+      order: 3;
+      margin-left: auto;
     }
   }
 
@@ -510,5 +770,9 @@
 
   .ai-chat__subtitle {
     font-size: 0.7rem;
+  }
+
+  .ai-chat__voice-hint {
+    display: none;
   }
 }

@@ -138,6 +138,17 @@ export const API_ENDPOINTS = {
     diagnostics: '/ai/diagnostics',
     analyticsQuery: '/ai/analytics/query',
   },
+  agents: {
+    chat: '/agents/chat',
+    chatStream: '/agents/chat/stream',
+    employees: '/agents/employees',
+    voicePreferences: '/agents/voice-preferences',
+    onboardingStart: '/agents/onboarding/start',
+    onboardingContinue: '/agents/onboarding/continue',
+    workflows: '/agents/workflows',
+    workflow: '/agents/workflows',
+    askSophia: '/agents/ask-sophia',
+  },
   help: {
     faqs: '/help/faqs',
   },

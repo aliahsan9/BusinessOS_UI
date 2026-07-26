@@ -93,9 +93,37 @@
     line-height: 1;
   }
 
+  &__fab-avatar {
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: #fff;
+    background: linear-gradient(135deg, var(--color-primary, #2563eb), color-mix(in srgb, var(--color-primary, #2563eb) 55%, #0f172a));
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--color-primary, #2563eb) 35%, transparent);
+  }
+
+  &__fab-copy {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.1rem;
+    line-height: 1.1;
+  }
+
   &__fab-label {
     font-size: 0.875rem;
+    font-weight: 600;
     line-height: 1;
+    white-space: nowrap;
+  }
+
+  &__fab-sub {
+    font-size: 0.68rem;
+    color: #6b7280;
     white-space: nowrap;
   }
 

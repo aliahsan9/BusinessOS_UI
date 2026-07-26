@@ -1,97 +1,68 @@
-<div class="ai-chat" role="dialog" aria-label="BusinessOS AI Assistant">
+<div class="ai-chat" role="dialog" [attr.aria-label]="agentName() + ' — AI employee'">
   <header class="ai-chat__header">
-    <div>
-      <strong>BusinessOS AI Copilot</strong>
-      <span class="ai-chat__subtitle">
-        Live data · Tools · RAG · Memory
-      </span>
-
-      @if (contextLabel()) {
-        <span class="ai-chat__context">
-          {{ contextLabel() }}
+    <div class="ai-chat__identity">
+      <div class="ai-chat__avatar" [attr.data-state]="voiceState()" aria-hidden="true">
+        <span class="ai-chat__avatar-initials">{{ agentName().charAt(0) }}</span>
+        <span class="ai-chat__avatar-pulse"></span>
+      </div>
+      <div>
+        <strong class="ai-chat__name">{{ agentName() }}</strong>
+        <span class="ai-chat__subtitle">{{ agentRole() }}</span>
+        <span class="ai-chat__status" [attr.data-state]="voiceState()">
+          <span class="ai-chat__status-dot"></span>
+          {{ statusLabel() }}
+          <span class="ai-chat__lang">{{ language() === 'ur' ? 'UR' : 'EN' }}</span>
         </span>
-      }
+        @if (contextLabel()) {
+          <span class="ai-chat__context">{{ contextLabel() }}</span>
+        }
+      </div>
     </div>
 
     <div class="ai-chat__header-actions">
-      <button
-        type="button"
-        class="ai-chat__workspace-link"
-        (click)="newConversation()"
-        [disabled]="loading()"
-        title="Start a new conversation"
-      >
+      <button type="button" class="ai-chat__workspace-link" (click)="newConversation()" [disabled]="loading()" title="New conversation">
         New
       </button>
-
       @if (canRegenerate()) {
-        <button
-          type="button"
-          class="ai-chat__workspace-link"
-          (click)="regenerateLast()"
-          title="Regenerate last response"
-        >
+        <button type="button" class="ai-chat__workspace-link" (click)="regenerateLast()" title="Regenerate">
           Regen
         </button>
       }
-
-      <a
-        class="ai-chat__workspace-link"
-        [routerLink]="workspaceRoute"
-        (click)="onClose()"
-      >
-        Workspace
-      </a>
-
-      <button
-        type="button"
-        class="ai-chat__close"
-        aria-label="Close"
-        (click)="onClose()"
-      >
-        ×
-      </button>
+      <a class="ai-chat__workspace-link" [routerLink]="workspaceRoute" (click)="onClose()">Workspace</a>
+      <button type="button" class="ai-chat__close" aria-label="Close" (click)="onClose()">×</button>
     </div>
   </header>
 
   @if (!chatEnabled()) {
     <div class="ai-chat__notice" role="status">
-      AI assistant is disabled in tenant settings.
-      <a [routerLink]="settingsRoute">
-        Enable in Settings
-      </a>
+      Sophia is disabled in tenant settings.
+      <a [routerLink]="settingsRoute">Enable in Settings</a>
     </div>
   }
 
-  <div class="ai-chat__search">
-    <input
-      type="search"
-      class="ai-chat__search-input"
-      placeholder="Search customers, projects, invoices..."
-      [ngModel]="searchText()"
-      (ngModelChange)="searchText.set($event)"
-      (keydown.enter)="runSearch()"
-    />
-
-    <button
-      type="button"
-      class="ai-chat__search-btn"
-      (click)="runSearch()"
-      [disabled]="loading()"
-    >
-      Search
-    </button>
-  </div>
+  @if (workflowSteps().length > 0) {
+    <div class="ai-chat__workflow" aria-live="polite">
+      <div class="ai-chat__workflow-title">Working on it</div>
+      <ul>
+        @for (step of workflowSteps(); track step.stepKey) {
+          <li
+            [class.ai-chat__workflow-step--done]="isStepDone(step.status)"
+            [class.ai-chat__workflow-step--active]="isStepActive(step.status)"
+          >
+            <span class="ai-chat__workflow-icon">{{ stepStatusIcon(step.status) }}</span>
+            <span>{{ step.title }}</span>
+          </li>
+        }
+      </ul>
+    </div>
+  }
 
   <div class="ai-chat__messages" #messagesContainer>
     @for (msg of messages(); track $index) {
-      <div
-        class="ai-chat__message"
-        [class.ai-chat__message--user]="msg.role === 'user'"
-      >
+      <div class="ai-chat__message" [class.ai-chat__message--user]="msg.role === 'user'">
         <div class="ai-chat__bubble">
           @if (msg.streaming && !msg.content) {
-            <span class="ai-chat__typing-dots" aria-live="polite" aria-label="AI is typing">
+            <span class="ai-chat__typing-dots" aria-live="polite" aria-label="Sophia is thinking">
               <span></span><span></span><span></span>
             </span>
           } @else {
@@ -107,15 +78,10 @@
 
           @if (msg.citations && msg.citations.length > 0) {
             <div class="ai-chat__citations">
-              <button
-                type="button"
-                class="ai-chat__citations-toggle"
-                (click)="toggleCitations($index)"
-              >
+              <button type="button" class="ai-chat__citations-toggle" (click)="toggleCitations($index)">
                 <strong>Sources</strong>
                 <span>{{ expandedCitations()[$index] ? 'Hide' : 'Show' }} ({{ msg.citations.length }})</span>
               </button>
-
               @if (expandedCitations()[$index]) {
                 @for (source of citationSources(msg); track source.documentName + $index) {
                   <div class="ai-chat__citation">
@@ -140,17 +106,9 @@
             </div>
           }
 
-          @if (
-            msg.actionResult &&
-            msg.actionResult.success &&
-            msg.actionResult.route
-          ) {
-            <button
-              type="button"
-              class="ai-chat__action-link"
-              (click)="goTo(msg.actionResult.route)"
-            >
-              View {{ msg.actionResult.entityType }}
+          @if (msg.actionResult?.success && msg.actionResult?.route) {
+            <button type="button" class="ai-chat__action-link" (click)="goTo(msg.actionResult!.route!)">
+              View {{ msg.actionResult?.entityType }}
             </button>
           }
         </div>
@@ -161,23 +119,11 @@
   @if (searchResults().length > 0) {
     <div class="ai-chat__results">
       @for (result of searchResults(); track result.id) {
-        <button
-          type="button"
-          class="ai-chat__result"
-          (click)="goTo(result.route)"
-        >
-          <span class="ai-chat__result-type">
-            {{ result.type }}
-          </span>
-
-          <strong>
-            {{ result.title }}
-          </strong>
-
+        <button type="button" class="ai-chat__result" (click)="goTo(result.route)">
+          <span class="ai-chat__result-type">{{ result.type }}</span>
+          <strong>{{ result.title }}</strong>
           @if (result.subtitle) {
-            <small>
-              {{ result.subtitle }}
-            </small>
+            <small>{{ result.subtitle }}</small>
           }
         </button>
       }
@@ -187,11 +133,7 @@
   @if (showSuggestions() && suggestions().length > 0) {
     <div class="ai-chat__suggestions">
       @for (suggestion of suggestions(); track suggestion.label) {
-        <button
-          type="button"
-          class="ai-chat__suggestion"
-          (click)="useSuggestion(suggestion)"
-        >
+        <button type="button" class="ai-chat__suggestion" (click)="useSuggestion(suggestion)">
           {{ suggestion.label }}
         </button>
       }
@@ -201,11 +143,7 @@
   @if (quickActions().length > 0) {
     <div class="ai-chat__quick-actions">
       @for (action of quickActions(); track action.label) {
-        <button
-          type="button"
-          class="ai-chat__quick-action"
-          (click)="goTo(action.route)"
-        >
+        <button type="button" class="ai-chat__quick-action" (click)="goTo(action.route)">
           <span>{{ action.icon }}</span>
           {{ action.label }}
         </button>
@@ -213,10 +151,68 @@
     </div>
   }
 
+  @if (interimTranscript()) {
+    <div class="ai-chat__interim" aria-live="polite">{{ interimTranscript() }}</div>
+  }
+
+  <div class="ai-chat__voice-bar" [attr.data-state]="voiceState()">
+    <div class="ai-chat__wave" aria-hidden="true">
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <span class="ai-chat__voice-hint">
+      @if (isListening()) {
+        Listening — speak naturally
+      } @else if (isSpeaking()) {
+        Sophia is speaking
+      } @else {
+        Hold mic to talk · or type below
+      }
+    </span>
+  </div>
+
   <footer class="ai-chat__input">
+    <div class="ai-chat__voice-controls">
+      <button
+        type="button"
+        class="ai-chat__mic"
+        [class.ai-chat__mic--active]="isListening()"
+        [disabled]="!micSupported() || !chatEnabled()"
+        (click)="toggleMic()"
+        (pointerdown)="onMicPointerDown($event)"
+        (pointerup)="onMicPointerUp()"
+        (pointerleave)="onMicPointerUp()"
+        [attr.aria-pressed]="isListening()"
+        [attr.aria-label]="isListening() ? 'Stop listening' : 'Talk to Sophia'"
+        title="{{ micSupported() ? 'Talk to Sophia' : 'Microphone not supported' }}"
+      >
+        <i class="bi" [class.bi-mic-fill]="!isListening()" [class.bi-mic-mute-fill]="isListening()"></i>
+      </button>
+
+      <button
+        type="button"
+        class="ai-chat__icon-btn"
+        (click)="toggleMute()"
+        [attr.aria-pressed]="isMuted()"
+        [attr.aria-label]="isMuted() ? 'Unmute' : 'Mute'"
+        title="Mute"
+      >
+        <i class="bi" [class.bi-volume-up-fill]="!isMuted()" [class.bi-volume-mute-fill]="isMuted()"></i>
+      </button>
+
+      @if (isSpeaking()) {
+        <button type="button" class="ai-chat__icon-btn" (click)="stopSpeaking()" aria-label="Stop speaking" title="Stop speaking">
+          <i class="bi bi-stop-fill"></i>
+        </button>
+      } @else {
+        <button type="button" class="ai-chat__icon-btn" (click)="replay()" aria-label="Replay response" title="Replay">
+          <i class="bi bi-arrow-clockwise"></i>
+        </button>
+      }
+    </div>
+
     <input
       type="text"
-      placeholder="Ask BusinessOS AI..."
+      placeholder="Ask Sophia anything…"
       [ngModel]="inputText()"
       (ngModelChange)="inputText.set($event)"
       (keydown.enter)="sendMessage()"
@@ -224,17 +220,9 @@
     />
 
     @if (loading()) {
-      <button type="button" class="ai-chat__stop" (click)="stopGeneration()">
-        Stop
-      </button>
+      <button type="button" class="ai-chat__stop" (click)="stopGeneration()">Stop</button>
     } @else {
-      <button
-        type="button"
-        (click)="sendMessage()"
-        [disabled]="!inputText().trim()"
-      >
-        Send
-      </button>
+      <button type="button" (click)="sendMessage()" [disabled]="!inputText().trim()">Send</button>
     }
   </footer>
 </div>

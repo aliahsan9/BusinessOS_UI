@@ -1,19 +1,23 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  inject,
-  signal,
-  computed,
-  output,
+  DestroyRef,
   ElementRef,
-  viewChild,
-  afterNextRender,
   OnDestroy,
+  OnInit,
+  afterNextRender,
+  computed,
+  inject,
+  output,
+  signal,
+  viewChild,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { AiChatService } from '../../../../core/services/ai-chat.service';
+import { AgentEmployeeService } from '../../../../core/services/agent-employee.service';
+import { SophiaVoiceService } from '../../../../core/services/sophia-voice.service';
 import { AiContextService } from '../../../../core/services/ai-context.service';
 import { AiRetrievalService } from '../../../../core/services/ai-retrieval.service';
 import { AiActionService } from '../../../../core/services/ai-action.service';
@@ -21,7 +25,6 @@ import { AiPromptBuilderService } from '../../../../core/services/ai-prompt-buil
 import { NotificationService } from '../../../../core/services/notification.service';
 import {
   AiChatMessage,
-  AiChatResponse,
   AiCitation,
   AiQuickActionDto,
   AiSearchResultDto,
@@ -29,6 +32,7 @@ import {
   AiStreamError,
   AiSuggestionDto,
 } from '../../../../core/models/ai.model';
+import { AgentChatResponse, AgentWorkflowStep } from '../../../../core/models/agent.model';
 import { ApiError } from '../../../../core/models/api-error.model';
 import { AiAssistantStateService } from '../../../../state/ai-assistant.state';
 import { ROUTES } from '../../../../core/constants/route.constants';
@@ -42,8 +46,9 @@ import { TenantSettingsStoreService } from '../../../../core/services/tenant-set
   styleUrl: './ai-chat-window.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AiChatWindowComponent implements OnDestroy {
-  private readonly aiChatService = inject(AiChatService);
+export class AiChatWindowComponent implements OnInit, OnDestroy {
+  private readonly agentService = inject(AgentEmployeeService);
+  private readonly voice = inject(SophiaVoiceService);
   private readonly aiContextService = inject(AiContextService);
   private readonly aiRetrievalService = inject(AiRetrievalService);
   private readonly aiActionService = inject(AiActionService);
@@ -51,16 +56,22 @@ export class AiChatWindowComponent implements OnDestroy {
   private readonly aiAssistantState = inject(AiAssistantStateService);
   private readonly tenantSettingsStore = inject(TenantSettingsStoreService);
   private readonly notification = inject(NotificationService);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly messagesContainer = viewChild<ElementRef<HTMLDivElement>>('messagesContainer');
 
   readonly close = output<void>();
   readonly navigate = output<string>();
 
+  readonly agentName = signal('Sophia');
+  readonly agentRole = signal('Senior Business Analyst');
+  readonly workflowSteps = signal<AgentWorkflowStep[]>([]);
+
   readonly welcomeMessage: AiChatMessage = {
     role: 'assistant',
     content:
-      "Hi! I'm BusinessOS AI Copilot. Ask about revenue, invoices, projects, customers, or say \"What should I focus on today?\" — I'll answer using your live business data.",
+      "Hello — I'm Sophia, your Senior Business Analyst. Talk or type anytime. I can check inventory, prepare reports, explain your dashboard, and help run the business.",
     timestamp: new Date(),
+    agentDisplayName: 'Sophia',
   };
 
   readonly messages = signal<AiChatMessage[]>([{ ...this.welcomeMessage }]);
@@ -70,8 +81,16 @@ export class AiChatWindowComponent implements OnDestroy {
   readonly inputText = signal('');
   readonly searchText = signal('');
   readonly loading = signal(false);
-  readonly streamingEnabled = signal(true);
   readonly expandedCitations = signal<Record<number, boolean>>({});
+
+  readonly voiceState = this.voice.voiceState;
+  readonly isListening = this.voice.isListening;
+  readonly isSpeaking = this.voice.isSpeaking;
+  readonly isMuted = this.voice.isMuted;
+  readonly micSupported = this.voice.micSupported;
+  readonly language = this.voice.language;
+  readonly interimTranscript = this.voice.transcriptInterim;
+
   readonly showSuggestions = computed(
     () => this.tenantSettingsStore.settings()?.aiShowSuggestions ?? true,
   );
@@ -85,52 +104,103 @@ export class AiChatWindowComponent implements OnDestroy {
     const msgs = this.messages();
     return !this.loading() && msgs.some((m) => m.role === 'user');
   });
+  readonly statusLabel = computed(() => {
+    switch (this.voiceState()) {
+      case 'listening':
+        return 'Listening…';
+      case 'processing':
+        return 'Thinking…';
+      case 'speaking':
+        return 'Speaking…';
+      case 'working':
+        return 'Working…';
+      default:
+        return this.loading() ? 'Thinking…' : 'Ready';
+    }
+  });
 
   constructor() {
     afterNextRender(() => this.scrollToBottom());
   }
 
-  ngOnDestroy(): void {
-    this.aiChatService.stopGeneration();
+  ngOnInit(): void {
+    void this.bootstrap();
+    this.voice.onFinalTranscript = (text) => this.sendMessage(text);
+    this.aiAssistantState.pendingPrompt;
+    // Consume pending Ask Sophia prompts when the window opens.
+    const pending = this.aiAssistantState.consumePendingPrompt();
+    if (pending) {
+      setTimeout(() => this.sendMessage(pending), 120);
+    }
   }
 
-  sendMessage(text?: string, options?: { regenerate?: boolean }): void {
+  ngOnDestroy(): void {
+    this.agentService.stopGeneration();
+    this.voice.stopListening();
+    this.voice.stopSpeaking();
+    this.voice.onFinalTranscript = null;
+  }
+
+  private async bootstrap(): Promise<void> {
+    await this.voice.loadPreferences();
+    this.agentService
+      .listEmployees()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (employees) => {
+          const sophia = employees.find((e) => e.key === 'sophia') ?? employees.find((e) => e.isDefault);
+          if (sophia) {
+            this.agentName.set(sophia.displayName);
+            this.agentRole.set(sophia.roleTitle);
+          }
+        },
+        error: () => undefined,
+      });
+
+    this.agentService
+      .getAskSophiaSuggestions()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (data) => {
+          if (this.showSuggestions() && data.suggestions?.length) {
+            this.suggestions.set(
+              data.suggestions.map((s) => ({ label: s.label, message: s.message })),
+            );
+          }
+        },
+        error: () => undefined,
+      });
+  }
+
+  sendMessage(text?: string): void {
     const message = (text ?? this.inputText()).trim();
     if (!message || this.loading()) return;
 
     if (!this.chatEnabled()) {
       this.appendMessage(
         'assistant',
-        'The AI assistant is turned off in tenant settings. Enable it under Settings to start chatting.',
+        'Sophia is turned off in tenant settings. Enable her under Settings → AI Assistant.',
       );
       return;
     }
 
-    if (!options?.regenerate) {
-      this.inputText.set('');
-      this.appendMessage('user', message);
-    }
-
+    this.inputText.set('');
+    this.appendMessage('user', message);
     this.loading.set(true);
-
-    if (this.streamingEnabled()) {
-      void this.sendStreaming(message, options?.regenerate);
-      return;
-    }
-
-    this.aiChatService.chat(message, { regenerate: options?.regenerate }).subscribe({
-      next: (response) => this.handleResponse(this.aiChatService.normalizeResponse(response)),
-      error: (err: ApiError) => this.handleError(err),
-    });
+    this.voice.setProcessing(true);
+    this.workflowSteps.set([]);
+    void this.sendStreaming(message);
   }
 
   newConversation(): void {
-    this.aiChatService.stopGeneration();
-    this.aiChatService.clearSession();
+    this.agentService.stopGeneration();
+    this.agentService.clearSession();
+    this.voice.stopSpeaking();
     this.messages.set([{ ...this.welcomeMessage, timestamp: new Date() }]);
     this.suggestions.set([]);
     this.quickActions.set([]);
     this.searchResults.set([]);
+    this.workflowSteps.set([]);
     this.inputText.set('');
     this.searchText.set('');
     this.loading.set(false);
@@ -138,8 +208,9 @@ export class AiChatWindowComponent implements OnDestroy {
   }
 
   stopGeneration(): void {
-    this.aiChatService.stopGeneration();
+    this.agentService.stopGeneration();
     this.loading.set(false);
+    this.voice.setProcessing(false);
     this.messages.update((msgs) =>
       msgs.map((msg) => (msg.streaming ? { ...msg, streaming: false } : msg)),
     );
@@ -148,16 +219,38 @@ export class AiChatWindowComponent implements OnDestroy {
   regenerateLast(): void {
     const lastUser = [...this.messages()].reverse().find((m) => m.role === 'user');
     if (!lastUser || this.loading()) return;
-
     this.messages.update((msgs) => {
       const copy = [...msgs];
-      while (copy.length && copy[copy.length - 1].role === 'assistant') {
-        copy.pop();
-      }
+      while (copy.length && copy[copy.length - 1].role === 'assistant') copy.pop();
       return copy;
     });
+    this.sendMessage(lastUser.content);
+  }
 
-    this.sendMessage(lastUser.content, { regenerate: true });
+  toggleMic(): void {
+    this.voice.toggleListening();
+  }
+
+  onMicPointerDown(event: Event): void {
+    event.preventDefault();
+    if (!this.micSupported() || this.loading()) return;
+    this.voice.startListening({ pushToTalk: true });
+  }
+
+  onMicPointerUp(): void {
+    if (this.isListening()) this.voice.stopListening();
+  }
+
+  toggleMute(): void {
+    this.voice.toggleMute();
+  }
+
+  stopSpeaking(): void {
+    this.voice.stopSpeaking();
+  }
+
+  replay(): void {
+    this.voice.replay();
   }
 
   toggleCitations(messageIndex: number): void {
@@ -179,18 +272,45 @@ export class AiChatWindowComponent implements OnDestroy {
     return this.aiRetrievalService.formatMetadata(metadata);
   }
 
-  private async sendStreaming(message: string, regenerate = false): Promise<void> {
+  stepStatusIcon(status: AgentWorkflowStep['status']): string {
+    const value = String(status);
+    if (value === 'Completed' || value === '2') return '✔';
+    if (value === 'Running' || value === '1') return '…';
+    if (value === 'Failed' || value === '3') return '!';
+    if (value === 'Skipped' || value === '4') return '–';
+    return '○';
+  }
+
+  isStepDone(status: AgentWorkflowStep['status']): boolean {
+    const value = String(status);
+    return value === 'Completed' || value === '2';
+  }
+
+  isStepActive(status: AgentWorkflowStep['status']): boolean {
+    const value = String(status);
+    return value === 'Running' || value === '1';
+  }
+
+  private async sendStreaming(message: string): Promise<void> {
     const streamMsg: AiChatMessage = {
       role: 'assistant',
       content: '',
       timestamp: new Date(),
       streaming: true,
+      agentDisplayName: this.agentName(),
     };
     this.messages.update((msgs) => [...msgs, streamMsg]);
     const msgIndex = this.messages().length - 1;
 
     try {
-      for await (const chunk of this.aiChatService.streamWithFallback(message, { regenerate })) {
+      for await (const chunk of this.agentService.streamWithFallback(message)) {
+        if (chunk.type === 'status' && chunk.content) {
+          /* status text shown via voice state */
+        }
+        if (chunk.type === 'workflow_step' && chunk.workflowStep) {
+          this.upsertWorkflowStep(chunk.workflowStep);
+          this.voice.setWorking(true);
+        }
         if ((chunk.type === 'token' || chunk.type === 'delta') && chunk.content) {
           this.messages.update((msgs) => {
             const copy = [...msgs];
@@ -199,8 +319,7 @@ export class AiChatWindowComponent implements OnDestroy {
           });
           this.scrollToBottom();
         }
-
-        if (chunk.type === 'done') {
+        if (chunk.type === 'final' || chunk.type === 'done') {
           if (chunk.finalResponse) {
             this.applyFinalResponse(chunk.finalResponse, msgIndex);
           } else if (chunk.content) {
@@ -217,7 +336,6 @@ export class AiChatWindowComponent implements OnDestroy {
         }
       }
 
-      // If stream ended without clearing the caret, finalize whatever text we have.
       this.messages.update((msgs) => {
         const copy = [...msgs];
         if (copy[msgIndex]?.streaming) {
@@ -235,75 +353,43 @@ export class AiChatWindowComponent implements OnDestroy {
       if (err instanceof AiStreamError && err.aborted) {
         this.messages.update((msgs) => {
           const copy = [...msgs];
-          const current = copy[msgIndex];
           copy[msgIndex] = {
-            ...current,
-            content: current.content || 'Generation stopped.',
+            ...copy[msgIndex],
+            content: copy[msgIndex].content || 'Generation stopped.',
             streaming: false,
           };
           return copy;
         });
         return;
       }
-
-      // Last-resort HTTP fallback if streamWithFallback itself failed before yielding.
       try {
-        const response = await firstValueFrom(this.aiChatService.chat(message, { regenerate }));
-        this.applyFinalResponse(this.aiChatService.normalizeResponse(response), msgIndex);
+        const response = await firstValueFrom(this.agentService.chat(message));
+        this.applyFinalResponse(this.agentService.normalizeResponse(response), msgIndex);
       } catch (fallbackErr) {
         this.messages.update((msgs) => {
           const copy = [...msgs];
           copy[msgIndex] = {
             ...copy[msgIndex],
-            content: this.formatStreamOrApiError(fallbackErr),
+            content: this.formatError(fallbackErr),
             streaming: false,
           };
           return copy;
         });
-        this.notifyStreamError(fallbackErr);
       }
     } finally {
       this.loading.set(false);
+      this.voice.setProcessing(false);
       this.messages.update((msgs) =>
         msgs.map((msg, i) => (i === msgIndex && msg.streaming ? { ...msg, streaming: false } : msg)),
       );
     }
   }
 
-  private handleResponse(response: AiChatResponse): void {
-    const sessionId = this.aiChatService.resolveSessionId(response);
-    if (sessionId) {
-      this.aiChatService.setSessionId(sessionId);
-    }
-    this.appendMessage(
-      'assistant',
-      response.reply,
-      response.sources,
-      response.actionResult,
-      this.mergeCitations(response),
-      response.toolsUsed,
-    );
-    if (this.showSuggestions()) {
-      this.suggestions.set(response.suggestions);
-    }
-    this.quickActions.set(response.quickActions);
-    this.searchResults.set(response.searchResults);
+  private applyFinalResponse(response: AgentChatResponse, msgIndex: number): void {
+    if (response.sessionId) this.agentService.setSessionId(response.sessionId);
+    if (response.agentDisplayName) this.agentName.set(response.agentDisplayName);
+    if (response.workflowSteps?.length) this.workflowSteps.set([...response.workflowSteps]);
 
-    const navRoute = response.actionResult
-      ? this.aiActionService.shouldNavigate(response.actionResult)
-      : null;
-    if (navRoute) {
-      this.navigate.emit(navRoute);
-    }
-
-    this.loading.set(false);
-  }
-
-  private applyFinalResponse(response: AiChatResponse, msgIndex: number): void {
-    const sessionId = this.aiChatService.resolveSessionId(response);
-    if (sessionId) {
-      this.aiChatService.setSessionId(sessionId);
-    }
     this.messages.update((msgs) => {
       const copy = [...msgs];
       copy[msgIndex] = {
@@ -311,76 +397,42 @@ export class AiChatWindowComponent implements OnDestroy {
         content: response.reply || copy[msgIndex].content,
         streaming: false,
         sources: response.sources,
-        citations: this.mergeCitations(response),
+        citations: response.citations ?? [],
         toolsUsed: response.toolsUsed,
         actionResult: response.actionResult,
+        workflowSteps: response.workflowSteps ?? [],
+        agentDisplayName: response.agentDisplayName,
       };
       return copy;
     });
-    if (this.showSuggestions()) {
-      this.suggestions.set(response.suggestions);
-    }
-    this.quickActions.set(response.quickActions);
-    this.searchResults.set(response.searchResults);
+
+    if (this.showSuggestions()) this.suggestions.set(response.suggestions ?? []);
+    this.quickActions.set(response.quickActions ?? []);
+    this.searchResults.set(response.searchResults ?? []);
+
+    const speakText = (response.spokenReply || response.reply || '').trim();
+    if (speakText) this.voice.speak(speakText);
 
     const navRoute = response.actionResult
       ? this.aiActionService.shouldNavigate(response.actionResult)
       : null;
-    if (navRoute) {
-      this.navigate.emit(navRoute);
-    }
+    if (navRoute) this.navigate.emit(navRoute);
   }
 
-  private mergeCitations(response: AiChatResponse): AiCitation[] {
-    const fromCitations = response.citations ?? [];
-    if (fromCitations.length || !response.sourceDocuments?.length) {
-      return fromCitations;
-    }
-
-    return response.sourceDocuments.map((doc) => ({
-      title: doc.documentName,
-      documentType: doc.entityType,
-      sourceId: doc.sourceId,
-      excerpt: doc.preview,
-      score: doc.similarityScore,
-      documentName: doc.documentName,
-      entityType: doc.entityType,
-      similarityScore: doc.similarityScore,
-      metadata: doc.metadata,
-      preview: doc.preview,
-    }));
+  private upsertWorkflowStep(step: AgentWorkflowStep): void {
+    this.workflowSteps.update((steps) => {
+      const copy = [...steps];
+      const idx = copy.findIndex((s) => s.stepKey === step.stepKey);
+      if (idx >= 0) copy[idx] = { ...copy[idx], ...step };
+      else copy.push(step);
+      return copy.sort((a, b) => a.sortOrder - b.sortOrder);
+    });
   }
 
   runSearch(): void {
     const query = this.searchText().trim();
     if (!query || this.loading()) return;
-
-    if (!this.chatEnabled()) {
-      this.appendMessage(
-        'assistant',
-        'Search is unavailable while the AI assistant is disabled in tenant settings.',
-      );
-      return;
-    }
-
-    this.loading.set(true);
-    this.aiChatService.search(query).subscribe({
-      next: (response) => {
-        const normalized = this.aiChatService.normalizeResponse(response);
-        this.searchResults.set(normalized.searchResults);
-        this.appendMessage(
-          'assistant',
-          normalized.searchResults.length
-            ? `Found ${normalized.searchResults.length} result(s) for "${query}".`
-            : `No results found for "${query}".`,
-          normalized.sources,
-          null,
-          this.mergeCitations(normalized),
-        );
-        this.loading.set(false);
-      },
-      error: (err: ApiError) => this.handleError(err),
-    });
+    this.sendMessage(`Search for: ${query}`);
   }
 
   sourcesSummary(msg: AiChatMessage): string | null {
@@ -397,28 +449,21 @@ export class AiChatWindowComponent implements OnDestroy {
   }
 
   onClose(): void {
+    this.voice.stopListening();
+    this.voice.stopSpeaking();
     this.close.emit();
   }
 
   private appendMessage(
     role: 'user' | 'assistant',
     content: string,
-    sources?: AiChatMessage['sources'],
-    actionResult?: AiChatMessage['actionResult'],
-    citations?: AiChatMessage['citations'],
-    toolsUsed?: AiChatMessage['toolsUsed'],
+    extras?: Partial<AiChatMessage>,
   ): void {
     this.messages.update((msgs) => [
       ...msgs,
-      { role, content, timestamp: new Date(), sources, actionResult, citations, toolsUsed },
+      { role, content, timestamp: new Date(), agentDisplayName: this.agentName(), ...extras },
     ]);
     setTimeout(() => this.scrollToBottom(), 50);
-  }
-
-  private handleError(err: ApiError): void {
-    this.appendMessage('assistant', this.formatErrorMessage(err));
-    this.loading.set(false);
-    this.notifyApiError(err);
   }
 
   private scrollToBottom(): void {
@@ -426,50 +471,11 @@ export class AiChatWindowComponent implements OnDestroy {
     if (el) el.scrollTop = el.scrollHeight;
   }
 
-  private formatErrorMessage(err: ApiError): string {
-    const message = err.detail?.trim() || err.title?.trim();
-    if (message) {
-      return message;
+  private formatError(err: unknown): string {
+    if (err instanceof AiStreamError) return err.message;
+    if (err && typeof err === 'object' && 'detail' in err) {
+      return String((err as ApiError).detail || (err as ApiError).title || 'Request failed.');
     }
-
-    return 'Sorry, I could not reach the AI service. Please try again in a moment.';
-  }
-
-  private formatStreamOrApiError(err: unknown): string {
-    if (err instanceof AiStreamError) {
-      return err.message;
-    }
-    if (err && typeof err === 'object' && 'status' in err) {
-      return this.formatErrorMessage(err as ApiError);
-    }
-    return 'Sorry, streaming failed. Please try again.';
-  }
-
-  private notifyStreamError(err: unknown): void {
-    if (err instanceof AiStreamError) {
-      if (err.status === 401) {
-        this.notification.error('Session expired', 'Please sign in again.');
-      } else if (err.status === 403) {
-        this.notification.error('Access denied', err.message);
-      } else if (err.status === 404) {
-        this.notification.error('AI endpoint not found', err.message);
-      } else if (err.status >= 500) {
-        this.notification.error('AI server error', err.message);
-      } else if (err.status === 0) {
-        this.notification.error('Network error', err.message);
-      }
-      return;
-    }
-    if (err && typeof err === 'object' && 'status' in err) {
-      this.notifyApiError(err as ApiError);
-    }
-  }
-
-  private notifyApiError(err: ApiError): void {
-    if (err.status === 404) {
-      this.notification.error('Not found', err.detail ?? err.title);
-    } else if (err.status === 408) {
-      this.notification.error('Request timed out', 'The AI service took too long to respond.');
-    }
+    return 'Sorry, I could not reach Sophia right now. Please try again.';
   }
 }

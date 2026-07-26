@@ -127,6 +127,8 @@ export interface AiChatMessage {
   toolsUsed?: string[] | null;
   actionResult?: AiActionResult | null;
   streaming?: boolean;
+  workflowSteps?: import('./agent.model').AgentWorkflowStep[] | null;
+  agentDisplayName?: string | null;
 }
 
 export interface AiConversationSession {

@@ -5,6 +5,9 @@ import { SettingsService } from '../../../core/services/settings.service';
 import { TenantSettingsStoreService } from '../../../core/services/tenant-settings-store.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { TokenService } from '../../../core/services/token.service';
+import { AgentEmployeeService } from '../../../core/services/agent-employee.service';
+import { SophiaVoiceService } from '../../../core/services/sophia-voice.service';
+import { AgentEmployee } from '../../../core/models/agent.model';
 import { BusinessProfileDto, TenantSettingsDto, UpdateTenantSettingsRequest } from '../../../core/models/settings.model';
 import { ROUTES } from '../../../core/constants/route.constants';
 import { PermissionCodes } from '../../../core/constants/permission.constants';
@@ -58,13 +61,17 @@ export class SettingsHubComponent implements OnInit {
   private readonly tenantSettingsStore = inject(TenantSettingsStoreService);
   private readonly notification = inject(NotificationService);
   private readonly tokenService = inject(TokenService);
+  private readonly agentService = inject(AgentEmployeeService);
+  private readonly voiceService = inject(SophiaVoiceService);
 
   readonly activeTab = signal<SettingsTab>('general');
   readonly loading = signal(true);
   readonly saving = signal(false);
+  readonly voiceSaving = signal(false);
   readonly error = signal<string | null>(null);
   readonly settings = signal<TenantSettingsDto | null>(null);
   readonly profile = signal<BusinessProfileDto | null>(null);
+  readonly employees = signal<AgentEmployee[]>([]);
   readonly routes = ROUTES;
   readonly canUpdate = this.tokenService.hasPermission(PermissionCodes.settings.update);
   readonly breadcrumbs = [{ label: 'Settings', route: ROUTES.settings.hub }];
@@ -77,7 +84,7 @@ export class SettingsHubComponent implements OnInit {
     { id: 'email', label: 'Email' },
     { id: 'notifications', label: 'Notifications' },
     { id: 'appearance', label: 'Appearance' },
-    { id: 'ai', label: 'AI Assistant' },
+    { id: 'ai', label: 'Sophia / AI' },
     { id: 'security', label: 'Security' },
     { id: 'branding', label: 'Branding' },
   ];
@@ -112,8 +119,16 @@ export class SettingsHubComponent implements OnInit {
     address: ['', Validators.required],
   });
 
+  readonly voiceForm = this.fb.nonNullable.group({
+    language: ['en', Validators.required],
+    autoSpeak: [true],
+    continuousListening: [false],
+    preferredAgentKey: ['sophia'],
+  });
+
   ngOnInit(): void {
     this.load();
+    this.loadVoicePreferences();
   }
 
   load(): void {
@@ -241,5 +256,67 @@ export class SettingsHubComponent implements OnInit {
         this.saving.set(false);
       },
     });
+  }
+
+  loadVoicePreferences(): void {
+    this.agentService.listEmployees().subscribe({
+      next: (emps) => this.employees.set(emps.filter((e) => e.isActive)),
+      error: () =>
+        this.employees.set([
+          {
+            key: 'sophia',
+            displayName: 'Sophia',
+            roleTitle: 'Senior Business Analyst',
+            specialty: 'Business operations',
+            defaultLanguage: 'en',
+            isDefault: true,
+            isActive: true,
+          },
+        ]),
+    });
+
+    this.agentService.getVoicePreferences().subscribe({
+      next: (prefs) => {
+        this.voiceForm.patchValue({
+          language: prefs.language === 'ur' ? 'ur' : 'en',
+          autoSpeak: prefs.autoSpeak !== false,
+          continuousListening: !!prefs.continuousListening,
+          preferredAgentKey: prefs.preferredAgentKey || 'sophia',
+        });
+        this.voiceService.applyPreferences(prefs);
+      },
+      error: () => undefined,
+    });
+  }
+
+  saveVoicePreferences(): void {
+    if (this.voiceForm.invalid) {
+      this.voiceForm.markAllAsTouched();
+      return;
+    }
+
+    this.voiceSaving.set(true);
+    const value = this.voiceForm.getRawValue();
+    this.agentService
+      .saveVoicePreferences({
+        language: value.language,
+        autoSpeak: value.autoSpeak,
+        continuousListening: value.continuousListening,
+        preferredAgentKey: value.preferredAgentKey,
+        voiceName: 'default',
+        speechRate: 1,
+        pitch: 1,
+      })
+      .subscribe({
+        next: (prefs) => {
+          this.voiceService.applyPreferences(prefs);
+          this.notification.success('Sophia voice preferences saved.');
+          this.voiceSaving.set(false);
+        },
+        error: () => {
+          this.notification.error('Failed to save voice preferences.');
+          this.voiceSaving.set(false);
+        },
+      });
   }
 }
