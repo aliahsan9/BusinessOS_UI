@@ -1,17 +1,18 @@
 <main class="dashboard page-container">
   <!-- Header -->
-  <header class="dashboard__header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+  <header class="dashboard__header">
     <div class="dashboard__header-content">
-      <!-- <app-breadcrumb [items]="breadcrumbs" /> -->
-      <h1 class="page-title">
-        <i class="bi bi-speedometer2 dashboard__title-icon" aria-hidden="true"></i>
-        Dashboard
+      <p class="dashboard__eyebrow">Business overview</p>
+      <h1 class="page-title dashboard__title">
+        <span class="dashboard__title-icon" aria-hidden="true">
+          <i class="bi bi-speedometer2"></i>
+        </span>
+        <span class="dashboard__title-text">Dashboard</span>
       </h1>
     </div>
 
-    <div class="dashboard__toolbar d-flex align-items-center gap-2 w-100 w-md-auto">
-      <!-- Segmented pill switcher: desktop / tablet -->
-      <div class="dashboard__period-pills d-none d-md-flex" role="tablist" aria-label="Select dashboard period">
+    <div class="dashboard__toolbar">
+      <div class="dashboard__period-pills d-none d-md-inline-flex" role="tablist" aria-label="Select dashboard period">
         @for (p of periods; track p.value) {
           <button
             type="button"
@@ -26,8 +27,7 @@
         }
       </div>
 
-      <!-- Native select: compact / touch screens -->
-      <div class="dashboard__period-select d-md-none w-100">
+      <div class="dashboard__period-select d-md-none">
         <label for="period-select">
           <i class="bi bi-calendar3" aria-hidden="true"></i>
           Time period
@@ -47,7 +47,7 @@
 
       <button
         type="button"
-        class="btn btn-icon btn-outline-secondary dashboard__refresh-btn"
+        class="btn btn-outline-secondary dashboard__refresh-btn"
         (click)="retry()"
         [disabled]="loading()"
         aria-label="Refresh dashboard data"
