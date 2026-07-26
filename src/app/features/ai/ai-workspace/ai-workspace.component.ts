@@ -10,6 +10,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { AiChatService } from '../../../core/services/ai-chat.service';
@@ -94,6 +95,7 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
   private readonly aiChat = inject(AiChatService);
   private readonly aiRetrieval = inject(AiRetrievalService);
   private readonly notification = inject(NotificationService);
+  private readonly sanitizer = inject(DomSanitizer);
 
   private readonly messagesEl = viewChild<ElementRef<HTMLDivElement>>('messagesEl');
   private readonly composerEl = viewChild<ElementRef<HTMLTextAreaElement>>('composerEl');
@@ -104,11 +106,44 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
   readonly activeSessionId = signal<string | null>(null);
   readonly suggestions = signal<AiSuggestionDto[]>([
     { label: 'Revenue this month', message: 'What is our revenue this month?' },
-    { label: 'Products sold', message: 'How many products sold this month?' },
+    { label: 'Best-selling products', message: 'Which products are best selling this month?' },
+    { label: 'Sales trends', message: 'What are our sales trends over the last few months?' },
+    { label: 'Increase sales', message: 'How can I increase sales based on our current data?' },
     { label: 'Overdue invoices', message: 'Show overdue invoices' },
     { label: 'Top customers', message: 'Who are the top customers by revenue?' },
     { label: 'Focus today', message: 'What should I focus on today?' },
   ]);
+
+  readonly starterPrompts = [
+    {
+      icon: 'bi-graph-up-arrow',
+      title: 'Sales & revenue',
+      description: 'Live totals, bestsellers, and month-over-month trends.',
+      prompts: [
+        { label: 'Revenue this month', message: 'What is our revenue this month?' },
+        { label: 'Best sellers', message: 'Which products are best selling this month?' },
+        { label: 'Sales trends', message: 'What are our sales trends over the last few months?' },
+      ],
+    },
+    {
+      icon: 'bi-lightbulb',
+      title: 'Grow the business',
+      description: 'Practical tips grounded in your actual numbers.',
+      prompts: [
+        { label: 'Increase sales', message: 'How can I increase sales based on our current data?' },
+        { label: 'Focus today', message: 'What should I focus on today?' },
+      ],
+    },
+    {
+      icon: 'bi-people',
+      title: 'Customers & cash',
+      description: 'Who pays, who owes, and who to follow up.',
+      prompts: [
+        { label: 'Top customers', message: 'Who are the top customers by revenue?' },
+        { label: 'Overdue invoices', message: 'Show overdue invoices' },
+      ],
+    },
+  ] as const;
   private readonly defaultSuggestions = this.suggestions();
   readonly input = signal('');
   readonly expandedCitations = signal<Record<number, boolean>>({});
@@ -718,6 +753,57 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
         this.notification.error(apiErr.title, apiErr.detail);
       }
     }
+  }
+
+  /** Lightweight markdown → HTML for assistant replies (**bold**, bullets, paragraphs). */
+  formatReplyHtml(text: string | undefined | null): SafeHtml {
+    const raw = (text ?? '').trim();
+    if (!raw) {
+      return this.sanitizer.bypassSecurityTrustHtml('');
+    }
+
+    const escaped = raw
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
+    const withInline = escaped
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/`([^`]+)`/g, '<code>$1</code>');
+
+    const lines = withInline.split('\n');
+    const htmlParts: string[] = [];
+    let inList = false;
+
+    for (const line of lines) {
+      const bullet = line.match(/^\s*(?:[-*]|\d+\.)\s+(.*)$/);
+      if (bullet) {
+        if (!inList) {
+          htmlParts.push('<ul>');
+          inList = true;
+        }
+        htmlParts.push(`<li>${bullet[1]}</li>`);
+        continue;
+      }
+
+      if (inList) {
+        htmlParts.push('</ul>');
+        inList = false;
+      }
+
+      if (!line.trim()) {
+        htmlParts.push('<br />');
+        continue;
+      }
+
+      htmlParts.push(`<p>${line}</p>`);
+    }
+
+    if (inList) {
+      htmlParts.push('</ul>');
+    }
+
+    return this.sanitizer.bypassSecurityTrustHtml(htmlParts.join(''));
   }
 
   private push(role: 'user' | 'assistant', content: string, isVoice = false): void {

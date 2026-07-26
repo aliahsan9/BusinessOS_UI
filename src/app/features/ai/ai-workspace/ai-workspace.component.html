@@ -103,7 +103,7 @@
         </div>
         <div class="ai-workspace__header-text">
           <h1>AI Copilot Workspace</h1>
-          <p>Ask business questions, create records, and explore analytics with live tenant data.</p>
+          <p>ChatGPT-style answers grounded in your live BusinessOS data — sales, products, trends, and more.</p>
         </div>
 
         @if (voiceOutputSupported()) {
@@ -145,13 +145,38 @@
               <i class="bi bi-stars"></i>
             </div>
             <h2>How can I help today?</h2>
-            <p>Try one of the suggested questions, or ask anything about your business data.</p>
+            <p>
+              Ask anything about your business — sales, bestsellers, trends, invoices, or how to grow.
+              Answers use your live data so numbers stay grounded.
+            </p>
             @if (voiceInputSupported()) {
               <p class="empty-state__voice-hint">
                 <i class="bi bi-mic-fill"></i>
                 Tip: tap the mic to ask by voice.
               </p>
             }
+
+            <div class="starter-grid">
+              @for (group of starterPrompts; track group.title) {
+                <div class="starter-card">
+                  <div class="starter-card__head">
+                    <i [class]="'bi ' + group.icon"></i>
+                    <div>
+                      <strong>{{ group.title }}</strong>
+                      <small>{{ group.description }}</small>
+                    </div>
+                  </div>
+                  <div class="starter-card__prompts">
+                    @for (prompt of group.prompts; track prompt.label) {
+                      <button type="button" (click)="send(prompt.message)">
+                        {{ prompt.label }}
+                        <i class="bi bi-arrow-up-right"></i>
+                      </button>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
           </div>
         }
 
@@ -170,11 +195,13 @@
                   <span class="thinking-dots" aria-live="polite" aria-label="AI Copilot is thinking">
                     <span></span><span></span><span></span>
                   </span>
-                } @else {
-                  <span>{{ msg.displayContent ?? msg.content }}</span>
+                } @else if (msg.role === 'assistant') {
+                  <div class="bubble__rich" [innerHTML]="formatReplyHtml(msg.displayContent ?? msg.content)"></div>
                   @if (msg.isStreaming) {
                     <span class="caret" aria-hidden="true"></span>
                   }
+                } @else {
+                  <span>{{ msg.displayContent ?? msg.content }}</span>
                 }
               </div>
 
@@ -244,7 +271,7 @@
             <textarea
               #composerEl
               rows="1"
-              [placeholder]="isListening() ? 'Listening… speak now' : 'Ask about revenue, invoices, projects, customers…'"
+              [placeholder]="isListening() ? 'Listening… speak now' : 'Ask about sales, bestsellers, trends, invoices…'"
               [ngModel]="input()"
               (ngModelChange)="onComposerInput($event)"
               (keydown)="onComposerKeydown($event)"
