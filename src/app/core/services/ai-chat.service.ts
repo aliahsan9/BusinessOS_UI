@@ -93,6 +93,10 @@ export class AiChatService extends BaseApiService {
     return this.get<AiConversationMessage[]>(`${API_ENDPOINTS.ai.conversation}/${sessionId}`);
   }
 
+  deleteConversation(sessionId: string): Observable<void> {
+    return this.delete<void>(`${API_ENDPOINTS.ai.conversation}/${sessionId}`);
+  }
+
   getInsights(): Observable<AiProactiveInsight[]> {
     return this.get<AiProactiveInsight[]>(API_ENDPOINTS.ai.insights);
   }

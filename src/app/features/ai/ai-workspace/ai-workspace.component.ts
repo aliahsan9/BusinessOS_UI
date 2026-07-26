@@ -28,6 +28,7 @@ import { ApiError } from '../../../core/models/api-error.model';
 import { ROUTES } from '../../../core/constants/route.constants';
 import { AppBreadcrumbComponent } from '../../../shared/components/app-breadcrumb/app-breadcrumb.component';
 import { AppCardComponent } from '../../../shared/components/app-card/app-card.component';
+import { AppConfirmDialogComponent } from '../../../shared/components/app-confirm-dialog/app-confirm-dialog.component';
 
 /**
  * Extends the base chat message with client-only state used to drive
@@ -84,7 +85,7 @@ interface SpeechRecognitionLike extends EventTarget {
 @Component({
   selector: 'app-ai-workspace',
   standalone: true,
-  imports: [FormsModule, RouterLink, AppBreadcrumbComponent, AppCardComponent],
+  imports: [FormsModule, RouterLink, AppBreadcrumbComponent, AppCardComponent, AppConfirmDialogComponent],
   templateUrl: './ai-workspace.component.html',
   styleUrl: './ai-workspace.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -118,6 +119,8 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
   readonly streaming = signal(false);
   readonly sidebarOpen = signal(false);
   readonly sessionsLoading = signal(false);
+  readonly deleteTarget = signal<AiConversationSession | null>(null);
+  readonly deleting = signal(false);
   readonly canRegenerate = computed(() => {
     const msgs = this.messages();
     return !this.loading() && !this.streaming() && msgs.some((m) => m.role === 'user');
@@ -270,6 +273,47 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
       },
       error: (err: ApiError) => {
         this.notification.error('Could not load conversation', err.detail ?? err.title);
+      },
+    });
+  }
+
+  confirmDeleteSession(session: AiConversationSession, event: Event): void {
+    event.stopPropagation();
+    this.deleteTarget.set(session);
+  }
+
+  deleteConfirmMessage(session: AiConversationSession): string {
+    const title = session.title?.trim() || 'this chat';
+    return `Delete "${title}"? This cannot be undone.`;
+  }
+
+  cancelDeleteSession(): void {
+    if (this.deleting()) return;
+    this.deleteTarget.set(null);
+  }
+
+  deleteSession(): void {
+    const target = this.deleteTarget();
+    if (!target) return;
+
+    this.deleting.set(true);
+    this.aiChat.deleteConversation(target.id).subscribe({
+      next: () => {
+        this.sessions.update((list) => list.filter((s) => s.id !== target.id));
+        if (this.activeSessionId() === target.id) {
+          this.newChat();
+        }
+        this.notification.success('Conversation deleted');
+        this.deleteTarget.set(null);
+        this.deleting.set(false);
+      },
+      error: (err: ApiError) => {
+        const detail =
+          err.status === 405
+            ? 'Delete is not available on this API yet. Restart the backend after the latest update.'
+            : (err.detail ?? err.title);
+        this.notification.error('Failed to delete conversation', detail);
+        this.deleting.set(false);
       },
     });
   }

@@ -237,15 +237,14 @@
 .suggestion {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.35rem;
   width: 100%;
   text-align: left;
   border: 1px solid var(--color-border);
   background: var(--color-bg);
   border-radius: var(--radius-md, 8px);
-  padding: 0.55rem 0.75rem;
+  padding: 0.35rem 0.4rem 0.35rem 0.55rem;
   margin-bottom: 0.5rem;
-  cursor: pointer;
   color: var(--color-text);
   transition: border-color 0.15s ease, transform 0.15s ease, background-color 0.15s ease;
 
@@ -264,6 +263,20 @@
   &--active {
     border-color: var(--color-primary);
     background: color-mix(in srgb, var(--color-primary) 10%, var(--color-bg));
+  }
+
+  &__main {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex: 1 1 auto;
+    min-width: 0;
+    border: none;
+    background: transparent;
+    color: inherit;
+    text-align: left;
+    padding: 0.2rem 0.15rem;
+    cursor: pointer;
   }
 
   &__icon {
@@ -287,11 +300,43 @@
       color: var(--color-text-muted);
     }
   }
+
+  &__delete {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    opacity: 0.65;
+    transition: opacity 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+
+    &:hover,
+    &:focus-visible {
+      opacity: 1;
+      color: #dc3545;
+      background: color-mix(in srgb, #dc3545 12%, transparent);
+      outline: none;
+    }
+  }
+
+  &:hover &__delete,
+  &--active &__delete {
+    opacity: 1;
+  }
 }
 
 .suggestion {
   margin-bottom: 0.4rem;
   font-size: 0.875rem;
+  gap: 0.6rem;
+  padding: 0.55rem 0.75rem;
+  cursor: pointer;
 
   &__icon {
     color: var(--color-primary);
@@ -792,6 +837,15 @@
 @media (max-width: 991.98px) {
   .ai-workspace {
     --ai-workspace-chrome-offset: 11.5rem;
+    min-height: 0;
+    height: calc(100dvh - var(--ai-workspace-chrome-offset));
+    max-height: calc(100dvh - var(--ai-workspace-chrome-offset));
+
+    &__mobile-bar {
+      .btn span {
+        display: inline;
+      }
+    }
 
     &__body {
       grid-template-columns: 1fr;
@@ -802,10 +856,11 @@
       top: 0;
       left: 0;
       bottom: 0;
-      width: min(85vw, 320px);
+      width: min(88vw, 340px);
       z-index: 1050;
       background: var(--color-bg);
       padding: 1rem;
+      padding-top: max(1rem, env(safe-area-inset-top, 0px));
       overflow-y: auto;
       transform: translateX(-100%);
       transition: transform 0.22s ease;
@@ -815,19 +870,43 @@
         transform: translateX(0);
       }
     }
+
+    &__main {
+      border-radius: var(--radius-md, 10px);
+    }
+
+    &__header {
+      flex-wrap: wrap;
+      gap: 0.65rem;
+    }
+  }
+
+  .session-item__delete {
+    opacity: 1;
   }
 }
 
 @media (max-width: 575.98px) {
   .ai-workspace {
-    --ai-workspace-chrome-offset: 10.5rem;
+    --ai-workspace-chrome-offset: 9.75rem;
+    min-height: 0;
+  }
+
+  .ai-workspace__mobile-bar {
+    margin-bottom: 0.5rem;
+
+    .btn {
+      flex: 1 1 auto;
+      justify-content: center;
+      min-height: 2.4rem;
+    }
   }
 
   .ai-workspace__header {
-    padding: 0.9rem 1rem;
+    padding: 0.75rem 0.85rem;
 
     h1 {
-      font-size: 1.05rem;
+      font-size: 1.02rem;
     }
 
     p {
@@ -835,19 +914,54 @@
     }
   }
 
+  .ai-workspace__header-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+  }
+
   .auto-speak-toggle span {
     display: none;
   }
 
+  .new-chat-btn--compact {
+    padding: 0.45rem 0.65rem;
+    font-size: 0.8rem;
+  }
+
+  .message {
+    gap: 0.5rem;
+  }
+
   .message__content {
-    max-width: 88%;
+    max-width: calc(100% - 2.75rem);
+  }
+
+  .avatar {
+    width: 1.85rem;
+    height: 1.85rem;
+    font-size: 0.85rem;
   }
 
   .composer {
-    padding: 0.75rem;
+    padding: 0.65rem 0.7rem;
+    padding-bottom: max(0.65rem, env(safe-area-inset-bottom, 0px));
+  }
+
+  .composer__input-wrap textarea {
+    font-size: 1rem; // avoid iOS zoom
   }
 
   .composer__send span {
     display: none;
+  }
+
+  .composer__mic,
+  .composer__send {
+    min-width: 2.6rem;
+  }
+
+  .empty-state {
+    padding: 1.5rem 1rem;
   }
 }
