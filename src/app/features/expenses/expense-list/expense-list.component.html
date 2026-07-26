@@ -29,7 +29,7 @@
 @if (loading()) {
   <div class="loading-stack">@for (i of [1, 2, 3, 4, 5]; track i) { <app-skeleton height="2.5rem" /> }</div>
 } @else if (items().length === 0) {
-  <app-empty-state icon="💸" title="No expenses found" description="Add your first expense or adjust filters." />
+  <app-empty-state icon="bi-cash-stack" title="No expenses found" description="Add your first expense or adjust filters." />
 } @else {
   <div class="bos-table-wrapper">
     <table class="bos-table bos-table--striped bos-table--hover bos-table--compact">

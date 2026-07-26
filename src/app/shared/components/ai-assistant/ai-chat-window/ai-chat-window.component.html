@@ -29,7 +29,9 @@
         </button>
       }
       <a class="ai-chat__workspace-link" [routerLink]="workspaceRoute" (click)="onClose()">Workspace</a>
-      <button type="button" class="ai-chat__close" aria-label="Close" (click)="onClose()">×</button>
+      <button type="button" class="ai-chat__close" aria-label="Close" (click)="onClose()">
+        <i class="bi bi-x-lg" aria-hidden="true"></i>
+      </button>
     </div>
   </header>
 
@@ -40,20 +42,33 @@
     </div>
   }
 
-  @if (workflowSteps().length > 0) {
+  @if (workflowSteps().length > 0 || liveTaskStatus()) {
     <div class="ai-chat__workflow" aria-live="polite">
-      <div class="ai-chat__workflow-title">Working on it</div>
-      <ul>
-        @for (step of workflowSteps(); track step.stepKey) {
-          <li
-            [class.ai-chat__workflow-step--done]="isStepDone(step.status)"
-            [class.ai-chat__workflow-step--active]="isStepActive(step.status)"
-          >
-            <span class="ai-chat__workflow-icon">{{ stepStatusIcon(step.status) }}</span>
-            <span>{{ step.title }}</span>
-          </li>
-        }
-      </ul>
+      @if (liveTaskStatus()) {
+        <div class="ai-chat__live-task">
+          <span class="ai-chat__live-task-pulse" aria-hidden="true"></span>
+          <span>{{ liveTaskStatus() }}</span>
+          @if (liveToolName()) {
+            <span class="ai-chat__live-tool">{{ liveToolName() }}</span>
+          }
+        </div>
+      }
+      @if (workflowSteps().length > 0) {
+        <div class="ai-chat__workflow-title">Working on it</div>
+        <ul>
+          @for (step of workflowSteps(); track step.stepKey) {
+            <li
+              [class.ai-chat__workflow-step--done]="isStepDone(step.status)"
+              [class.ai-chat__workflow-step--active]="isStepActive(step.status)"
+            >
+              <span class="ai-chat__workflow-icon" aria-hidden="true">
+                <i class="bi" [class]="stepStatusIcon(step.status)"></i>
+              </span>
+              <span>{{ step.title }}</span>
+            </li>
+          }
+        </ul>
+      }
     </div>
   }
 
@@ -144,7 +159,11 @@
     <div class="ai-chat__quick-actions">
       @for (action of quickActions(); track action.label) {
         <button type="button" class="ai-chat__quick-action" (click)="goTo(action.route)">
-          <span>{{ action.icon }}</span>
+          @if (isBootstrapIcon(action.icon)) {
+            <i class="bi" [class]="bootstrapIconClass(action.icon)" aria-hidden="true"></i>
+          } @else if (action.icon) {
+            <span aria-hidden="true">{{ action.icon }}</span>
+          }
           {{ action.label }}
         </button>
       }

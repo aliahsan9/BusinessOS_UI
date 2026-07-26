@@ -13,7 +13,13 @@
     <span class="app-btn__spinner" aria-hidden="true"></span>
   }
   @if (icon()) {
-    <span class="app-btn__icon" aria-hidden="true">{{ icon() }}</span>
+    <span class="app-btn__icon" aria-hidden="true">
+      @if (isBootstrapIcon(icon())) {
+        <i class="bi" [class]="bootstrapIconClass(icon())"></i>
+      } @else {
+        {{ icon() }}
+      }
+    </span>
   }
   <span class="app-btn__label">{{ label() }}</span>
 </button>

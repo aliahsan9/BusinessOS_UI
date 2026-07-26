@@ -54,8 +54,8 @@ export class InventoryDashboardComponent implements OnInit {
   ];
 
   readonly headerActions = [
-    { label: 'Overview', route: ROUTES.inventory.overview, icon: '🏠', variant: ButtonVariant.Outline },
-    { label: 'Stock Levels', route: ROUTES.inventory.stockLevels, icon: '📊', variant: ButtonVariant.Outline },
+    { label: 'Overview', route: ROUTES.inventory.overview, icon: 'bi-house', variant: ButtonVariant.Outline },
+    { label: 'Stock Levels', route: ROUTES.inventory.stockLevels, icon: 'bi-bar-chart', variant: ButtonVariant.Outline },
   ];
 
   ngOnInit(): void {

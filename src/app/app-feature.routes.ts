@@ -66,7 +66,7 @@ export function buildFeatureRoutes(): Routes {
       data: {
         pageTitle: 'Profile',
         description: 'View and update your account profile.',
-        icon: '👤',
+        icon: 'bi-person',
       },
     },
   ];

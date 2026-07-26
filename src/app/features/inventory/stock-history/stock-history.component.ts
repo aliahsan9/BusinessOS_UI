@@ -56,7 +56,7 @@ export class StockHistoryComponent implements OnInit {
   ];
 
   readonly headerActions = [
-    { label: 'Overview', route: ROUTES.inventory.overview, icon: '🏠', variant: ButtonVariant.Outline },
+    { label: 'Overview', route: ROUTES.inventory.overview, icon: 'bi-house', variant: ButtonVariant.Outline },
   ];
 
   ngOnInit(): void {

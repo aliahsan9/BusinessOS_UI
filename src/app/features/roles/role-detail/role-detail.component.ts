@@ -80,7 +80,7 @@ export class RoleDetailComponent implements OnInit {
       {
         label: 'Edit',
         route: `${ROUTES.roles.base}/${this.role()?.id}/edit`,
-        icon: '✏️',
+        icon: 'bi-pencil',
         variant: ButtonVariant.Outline,
       },
     ];

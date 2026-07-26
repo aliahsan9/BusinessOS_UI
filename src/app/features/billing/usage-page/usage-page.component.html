@@ -8,45 +8,45 @@
 } @else {
   @if (usage(); as u) {
     <app-card>
-      <div class="row g-4">
-        <div class="col-md-6">
+      <div class="row g-3 g-md-4">
+        <div class="col-12 col-sm-6">
           <div class="d-flex align-items-center gap-2 mb-2">
-            <span>👥</span><strong>Users</strong>
+            <i class="bi bi-people" aria-hidden="true"></i><strong>Users</strong>
             <span class="ms-auto small text-muted">{{ u.userCount }} / {{ formatLimit(u.maxUsers) }}</span>
           </div>
           <div class="progress mb-3" style="height: 8px"><div class="progress-bar" [style.width.%]="usagePercent(u.userCount, u.maxUsers)"></div></div>
         </div>
-        <div class="col-md-6">
+        <div class="col-12 col-sm-6">
           <div class="d-flex align-items-center gap-2 mb-2">
-            <span>🧑‍💼</span><strong>Customers</strong>
+            <i class="bi bi-person-badge" aria-hidden="true"></i><strong>Customers</strong>
             <span class="ms-auto small text-muted">{{ u.customerCount }} / {{ formatLimit(u.maxCustomers) }}</span>
           </div>
           <div class="progress mb-3" style="height: 8px"><div class="progress-bar" [style.width.%]="usagePercent(u.customerCount, u.maxCustomers)"></div></div>
         </div>
-        <div class="col-md-6">
+        <div class="col-12 col-sm-6">
           <div class="d-flex align-items-center gap-2 mb-2">
-            <span>📁</span><strong>Projects</strong>
+            <i class="bi bi-folder" aria-hidden="true"></i><strong>Projects</strong>
             <span class="ms-auto small text-muted">{{ u.projectCount }} / {{ formatLimit(u.maxProjects) }}</span>
           </div>
           <div class="progress mb-3" style="height: 8px"><div class="progress-bar" [style.width.%]="usagePercent(u.projectCount, u.maxProjects)"></div></div>
         </div>
-        <div class="col-md-6">
+        <div class="col-12 col-sm-6">
           <div class="d-flex align-items-center gap-2 mb-2">
-            <span>✅</span><strong>Tasks</strong>
+            <i class="bi bi-check-circle" aria-hidden="true"></i><strong>Tasks</strong>
             <span class="ms-auto small text-muted">{{ u.taskCount }} / {{ formatLimit(u.maxTasks) }}</span>
           </div>
           <div class="progress mb-3" style="height: 8px"><div class="progress-bar" [style.width.%]="usagePercent(u.taskCount, u.maxTasks)"></div></div>
         </div>
-        <div class="col-md-6">
+        <div class="col-12 col-sm-6">
           <div class="d-flex align-items-center gap-2 mb-2">
-            <span>💾</span><strong>Storage (MB)</strong>
+            <i class="bi bi-hdd" aria-hidden="true"></i><strong>Storage (MB)</strong>
             <span class="ms-auto small text-muted">{{ u.storageUsedMb }} / {{ formatLimit(u.maxStorageMb) }}</span>
           </div>
           <div class="progress mb-3" style="height: 8px"><div class="progress-bar" [style.width.%]="usagePercent(u.storageUsedMb, u.maxStorageMb)"></div></div>
         </div>
-        <div class="col-md-6">
+        <div class="col-12 col-sm-6">
           <div class="d-flex align-items-center gap-2 mb-2">
-            <span>🤖</span><strong>AI Requests</strong>
+            <i class="bi bi-robot" aria-hidden="true"></i><strong>AI Requests</strong>
             <span class="ms-auto small text-muted">{{ u.aiRequestsUsed }} / {{ formatLimit(u.maxAiRequests) }}</span>
           </div>
           <div class="progress mb-3" style="height: 8px"><div class="progress-bar" [style.width.%]="usagePercent(u.aiRequestsUsed, u.maxAiRequests)"></div></div>

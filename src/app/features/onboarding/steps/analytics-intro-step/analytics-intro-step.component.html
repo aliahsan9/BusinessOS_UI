@@ -6,7 +6,7 @@
   <div class="analytics-grid">
     @for (item of insights; track item.title) {
       <article class="analytics-card">
-        <span class="analytics-card__icon">{{ item.icon }}</span>
+        <span class="analytics-card__icon" aria-hidden="true"><i class="bi" [class]="item.icon"></i></span>
         <h3>{{ item.title }}</h3>
         <p>{{ item.description }}</p>
       </article>

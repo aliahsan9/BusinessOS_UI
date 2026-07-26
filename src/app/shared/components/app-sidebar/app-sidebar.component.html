@@ -9,7 +9,7 @@
 >
   <div class="app-sidebar__brand">
     <div class="app-sidebar__logo" aria-hidden="true">
-      <i class="fas fa-cubes"></i>
+      <i class="bi bi-boxes"></i>
     </div>
     @if (!hideLabels()) {
       <span class="app-sidebar__name">BusinessOS</span>
@@ -33,7 +33,7 @@
               (click)="onNavClick()"
             >
               <span class="app-sidebar__icon" aria-hidden="true">
-                <i [class]="'fas ' + item.icon"></i>
+                <i class="bi" [class]="item.icon"></i>
               </span>
               @if (!hideLabels()) {
                 <span class="app-sidebar__label">{{ item.label }}</span>
@@ -53,7 +53,7 @@
       [attr.aria-label]="isCollapsedView() ? 'Expand sidebar' : 'Collapse sidebar'"
       title="Toggle sidebar"
     >
-      <i [class]="'fas ' + (isCollapsedView() ? 'fa-angle-right' : 'fa-angle-left')"></i>
+      <i class="bi" [class]="isCollapsedView() ? 'bi-chevron-right' : 'bi-chevron-left'"></i>
     </button>
   </div>
 </aside>

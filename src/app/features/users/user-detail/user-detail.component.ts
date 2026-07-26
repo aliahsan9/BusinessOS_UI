@@ -84,7 +84,7 @@ export class UserDetailComponent implements OnInit {
       actions.push({
         label: 'Edit',
         route: `${ROUTES.users.base}/${this.user()?.id}/edit`,
-        icon: '✏️',
+        icon: 'bi-pencil',
         variant: ButtonVariant.Outline,
       });
     }

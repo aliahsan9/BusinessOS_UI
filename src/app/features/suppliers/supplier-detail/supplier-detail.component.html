@@ -1,7 +1,7 @@
 @if (loading()) {
   <app-skeleton height="16rem" variant="rect" />
 } @else if (!supplier()) {
-  <app-empty-state icon="🏭" title="Supplier not found" description="This supplier may have been removed." />
+  <app-empty-state icon="bi-building" title="Supplier not found" description="This supplier may have been removed." />
 } @else {
   <app-breadcrumb
     [items]="[
@@ -28,7 +28,7 @@
     @if (purchasesLoading()) {
       <app-skeleton height="8rem" variant="rect" />
     } @else if (purchases().length === 0) {
-      <app-empty-state icon="📋" title="No purchases yet" description="Purchase orders from this supplier will appear here." />
+      <app-empty-state icon="bi-clipboard" title="No purchases yet" description="Purchase orders from this supplier will appear here." />
     } @else {
       <div class="bos-table-wrapper">
         <table class="bos-table bos-table--striped bos-table--compact">
@@ -74,7 +74,7 @@
     @if (productsLoading()) {
       <app-skeleton height="8rem" variant="rect" />
     } @else if (products().length === 0) {
-      <app-empty-state icon="📦" title="No products linked" description="Products purchased from this supplier will appear here." />
+      <app-empty-state icon="bi-box-seam" title="No products linked" description="Products purchased from this supplier will appear here." />
     } @else {
       <div class="bos-table-wrapper">
         <table class="bos-table bos-table--striped bos-table--compact">

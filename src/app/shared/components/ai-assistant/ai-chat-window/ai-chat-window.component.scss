@@ -134,6 +134,33 @@
     }
   }
 
+  &__live-task {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-primary);
+    margin-bottom: 0.35rem;
+  }
+
+  &__live-task-pulse {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--color-primary);
+    animation: sophia-pulse 1.2s ease-out infinite;
+    flex-shrink: 0;
+  }
+
+  &__live-tool {
+    margin-inline-start: auto;
+    font-size: 0.68rem;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    font-family: ui-monospace, monospace;
+  }
+
   &__workflow-title {
     font-size: 0.7rem;
     font-weight: 700;

@@ -23,7 +23,7 @@
 @if (loading()) {
   @for (i of [1, 2, 3, 4]; track i) { <app-skeleton height="2rem" /> }
 } @else if (items().length === 0) {
-  <app-empty-state icon="🏷️" title="No categories" description="Create categories to organize your products." />
+  <app-empty-state icon="bi-tags" title="No categories" description="Create categories to organize your products." />
 } @else {
   <div class="bos-table-wrapper">
     <table class="bos-table bos-table--striped bos-table--hover">

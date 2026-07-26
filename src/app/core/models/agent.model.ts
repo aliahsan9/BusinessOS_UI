@@ -62,6 +62,7 @@ export interface AgentChatResponse {
 export interface AgentStreamChunk {
   type: string;
   content?: string | null;
+  toolName?: string | null;
   workflowStep?: AgentWorkflowStep | null;
   workflowId?: string | null;
   finalResponse?: AgentChatResponse | null;

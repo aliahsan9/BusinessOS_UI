@@ -2,7 +2,9 @@
   <app-breadcrumb [items]="breadcrumbs" />
 
   <header class="feature-page__header">
-    <span class="feature-page__icon" aria-hidden="true">{{ pageData.icon }}</span>
+    <span class="feature-page__icon" aria-hidden="true">
+      <i class="bi" [class]="pageData.icon"></i>
+    </span>
     <div>
       <h1 class="feature-page__title">{{ pageData.pageTitle }}</h1>
       <p class="feature-page__description">{{ pageData.description }}</p>

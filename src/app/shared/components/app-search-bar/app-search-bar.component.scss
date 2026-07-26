@@ -6,15 +6,20 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface);
-  min-width: 220px;
+  min-width: 0;
+  width: 100%;
+  max-width: 320px;
 
   &__icon {
     opacity: 0.6;
     font-size: var(--font-size-sm);
+    flex-shrink: 0;
+    line-height: 1;
   }
 
   &__input {
     flex: 1;
+    min-width: 0;
     border: none;
     background: transparent;
     outline: none;
@@ -27,8 +32,9 @@
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767.98px) {
   .search-bar {
+    max-width: none;
     width: 100%;
   }
 }

@@ -18,12 +18,12 @@ export class WelcomeStepComponent {
   readonly resumeLater = output<void>();
 
   readonly features = [
-    { icon: '🤝', title: 'Customer Management', description: 'Organize contacts, track relationships, and view customer analytics.' },
-    { icon: '📋', title: 'Project Management', description: 'Manage projects as orders with status tracking and revenue insights.' },
-    { icon: '✅', title: 'Tasks', description: 'Break projects into line-item tasks with quantities and pricing.' },
-    { icon: '🧾', title: 'Invoices', description: 'Generate invoices, track payments, and monitor outstanding balances.' },
-    { icon: '💸', title: 'Expenses', description: 'Record and categorize business expenses with vendor tracking.' },
-    { icon: '📈', title: 'Analytics', description: 'Visualize revenue, profit, and operational KPIs in real time.' },
-    { icon: '📄', title: 'Reports', description: 'Export professional PDF reports for stakeholders and accounting.' },
+    { icon: 'bi-handshake', title: 'Customer Management', description: 'Organize contacts, track relationships, and view customer analytics.' },
+    { icon: 'bi-clipboard', title: 'Project Management', description: 'Manage projects as orders with status tracking and revenue insights.' },
+    { icon: 'bi-check-circle', title: 'Tasks', description: 'Break projects into line-item tasks with quantities and pricing.' },
+    { icon: 'bi-receipt', title: 'Invoices', description: 'Generate invoices, track payments, and monitor outstanding balances.' },
+    { icon: 'bi-cash-stack', title: 'Expenses', description: 'Record and categorize business expenses with vendor tracking.' },
+    { icon: 'bi-graph-up', title: 'Analytics', description: 'Visualize revenue, profit, and operational KPIs in real time.' },
+    { icon: 'bi-file-earmark-text', title: 'Reports', description: 'Export professional PDF reports for stakeholders and accounting.' },
   ];
 }

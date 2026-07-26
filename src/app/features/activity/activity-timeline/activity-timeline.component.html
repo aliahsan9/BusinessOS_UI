@@ -30,7 +30,7 @@
       }
     </div>
   } @else if (items().length === 0) {
-    <app-empty-state icon="🕒" title="No activity yet" description="Actions performed in BusinessOS will appear here." />
+    <app-empty-state icon="bi-clock" title="No activity yet" description="Actions performed in BusinessOS will appear here." />
   } @else {
     <ul class="activity__timeline">
       @for (item of items(); track item.id) {

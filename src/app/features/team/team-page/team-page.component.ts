@@ -93,7 +93,7 @@ export class TeamPageComponent implements OnInit {
   readonly canManage = this.tokenService.hasPermission(PermissionCodes.team.manage);
   readonly breadcrumbs = [{ label: 'Team', route: ROUTES.team.list }, { label: 'Management' }];
   readonly headerActions = this.canInvite
-    ? [{ label: 'Invite Member', icon: '✉️', action: () => this.openInviteModal() }]
+    ? [{ label: 'Invite Member', icon: 'bi-envelope', action: () => this.openInviteModal() }]
     : [];
 
   ngOnInit(): void {

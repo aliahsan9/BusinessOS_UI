@@ -21,7 +21,7 @@
           for a guided setup, or explore the modules below.
         </p>
         <div class="help-center__video-placeholder">
-          <span class="help-center__video-icon">▶</span>
+          <span class="help-center__video-icon" aria-hidden="true"><i class="bi bi-play-fill"></i></span>
           <p>Video tutorials coming soon</p>
           <small>Product walkthrough and feature demos will be available here.</small>
         </div>
@@ -66,7 +66,9 @@
             <div class="faq-item" [class.faq-item--expanded]="expandedFaq() === faq.id">
               <button type="button" class="faq-item__question" (click)="toggleFaq(faq)">
                 <span>{{ faq.question }}</span>
-                <span class="faq-item__toggle">{{ expandedFaq() === faq.id ? '−' : '+' }}</span>
+                <span class="faq-item__toggle" aria-hidden="true">
+                  <i class="bi" [class]="expandedFaq() === faq.id ? 'bi-dash-lg' : 'bi-plus-lg'"></i>
+                </span>
               </button>
               @if (expandedFaq() === faq.id) {
                 <div class="faq-item__answer">{{ faq.answer }}</div>

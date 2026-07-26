@@ -18,9 +18,9 @@ export class CompletionStepComponent {
   readonly finish = output<void>();
 
   readonly quickActions = [
-    { label: 'Create Customer', route: ROUTES.customers.create, icon: '🤝' },
-    { label: 'Create Project', route: ROUTES.orders.create, icon: '📋' },
-    { label: 'Create Invoice', route: ROUTES.invoices.list, icon: '🧾' },
-    { label: 'Open Dashboard', route: ROUTES.dashboard, icon: '📊' },
+    { label: 'Create Customer', route: ROUTES.customers.create, icon: 'bi-handshake' },
+    { label: 'Create Project', route: ROUTES.orders.create, icon: 'bi-clipboard' },
+    { label: 'Create Invoice', route: ROUTES.invoices.list, icon: 'bi-receipt' },
+    { label: 'Open Dashboard', route: ROUTES.dashboard, icon: 'bi-bar-chart' },
   ];
 }

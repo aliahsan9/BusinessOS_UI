@@ -59,7 +59,7 @@
                   [attr.aria-label]="isFavorite(theme.id) ? 'Remove from favorites' : 'Add to favorites'"
                   (click)="toggleFavorite($event, theme.id)"
                 >
-                  ★
+                  <i class="bi" [class]="isFavorite(theme.id) ? 'bi-star-fill' : 'bi-star'" aria-hidden="true"></i>
                 </button>
               </div>
               <p class="theme-card__description">{{ theme.description }}</p>
@@ -122,7 +122,7 @@
                 [attr.aria-label]="isFavorite(theme.id) ? 'Remove from favorites' : 'Add to favorites'"
                 (click)="toggleFavorite($event, theme.id)"
               >
-                ★
+                <i class="bi" [class]="isFavorite(theme.id) ? 'bi-star-fill' : 'bi-star'" aria-hidden="true"></i>
               </button>
             </div>
             <p class="theme-card__description">{{ theme.description }}</p>

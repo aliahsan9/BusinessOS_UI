@@ -51,25 +51,25 @@ export class InventoryOverviewComponent implements OnInit {
       title: 'Stock Levels',
       description: 'View and adjust current stock for all products.',
       route: ROUTES.inventory.stockLevels,
-      icon: '📊',
+      icon: 'bi-bar-chart',
     },
     {
       title: 'Stock History',
       description: 'Browse stock transactions and audit trail.',
       route: ROUTES.inventory.history,
-      icon: '📜',
+      icon: 'bi-clock-history',
     },
     {
       title: 'Reports',
       description: 'Inventory value and profit potential analysis.',
       route: ROUTES.inventory.reports,
-      icon: '📈',
+      icon: 'bi-graph-up',
     },
     {
       title: 'Dashboard',
       description: 'Visual overview of inventory KPIs and trends.',
       route: ROUTES.inventory.dashboard,
-      icon: '🏭',
+      icon: 'bi-building',
     },
   ];
 

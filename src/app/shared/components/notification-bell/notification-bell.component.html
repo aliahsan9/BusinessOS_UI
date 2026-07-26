@@ -6,7 +6,7 @@
     [attr.aria-expanded]="notificationState.panelOpen()"
     (click)="toggle()"
   >
-    <span class="notification-bell__icon" aria-hidden="true">🔔</span>
+    <span class="notification-bell__icon" aria-hidden="true"><i class="bi bi-bell"></i></span>
     @if (notificationState.hasUnread()) {
       <span class="notification-bell__count" [attr.aria-label]="notificationState.unreadCount() + ' unread'">
         {{ notificationState.unreadCount() > 99 ? '99+' : notificationState.unreadCount() }}

@@ -61,7 +61,7 @@ export class SupplierListComponent implements OnInit {
   readonly breadcrumbs = [{ label: 'Suppliers', route: ROUTES.suppliers.list }, { label: 'Directory' }];
 
   readonly headerActions = this.canCreate
-    ? [{ label: 'Add Supplier', route: ROUTES.suppliers.create, icon: '➕' }]
+    ? [{ label: 'Add Supplier', route: ROUTES.suppliers.create, icon: 'bi-plus-lg' }]
     : [];
 
   ngOnInit(): void {

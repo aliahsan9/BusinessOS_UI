@@ -17,9 +17,9 @@ export class AnalyticsIntroStepComponent {
   readonly skipStep = output<void>();
 
   readonly insights = [
-    { icon: '💰', title: 'Revenue Tracking', description: 'Monitor income trends, top customers, and sales performance over time.' },
-    { icon: '💸', title: 'Expenses', description: 'Track spending by category and vendor to understand your cost structure.' },
-    { icon: '📄', title: 'Reports', description: 'Generate PDF reports for business summary, P&L, and stakeholder updates.' },
-    { icon: '📊', title: 'Dashboard Insights', description: 'Get a real-time overview of KPIs, alerts, and recent activity.' },
+    { icon: 'bi-currency-dollar', title: 'Revenue Tracking', description: 'Monitor income trends, top customers, and sales performance over time.' },
+    { icon: 'bi-cash-stack', title: 'Expenses', description: 'Track spending by category and vendor to understand your cost structure.' },
+    { icon: 'bi-file-earmark-text', title: 'Reports', description: 'Generate PDF reports for business summary, P&L, and stakeholder updates.' },
+    { icon: 'bi-bar-chart', title: 'Dashboard Insights', description: 'Get a real-time overview of KPIs, alerts, and recent activity.' },
   ];
 }

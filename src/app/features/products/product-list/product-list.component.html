@@ -32,8 +32,8 @@
   </div>
 
   <div class="toolbar__actions">
-    <app-button label="Export CSV" [variant]="ButtonVariant.Outline" icon="📄" (clicked)="exportCsv()" />
-    <app-button label="Export Excel" [variant]="ButtonVariant.Outline" icon="📊" (clicked)="exportExcel()" />
+    <app-button label="Export CSV" [variant]="ButtonVariant.Outline" icon="bi-file-earmark-text" (clicked)="exportCsv()" />
+    <app-button label="Export Excel" [variant]="ButtonVariant.Outline" icon="bi-bar-chart" (clicked)="exportExcel()" />
     @if (canUpdate && selectedIds().size > 0) {
       <app-button label="Bulk Update" [variant]="ButtonVariant.Secondary" (clicked)="showBulkUpdate.set(true)" />
     }
@@ -51,7 +51,7 @@
   </div>
 } @else if (filteredItems().length === 0) {
   <app-empty-state
-    icon="📦"
+    icon="bi-box-seam"
     title="No products found"
     description="Create your first product or adjust your search filters."
   />

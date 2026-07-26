@@ -1,7 +1,7 @@
 @if (loading()) {
   <app-skeleton height="16rem" variant="rect" />
 } @else if (!customer()) {
-  <app-empty-state icon="🤝" title="Customer not found" description="This customer may have been removed." />
+  <app-empty-state icon="bi-handshake" title="Customer not found" description="This customer may have been removed." />
 } @else {
   <app-breadcrumb
     [items]="[
@@ -51,7 +51,7 @@
     @if (ordersLoading()) {
       <app-skeleton height="8rem" />
     } @else if (orders().length === 0) {
-      <app-empty-state icon="🛒" title="No orders yet" description="Create an order for this customer." />
+      <app-empty-state icon="bi-cart3" title="No orders yet" description="Create an order for this customer." />
     } @else {
       <div class="bos-table-wrapper">
         <table class="bos-table bos-table--striped bos-table--compact">

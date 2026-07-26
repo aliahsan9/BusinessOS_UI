@@ -37,6 +37,7 @@ import { ApiError } from '../../../../core/models/api-error.model';
 import { AiAssistantStateService } from '../../../../state/ai-assistant.state';
 import { ROUTES } from '../../../../core/constants/route.constants';
 import { TenantSettingsStoreService } from '../../../../core/services/tenant-settings-store.service';
+import { bootstrapIconClass, isBootstrapIcon } from '../../../utils/icon.util';
 
 @Component({
   selector: 'app-ai-chat-window',
@@ -65,6 +66,8 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
   readonly agentName = signal('Sophia');
   readonly agentRole = signal('Senior Business Analyst');
   readonly workflowSteps = signal<AgentWorkflowStep[]>([]);
+  readonly liveTaskStatus = signal<string | null>(null);
+  readonly liveToolName = signal<string | null>(null);
 
   readonly welcomeMessage: AiChatMessage = {
     role: 'assistant',
@@ -82,6 +85,9 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
   readonly searchText = signal('');
   readonly loading = signal(false);
   readonly expandedCitations = signal<Record<number, boolean>>({});
+
+  readonly isBootstrapIcon = isBootstrapIcon;
+  readonly bootstrapIconClass = bootstrapIconClass;
 
   readonly voiceState = this.voice.voiceState;
   readonly isListening = this.voice.isListening;
@@ -105,6 +111,8 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
     return !this.loading() && msgs.some((m) => m.role === 'user');
   });
   readonly statusLabel = computed(() => {
+    const live = this.liveTaskStatus();
+    if (live && this.loading()) return live;
     switch (this.voiceState()) {
       case 'listening':
         return 'Listening…';
@@ -113,7 +121,7 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
       case 'speaking':
         return 'Speaking…';
       case 'working':
-        return 'Working…';
+        return this.liveToolName() ? `Calling ${this.liveToolName()}…` : 'Working…';
       default:
         return this.loading() ? 'Thinking…' : 'Ready';
     }
@@ -189,6 +197,8 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
     this.loading.set(true);
     this.voice.setProcessing(true);
     this.workflowSteps.set([]);
+    this.liveTaskStatus.set(null);
+    this.liveToolName.set(null);
     void this.sendStreaming(message);
   }
 
@@ -201,6 +211,8 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
     this.quickActions.set([]);
     this.searchResults.set([]);
     this.workflowSteps.set([]);
+    this.liveTaskStatus.set(null);
+    this.liveToolName.set(null);
     this.inputText.set('');
     this.searchText.set('');
     this.loading.set(false);
@@ -274,11 +286,11 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
 
   stepStatusIcon(status: AgentWorkflowStep['status']): string {
     const value = String(status);
-    if (value === 'Completed' || value === '2') return '✔';
-    if (value === 'Running' || value === '1') return '…';
-    if (value === 'Failed' || value === '3') return '!';
-    if (value === 'Skipped' || value === '4') return '–';
-    return '○';
+    if (value === 'Completed' || value === '2') return 'bi-check-lg';
+    if (value === 'Running' || value === '1') return 'bi-arrow-repeat';
+    if (value === 'Failed' || value === '3') return 'bi-exclamation-lg';
+    if (value === 'Skipped' || value === '4') return 'bi-dash-lg';
+    return 'bi-circle';
   }
 
   isStepDone(status: AgentWorkflowStep['status']): boolean {
@@ -305,7 +317,13 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
     try {
       for await (const chunk of this.agentService.streamWithFallback(message)) {
         if (chunk.type === 'status' && chunk.content) {
-          /* status text shown via voice state */
+          this.liveTaskStatus.set(chunk.content);
+          this.voice.setWorking(true);
+        }
+        if (chunk.type === 'tool') {
+          if (chunk.toolName) this.liveToolName.set(chunk.toolName);
+          if (chunk.content) this.liveTaskStatus.set(chunk.content);
+          this.voice.setWorking(true);
         }
         if (chunk.type === 'workflow_step' && chunk.workflowStep) {
           this.upsertWorkflowStep(chunk.workflowStep);
@@ -379,6 +397,8 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
     } finally {
       this.loading.set(false);
       this.voice.setProcessing(false);
+      this.liveTaskStatus.set(null);
+      this.liveToolName.set(null);
       this.messages.update((msgs) =>
         msgs.map((msg, i) => (i === msgIndex && msg.streaming ? { ...msg, streaming: false } : msg)),
       );

@@ -79,7 +79,7 @@ export class PaymentListComponent implements OnInit {
   readonly breadcrumbs = [{ label: 'Payments', route: ROUTES.payments.list }, { label: 'All Payments' }];
 
   readonly headerActions = this.canCreate
-    ? [{ label: 'Record Payment', route: ROUTES.payments.create, icon: '➕' }]
+    ? [{ label: 'Record Payment', route: ROUTES.payments.create, icon: 'bi-plus-lg' }]
     : [];
 
   ngOnInit(): void {

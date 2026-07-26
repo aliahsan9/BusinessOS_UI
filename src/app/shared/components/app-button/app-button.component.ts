@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { ButtonSize, ButtonVariant } from '../../../core/enums';
+import { bootstrapIconClass, isBootstrapIcon } from '../../utils/icon.util';
 
 @Component({
   selector: 'app-button',
@@ -20,6 +21,9 @@ export class AppButtonComponent {
   readonly ariaLabel = input<string>();
 
   readonly clicked = output<MouseEvent>();
+
+  readonly isBootstrapIcon = isBootstrapIcon;
+  readonly bootstrapIconClass = bootstrapIconClass;
 
   onClick(event: MouseEvent): void {
     if (!this.loading() && !this.disabled()) {

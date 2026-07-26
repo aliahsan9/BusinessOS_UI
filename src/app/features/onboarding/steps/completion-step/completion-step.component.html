@@ -1,6 +1,6 @@
 <div class="onboarding-step onboarding-step--complete">
   <div class="completion-hero">
-    <span class="completion-hero__emoji">🎉</span>
+    <span class="completion-hero__icon" aria-hidden="true"><i class="bi bi-stars"></i></span>
     <h1>Congratulations!</h1>
     <h2>BusinessOS Setup Complete</h2>
     <p>You're ready to manage your business efficiently. Here are some quick actions to get started.</p>
@@ -9,7 +9,7 @@
   <div class="quick-actions">
     @for (action of quickActions; track action.label) {
       <a [routerLink]="action.route" class="quick-action-card" (click)="finish.emit()">
-        <span class="quick-action-card__icon">{{ action.icon }}</span>
+        <span class="quick-action-card__icon" aria-hidden="true"><i class="bi" [class]="action.icon"></i></span>
         <span>{{ action.label }}</span>
       </a>
     }

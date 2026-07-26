@@ -80,7 +80,7 @@ export class PurchaseOrderDetailComponent implements OnInit {
       actions.push({
         label: 'Edit',
         route: `${ROUTES.purchaseOrders.base}/${po.id}/edit`,
-        icon: '✏️',
+        icon: 'bi-pencil',
         variant: ButtonVariant.Outline,
       });
     }

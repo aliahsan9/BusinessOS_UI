@@ -72,7 +72,7 @@ export class OrderListComponent implements OnInit {
   readonly breadcrumbs = [{ label: 'Orders', route: ROUTES.orders.list }, { label: 'All Orders' }];
 
   readonly headerActions = this.canCreate
-    ? [{ label: 'New Order', route: ROUTES.orders.create, icon: '➕' }]
+    ? [{ label: 'New Order', route: ROUTES.orders.create, icon: 'bi-plus-lg' }]
     : [];
 
   ngOnInit(): void {

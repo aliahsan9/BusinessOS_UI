@@ -77,7 +77,7 @@ export class PurchaseOrderListComponent implements OnInit {
   ];
 
   readonly headerActions = this.canCreate
-    ? [{ label: 'New Purchase Order', route: ROUTES.purchaseOrders.create, icon: '➕' }]
+    ? [{ label: 'New Purchase Order', route: ROUTES.purchaseOrders.create, icon: 'bi-plus-lg' }]
     : [];
 
   ngOnInit(): void {

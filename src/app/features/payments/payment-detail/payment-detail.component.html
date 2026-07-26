@@ -1,7 +1,7 @@
 @if (loading()) {
   <app-skeleton height="12rem" variant="rect" />
 } @else if (!payment()) {
-  <app-empty-state icon="💳" title="Payment not found" description="This payment may have been removed." />
+  <app-empty-state icon="bi-credit-card" title="Payment not found" description="This payment may have been removed." />
 } @else {
   <app-breadcrumb
     [items]="[

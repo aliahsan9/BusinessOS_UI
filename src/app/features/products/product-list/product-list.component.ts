@@ -87,8 +87,8 @@ export class ProductListComponent implements OnInit {
   ];
 
   readonly headerActions = [
-    { label: 'Categories', route: ROUTES.products.categories.list, icon: '🏷️', variant: ButtonVariant.Outline },
-    ...(this.canCreate ? [{ label: 'Add Product', route: ROUTES.products.create, icon: '➕' }] : []),
+    { label: 'Categories', route: ROUTES.products.categories.list, icon: 'bi-tags', variant: ButtonVariant.Outline },
+    ...(this.canCreate ? [{ label: 'Add Product', route: ROUTES.products.create, icon: 'bi-plus-lg' }] : []),
   ];
 
   ngOnInit(): void {

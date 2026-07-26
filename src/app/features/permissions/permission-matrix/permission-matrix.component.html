@@ -12,7 +12,7 @@
 @if (loading()) {
   <app-skeleton height="24rem" variant="rect" />
 } @else if (permissions().length === 0) {
-  <app-empty-state icon="🔐" title="No permissions found" description="Permission definitions will appear here." />
+  <app-empty-state icon="bi-shield-lock" title="No permissions found" description="Permission definitions will appear here." />
 } @else {
   @for (group of groupedPermissions(); track group[0]) {
     <app-card [title]="group[0]" [subtitle]="group[1].length + ' permissions'">

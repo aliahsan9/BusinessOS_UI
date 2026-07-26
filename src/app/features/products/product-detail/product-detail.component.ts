@@ -82,7 +82,7 @@ export class ProductDetailComponent implements OnInit {
 
   headerActions() {
     return this.canEdit
-      ? [{ label: 'Edit', route: `${ROUTES.products.base}/${this.product()?.id}/edit`, icon: '✏️', variant: ButtonVariant.Primary }]
+      ? [{ label: 'Edit', route: `${ROUTES.products.base}/${this.product()?.id}/edit`, icon: 'bi-pencil', variant: ButtonVariant.Primary }]
       : [];
   }
 }

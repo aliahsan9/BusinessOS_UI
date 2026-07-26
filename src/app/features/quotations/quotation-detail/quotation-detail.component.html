@@ -1,7 +1,7 @@
 @if (loading()) {
   <app-skeleton height="16rem" variant="rect" />
 } @else if (!quotation()) {
-  <app-empty-state icon="📄" title="Quotation not found" description="This quotation may have been removed." />
+  <app-empty-state icon="bi-file-earmark-text" title="Quotation not found" description="This quotation may have been removed." />
 } @else {
   <app-breadcrumb
     [items]="[

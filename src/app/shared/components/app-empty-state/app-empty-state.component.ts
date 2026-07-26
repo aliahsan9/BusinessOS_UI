@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { AppButtonComponent } from '../app-button/app-button.component';
 import { ButtonVariant } from '../../../core/enums';
+import { bootstrapIconClass, isBootstrapIcon } from '../../utils/icon.util';
 
 @Component({
   selector: 'app-empty-state',
@@ -13,9 +14,12 @@ import { ButtonVariant } from '../../../core/enums';
 export class AppEmptyStateComponent {
   readonly title = input.required<string>();
   readonly description = input<string>();
-  readonly icon = input('📭');
+  readonly icon = input('bi-inbox');
   readonly actionLabel = input<string>();
   readonly actionVariant = input<ButtonVariant>(ButtonVariant.Primary);
 
   readonly action = output<void>();
+
+  readonly isBootstrapIcon = isBootstrapIcon;
+  readonly bootstrapIconClass = bootstrapIconClass;
 }

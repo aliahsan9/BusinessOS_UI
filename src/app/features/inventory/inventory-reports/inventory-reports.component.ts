@@ -70,8 +70,8 @@ export class InventoryReportsComponent implements OnInit {
   ];
 
   readonly headerActions = [
-    { label: 'Overview', route: ROUTES.inventory.overview, icon: '🏠', variant: ButtonVariant.Outline },
-    { label: 'Export CSV', icon: '📄', action: () => this.exportCsv() },
+    { label: 'Overview', route: ROUTES.inventory.overview, icon: 'bi-house', variant: ButtonVariant.Outline },
+    { label: 'Export CSV', icon: 'bi-file-earmark-text', action: () => this.exportCsv() },
   ];
 
   ngOnInit(): void {

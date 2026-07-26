@@ -1,7 +1,7 @@
 @if (loading()) {
   <app-skeleton height="16rem" variant="rect" />
 } @else if (!product()) {
-  <app-empty-state icon="📦" title="Product not found" description="This product may have been removed." />
+  <app-empty-state icon="bi-box-seam" title="Product not found" description="This product may have been removed." />
 } @else {
   <app-breadcrumb
     [items]="[

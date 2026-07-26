@@ -58,7 +58,7 @@ export class UserListComponent implements OnInit {
   readonly canCreate = this.tokenService.hasPermission(PermissionCodes.user.create);
   readonly canUpdate = this.tokenService.hasPermission(PermissionCodes.user.update);
   readonly breadcrumbs = [{ label: 'Users', route: ROUTES.users.list }, { label: 'Directory' }];
-  readonly headerActions = this.canCreate ? [{ label: 'Add User', route: ROUTES.users.create, icon: '➕' }] : [];
+  readonly headerActions = this.canCreate ? [{ label: 'Add User', route: ROUTES.users.create, icon: 'bi-plus-lg' }] : [];
 
   ngOnInit(): void {
     this.load();

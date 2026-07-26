@@ -1,7 +1,7 @@
 @if (loading()) {
   <app-skeleton height="16rem" variant="rect" />
 } @else if (!invoice()) {
-  <app-empty-state icon="🧾" title="Invoice not found" description="This invoice may have been removed." />
+  <app-empty-state icon="bi-receipt" title="Invoice not found" description="This invoice may have been removed." />
 } @else {
   <app-breadcrumb
     [items]="[

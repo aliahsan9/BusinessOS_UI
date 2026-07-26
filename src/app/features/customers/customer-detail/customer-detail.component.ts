@@ -117,7 +117,7 @@ export class CustomerDetailComponent implements OnInit, OnDestroy {
       actions.push({
         label: 'Create Order',
         route: `${ROUTES.orders.create}?customerId=${this.customer()?.id}`,
-        icon: '🛒',
+        icon: 'bi-cart3',
         variant: ButtonVariant.Primary,
       });
     }
@@ -125,7 +125,7 @@ export class CustomerDetailComponent implements OnInit, OnDestroy {
       actions.push({
         label: 'Edit',
         route: `${ROUTES.customers.base}/${this.customer()?.id}/edit`,
-        icon: '✏️',
+        icon: 'bi-pencil',
         variant: ButtonVariant.Outline,
       });
     }

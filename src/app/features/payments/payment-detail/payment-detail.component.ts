@@ -80,7 +80,7 @@ export class PaymentDetailComponent implements OnInit {
       actions.push({
         label: 'Edit',
         route: `${ROUTES.payments.base}/${p.id}/edit`,
-        icon: '✏️',
+        icon: 'bi-pencil',
         variant: ButtonVariant.Outline,
       });
     }

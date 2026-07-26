@@ -44,7 +44,7 @@ export class ExpenseDetailComponent implements OnInit {
 
   headerActions() {
     if (!this.canEdit || !this.expense()) return [];
-    return [{ label: 'Edit', route: `${ROUTES.expenses.base}/${this.expense()!.id}/edit`, icon: '✏️', variant: ButtonVariant.Outline }];
+    return [{ label: 'Edit', route: `${ROUTES.expenses.base}/${this.expense()!.id}/edit`, icon: 'bi-pencil', variant: ButtonVariant.Outline }];
   }
 
   statusVariant(status: string): 'primary' | 'success' | 'danger' | 'warning' | 'info' | 'neutral' {

@@ -27,7 +27,7 @@
     }
   </div>
 } @else if (items().length === 0) {
-  <app-empty-state icon="📋" title="No audit logs found" description="Adjust filters or check back later." />
+  <app-empty-state icon="bi-clipboard" title="No audit logs found" description="Adjust filters or check back later." />
 } @else {
   <div class="audit-list">
     @for (log of items(); track log.id) {

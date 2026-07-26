@@ -10,7 +10,7 @@
   <div class="onboarding-step__grid">
     @for (feature of features; track feature.title) {
       <article class="feature-card">
-        <span class="feature-card__icon" aria-hidden="true">{{ feature.icon }}</span>
+        <span class="feature-card__icon" aria-hidden="true"><i class="bi" [class]="feature.icon"></i></span>
         <h3>{{ feature.title }}</h3>
         <p>{{ feature.description }}</p>
       </article>

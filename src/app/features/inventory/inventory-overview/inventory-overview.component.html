@@ -39,7 +39,7 @@
   @for (card of navCards; track card.route) {
     <a [routerLink]="card.route" class="overview__nav-link">
       <app-card [title]="card.title" [subtitle]="card.description" [hoverable]="true">
-        <span class="overview__nav-icon">{{ card.icon }}</span>
+        <span class="overview__nav-icon" aria-hidden="true"><i class="bi" [class]="card.icon"></i></span>
       </app-card>
     </a>
   }

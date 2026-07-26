@@ -61,7 +61,7 @@ export class CategoryListComponent implements OnInit {
   readonly canDelete = this.tokenService.hasPermission(PermissionCodes.category.delete);
 
   readonly headerActions = this.canCreate
-    ? [{ label: 'Add Category', route: ROUTES.products.categories.create, icon: '➕' }]
+    ? [{ label: 'Add Category', route: ROUTES.products.categories.create, icon: 'bi-plus-lg' }]
     : [];
 
   ngOnInit(): void {

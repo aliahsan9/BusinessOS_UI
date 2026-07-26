@@ -6,11 +6,17 @@
   gap: var(--space-4);
   margin-bottom: var(--space-6);
 
+  &__content {
+    min-width: 0;
+    flex: 1 1 12rem;
+  }
+
   &__title {
     margin: 0;
-    font-size: var(--font-size-2xl);
+    font-size: clamp(1.25rem, 2.5vw, var(--font-size-2xl));
     font-weight: 600;
     color: var(--color-text);
+    word-break: break-word;
   }
 
   &__subtitle {
@@ -31,11 +37,40 @@
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767.98px) {
   .page-header {
     flex-direction: column;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
 
     &__actions {
+      width: 100%;
+
+      > a,
+      > app-button,
+      .app-btn {
+        flex: 1 1 auto;
+      }
+
+      a {
+        display: flex;
+        flex: 1 1 auto;
+
+        .app-btn {
+          width: 100%;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 575.98px) {
+  .page-header__actions {
+    flex-direction: column;
+    align-items: stretch;
+
+    > a,
+    .app-btn {
       width: 100%;
     }
   }

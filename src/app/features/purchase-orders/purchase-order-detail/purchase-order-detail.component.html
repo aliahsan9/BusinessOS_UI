@@ -1,7 +1,7 @@
 @if (loading()) {
   <app-skeleton height="16rem" variant="rect" />
 } @else if (!purchaseOrder()) {
-  <app-empty-state icon="📋" title="Purchase order not found" description="This purchase order may have been removed." />
+  <app-empty-state icon="bi-clipboard" title="Purchase order not found" description="This purchase order may have been removed." />
 } @else {
   <app-breadcrumb
     [items]="[

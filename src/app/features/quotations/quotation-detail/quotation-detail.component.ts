@@ -81,7 +81,7 @@ export class QuotationDetailComponent implements OnInit {
       actions.push({
         label: 'Edit',
         route: `${ROUTES.quotations.base}/${q.id}/edit`,
-        icon: '✏️',
+        icon: 'bi-pencil',
         variant: ButtonVariant.Outline,
       });
     }

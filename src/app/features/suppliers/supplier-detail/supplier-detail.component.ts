@@ -103,7 +103,7 @@ export class SupplierDetailComponent implements OnInit {
           {
             label: 'Edit',
             route: `${ROUTES.suppliers.base}/${this.supplier()?.id}/edit`,
-            icon: '✏️',
+            icon: 'bi-pencil',
             variant: ButtonVariant.Primary,
           },
         ]

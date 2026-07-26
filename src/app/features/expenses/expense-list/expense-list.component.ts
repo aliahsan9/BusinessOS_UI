@@ -76,7 +76,7 @@ export class ExpenseListComponent implements OnInit {
   readonly canUpdate = this.tokenService.hasPermission(PermissionCodes.expense.update);
   readonly canDelete = this.tokenService.hasPermission(PermissionCodes.expense.delete);
   readonly breadcrumbs = [{ label: 'Expenses', route: ROUTES.expenses.list }, { label: 'Directory' }];
-  readonly headerActions = this.canCreate ? [{ label: 'Add Expense', route: ROUTES.expenses.create, icon: '➕' }] : [];
+  readonly headerActions = this.canCreate ? [{ label: 'Add Expense', route: ROUTES.expenses.create, icon: 'bi-plus-lg' }] : [];
 
   ngOnInit(): void {
     this.categoryService.getAll().subscribe({ next: (c) => this.categories.set(c) });

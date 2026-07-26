@@ -53,7 +53,7 @@ export class RoleListComponent implements OnInit {
   readonly canUpdate = this.tokenService.hasPermission(PermissionCodes.role.update);
   readonly canDelete = this.tokenService.hasPermission(PermissionCodes.role.delete);
   readonly breadcrumbs = [{ label: 'Roles', route: ROUTES.roles.list }, { label: 'Directory' }];
-  readonly headerActions = this.canCreate ? [{ label: 'Add Role', route: ROUTES.roles.create, icon: '➕' }] : [];
+  readonly headerActions = this.canCreate ? [{ label: 'Add Role', route: ROUTES.roles.create, icon: 'bi-plus-lg' }] : [];
 
   ngOnInit(): void {
     this.load();

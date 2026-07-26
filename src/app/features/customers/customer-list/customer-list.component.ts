@@ -69,7 +69,7 @@ export class CustomerListComponent implements OnInit {
 
   readonly breadcrumbs = [{ label: 'Customers', route: ROUTES.customers.list }, { label: 'Directory' }];
   readonly headerActions = this.canCreate
-    ? [{ label: 'Add Customer', route: ROUTES.customers.create, icon: '➕' }]
+    ? [{ label: 'Add Customer', route: ROUTES.customers.create, icon: 'bi-plus-lg' }]
     : [];
 
   ngOnInit(): void {

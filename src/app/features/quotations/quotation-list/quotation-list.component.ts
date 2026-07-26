@@ -77,7 +77,7 @@ export class QuotationListComponent implements OnInit {
   readonly breadcrumbs = [{ label: 'Quotations', route: ROUTES.quotations.list }, { label: 'All Quotations' }];
 
   readonly headerActions = this.canCreate
-    ? [{ label: 'New Quotation', route: ROUTES.quotations.create, icon: '➕' }]
+    ? [{ label: 'New Quotation', route: ROUTES.quotations.create, icon: 'bi-plus-lg' }]
     : [];
 
   ngOnInit(): void {

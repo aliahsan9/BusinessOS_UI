@@ -93,7 +93,7 @@ export class OrderDetailComponent implements OnInit, OnDestroy {
         {
           label: 'Edit',
           route: `${ROUTES.orders.base}/${order.id}/edit`,
-          icon: '✏️',
+          icon: 'bi-pencil',
           variant: ButtonVariant.Outline,
         },
       ];
