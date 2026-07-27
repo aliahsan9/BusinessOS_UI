@@ -47,8 +47,8 @@ export interface CategorySlice {
   dashOffset: number;
 }
 
-const CATEGORY_COLORS = ['#7c5cfc', '#3b82f6', '#10b981', '#f59e0b', '#94a3b8', '#ec4899'];
-const DONUT_RADIUS = 54;
+const CATEGORY_COLORS = ['#8b5cf6', '#3b82f6', '#22c55e', '#f59e0b', '#94a3b8', '#ec4899'];
+const DONUT_RADIUS = 52;
 const DONUT_CIRCUMFERENCE = 2 * Math.PI * DONUT_RADIUS;
 
 @Component({
@@ -147,17 +147,19 @@ export class DashboardComponent implements OnInit {
     return Math.round(revenue * 0.25);
   });
 
-  readonly sparkRevenue = computed(() => this.buildSparkPoints(this.sales()?.revenueTrends?.map((t) => t.revenue) ?? []));
+  readonly sparkRevenue = computed(() =>
+    this.buildSpark(this.sales()?.revenueTrends?.map((t) => t.revenue) ?? []),
+  );
   readonly sparkOrders = computed(() =>
-    this.buildSparkPoints(this.sales()?.revenueTrends?.map((t) => t.orderCount) ?? []),
+    this.buildSpark(this.sales()?.revenueTrends?.map((t) => t.orderCount) ?? []),
   );
   readonly sparkProfit = computed(() =>
-    this.buildSparkPoints((this.sales()?.revenueTrends?.map((t) => t.revenue) ?? []).map((v) => v * 0.25)),
+    this.buildSpark((this.sales()?.revenueTrends?.map((t) => t.revenue) ?? []).map((v) => v * 0.25)),
   );
   readonly sparkCustomers = computed(() => {
     const total = this.overview()?.totalCustomers ?? 0;
     const seed = [0.72, 0.78, 0.75, 0.84, 0.88, 0.93, 1].map((n) => n * Math.max(total, 10));
-    return this.buildSparkPoints(seed);
+    return this.buildSpark(seed);
   });
 
   readonly categorySlices = computed((): CategorySlice[] => {
@@ -400,7 +402,7 @@ export class DashboardComponent implements OnInit {
     return floored;
   }
 
-  private buildSparkPoints(values: number[]): string {
+  private buildSpark(values: number[]): { line: string; area: string } {
     if (!values.length) {
       values = [12, 18, 14, 22, 19, 28, 24];
     }
@@ -409,12 +411,21 @@ export class DashboardComponent implements OnInit {
     const min = Math.min(...values);
     const max = Math.max(...values);
     const range = max - min || 1;
-    return values
-      .map((v, i) => {
-        const x = (i / Math.max(values.length - 1, 1)) * width;
-        const y = height - ((v - min) / range) * (height - 4) - 2;
-        return `${x.toFixed(1)},${y.toFixed(1)}`;
-      })
-      .join(' ');
+    const coords = values.map((v, i) => {
+      const x = (i / Math.max(values.length - 1, 1)) * width;
+      const y = height - ((v - min) / range) * (height - 6) - 3;
+      return { x, y };
+    });
+    const line = coords.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+    const first = coords[0];
+    const last = coords[coords.length - 1];
+    const area = [
+      `M ${first.x.toFixed(1)} ${height}`,
+      `L ${first.x.toFixed(1)} ${first.y.toFixed(1)}`,
+      ...coords.slice(1).map((p) => `L ${p.x.toFixed(1)} ${p.y.toFixed(1)}`),
+      `L ${last.x.toFixed(1)} ${height}`,
+      'Z',
+    ].join(' ');
+    return { line, area };
   }
 }

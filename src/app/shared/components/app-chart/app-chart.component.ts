@@ -8,7 +8,7 @@ import {
   input,
   viewChild,
 } from '@angular/core';
-import { Chart, ChartConfiguration, registerables } from 'chart.js';
+import { Chart, ChartConfiguration, Plugin, registerables } from 'chart.js';
 import { ChartDataResponse } from '../../../core/models/dashboard.model';
 import { ThemeService } from '../../../core/theme/theme.service';
 
@@ -29,23 +29,26 @@ export class AppChartComponent implements OnDestroy {
   private readonly canvasRef = viewChild<ElementRef<HTMLCanvasElement>>('canvas');
   private chart: Chart | null = null;
   private chartType: 'line' | 'bar' | 'doughnut' = 'line';
+  private themeKey = '';
 
   constructor() {
     effect(() => {
       const canvas = this.canvasRef()?.nativeElement;
       const chartData = this.data();
-      this.themeService.themeId();
-      this.themeService.resolvedAppearance();
+      const themeKey = `${this.themeService.themeId()}|${this.themeService.resolvedAppearance()}`;
 
       if (!canvas || !chartData) {
         return;
       }
 
       const nextType = this.mapChartType(chartData.chartType);
-      if (!this.chart || this.chartType !== nextType) {
+      const needsRebuild = !this.chart || this.chartType !== nextType || this.themeKey !== themeKey;
+
+      if (needsRebuild) {
         this.chart?.destroy();
         this.chart = null;
-        this.createChart(canvas, chartData);
+        this.createChart(canvas, chartData, nextType);
+        this.themeKey = themeKey;
         return;
       }
 
@@ -58,30 +61,54 @@ export class AppChartComponent implements OnDestroy {
     this.chart = null;
   }
 
-  private createChart(canvas: HTMLCanvasElement, chartData: ChartDataResponse): void {
+  private createChart(
+    canvas: HTMLCanvasElement,
+    chartData: ChartDataResponse,
+    chartType: 'line' | 'bar' | 'doughnut',
+  ): void {
     const colors = this.getChartColors();
     const palette = this.getDatasetPalette();
-    const chartType = this.mapChartType(chartData.chartType);
     const isDoughnut = chartType === 'doughnut';
+    const isLine = chartType === 'line';
 
     const config = {
       type: chartType,
       data: {
         labels: chartData.labels,
-        datasets: this.buildDatasets(chartData, palette, colors, isDoughnut),
+        datasets: this.buildDatasets(chartData, palette, colors, isDoughnut, chartType),
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        animation: { duration: 750, easing: 'easeInOutQuart' },
+        interaction: {
+          mode: isDoughnut ? 'nearest' : 'index',
+          intersect: isDoughnut,
+        },
+        animation: {
+          duration: 900,
+          easing: 'easeInOutQuart',
+        },
         plugins: {
           legend: {
             display: !isDoughnut && chartData.datasets.length > 1,
             position: 'bottom',
-            labels: { color: colors.text, boxWidth: 10, usePointStyle: true },
+            labels: {
+              color: colors.text,
+              boxWidth: 10,
+              usePointStyle: true,
+              padding: 16,
+            },
           },
           tooltip: {
             enabled: true,
+            backgroundColor: colors.tooltipBg,
+            titleColor: colors.text,
+            bodyColor: colors.textMuted,
+            borderColor: colors.border,
+            borderWidth: 1,
+            padding: 10,
+            cornerRadius: 10,
+            displayColors: true,
             mode: isDoughnut ? 'nearest' : 'index',
             intersect: isDoughnut,
           },
@@ -91,18 +118,56 @@ export class AppChartComponent implements OnDestroy {
           : {
               y: {
                 beginAtZero: true,
-                grid: { color: colors.grid },
-                ticks: { color: colors.textMuted, font: { size: 11 } },
+                grid: {
+                  color: colors.grid,
+                  drawTicks: false,
+                },
+                ticks: {
+                  color: colors.textMuted,
+                  font: { size: 11 },
+                  padding: 8,
+                  callback: (value: string | number) => this.formatAxisTick(value),
+                },
                 border: { display: false },
               },
               x: {
                 grid: { display: false },
-                ticks: { color: colors.textMuted, font: { size: 11 } },
+                ticks: {
+                  color: colors.textMuted,
+                  font: { size: 11 },
+                  padding: 6,
+                  maxRotation: 0,
+                },
                 border: { display: false },
               },
             },
-        ...(isDoughnut ? { cutout: '68%' } : {}),
+        ...(isDoughnut
+          ? {
+              cutout: '68%',
+              elements: {
+                arc: {
+                  borderWidth: 3,
+                  borderColor: colors.surface,
+                  hoverOffset: 8,
+                },
+              },
+            }
+          : {}),
+        ...(isLine
+          ? {
+              elements: {
+                line: {
+                  borderJoinStyle: 'round' as const,
+                  borderCapStyle: 'round' as const,
+                },
+                point: {
+                  hoverBorderWidth: 3,
+                },
+              },
+            }
+          : {}),
       },
+      plugins: isLine ? [this.createGlowPlugin(palette[0]?.border ?? colors.primary)] : [],
     } as ChartConfiguration;
 
     this.chart = new Chart(canvas, config);
@@ -115,21 +180,27 @@ export class AppChartComponent implements OnDestroy {
     const palette = this.getDatasetPalette();
     const isDoughnut = this.chartType === 'doughnut';
     this.chart.data.labels = chartData.labels;
-    this.chart.data.datasets = this.buildDatasets(chartData, palette, colors, isDoughnut) as never;
+    this.chart.data.datasets = this.buildDatasets(
+      chartData,
+      palette,
+      colors,
+      isDoughnut,
+      this.chartType,
+    ) as never;
     this.chart.update();
   }
 
   private buildDatasets(
     chartData: ChartDataResponse,
-    palette: Array<{ border: string; fill: string; solid: string }>,
+    palette: Array<{ border: string; fillTop: string; fillMid: string; solid: string }>,
     colors: ReturnType<AppChartComponent['getChartColors']>,
     isDoughnut: boolean,
+    chartType: 'line' | 'bar' | 'doughnut',
   ) {
-    const doughnutColors = ['#7c5cfc', '#3b82f6', '#10b981', '#f59e0b', '#94a3b8', '#ec4899'];
+    const doughnutColors = ['#8b5cf6', '#3b82f6', '#22c55e', '#f59e0b', '#94a3b8', '#ec4899'];
 
     return chartData.datasets.map((ds, index) => {
       const color = palette[index % palette.length];
-      const isLine = ds.chartStyle === 'line' || ds.chartStyle === 'area';
 
       if (isDoughnut) {
         return {
@@ -138,7 +209,38 @@ export class AppChartComponent implements OnDestroy {
           backgroundColor: doughnutColors.slice(0, Math.max(ds.data.length, 1)),
           borderColor: colors.surface,
           borderWidth: 3,
-          hoverOffset: 6,
+          hoverOffset: 8,
+          hoverBorderWidth: 2,
+        };
+      }
+
+      if (chartType === 'line') {
+        return {
+          label: ds.label,
+          data: ds.data,
+          borderColor: color.border,
+          borderWidth: 3,
+          tension: 0.45,
+          fill: true,
+          backgroundColor: (ctx: { chart: Chart }) => {
+            const { chart } = ctx;
+            const { ctx: c, chartArea } = chart;
+            if (!chartArea) {
+              return color.fillMid;
+            }
+            const gradient = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+            gradient.addColorStop(0, color.fillTop);
+            gradient.addColorStop(0.55, color.fillMid);
+            gradient.addColorStop(1, this.withAlpha(color.border, 0));
+            return gradient;
+          },
+          pointRadius: 4,
+          pointHoverRadius: 7,
+          pointBackgroundColor: color.border,
+          pointBorderColor: colors.surface,
+          pointBorderWidth: 2,
+          pointHoverBorderColor: colors.surface,
+          pointHoverBackgroundColor: color.border,
         };
       }
 
@@ -146,27 +248,54 @@ export class AppChartComponent implements OnDestroy {
         label: ds.label,
         data: ds.data,
         borderColor: color.border,
-        backgroundColor: isLine ? color.fill : color.solid,
-        tension: 0.4,
-        fill: ds.chartStyle === 'line' || ds.chartStyle === 'area',
-        borderRadius: 6,
-        pointRadius: isLine ? 4 : 0,
-        pointHoverRadius: isLine ? 6 : 0,
-        pointBackgroundColor: color.border,
-        pointBorderColor: '#fff',
-        pointBorderWidth: 2,
+        backgroundColor: color.solid,
+        tension: 0.35,
+        fill: false,
+        borderRadius: 8,
+        borderSkipped: false,
+        maxBarThickness: 42,
+        pointRadius: 0,
       };
     });
   }
 
+  private createGlowPlugin(glowColor: string): Plugin {
+    return {
+      id: 'lineGlow',
+      beforeDatasetsDraw(chart) {
+        const { ctx } = chart;
+        ctx.save();
+        ctx.shadowColor = glowColor;
+        ctx.shadowBlur = 18;
+        ctx.shadowOffsetY = 0;
+      },
+      afterDatasetsDraw(chart) {
+        chart.ctx.restore();
+      },
+    };
+  }
+
+  private formatAxisTick(value: string | number): string {
+    const n = typeof value === 'string' ? Number(value) : value;
+    if (!Number.isFinite(n)) return String(value);
+    if (Math.abs(n) >= 1_000_000) {
+      const scaled = n / 1_000_000;
+      return `${scaled % 1 === 0 ? scaled.toFixed(0) : scaled.toFixed(1)}M`;
+    }
+    if (Math.abs(n) >= 1_000) {
+      return `${Math.round(n / 1_000)}K`;
+    }
+    return String(n);
+  }
+
   private getChartColors(): {
     primary: string;
-    primaryFaded: string;
-    primarySolid: string;
     grid: string;
     text: string;
     textMuted: string;
     surface: string;
+    border: string;
+    tooltipBg: string;
   } {
     const root = document.documentElement;
     const primary =
@@ -176,12 +305,12 @@ export class AppChartComponent implements OnDestroy {
     const isDark = this.themeService.resolvedAppearance() === 'dark';
     return {
       primary,
-      primaryFaded: this.withAlpha(primary, 0.18),
-      primarySolid: this.withAlpha(primary, 0.7),
       grid: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
       text: isDark ? '#f3f5f9' : '#111827',
       textMuted: isDark ? '#8b93a7' : '#6b7280',
       surface: isDark ? '#151a24' : '#ffffff',
+      border: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
+      tooltipBg: isDark ? 'rgba(21, 26, 36, 0.95)' : 'rgba(255,255,255,0.96)',
     };
   }
 
@@ -195,14 +324,20 @@ export class AppChartComponent implements OnDestroy {
     return hex;
   }
 
-  private getDatasetPalette(): Array<{ border: string; fill: string; solid: string }> {
+  private getDatasetPalette(): Array<{
+    border: string;
+    fillTop: string;
+    fillMid: string;
+    solid: string;
+  }> {
     const colors = this.getChartColors();
     const extras = ['#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
     const bases = [colors.primary, ...extras];
     return bases.map((base) => ({
       border: base,
-      fill: this.withAlpha(base, 0.15),
-      solid: this.withAlpha(base, 0.7),
+      fillTop: this.withAlpha(base, 0.42),
+      fillMid: this.withAlpha(base, 0.14),
+      solid: this.withAlpha(base, 0.75),
     }));
   }
 
