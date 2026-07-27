@@ -14,6 +14,18 @@ interface ServiceItem {
   stack: string[];
 }
 
+interface DeliveryStep {
+  icon: string;
+  title: string;
+  description: string;
+}
+
+interface TrustPoint {
+  icon: string;
+  title: string;
+  description: string;
+}
+
 @Component({
   selector: 'app-services',
   standalone: true,
@@ -83,6 +95,50 @@ export class ServicesComponent {
         'Protect business data with authentication, role-based permissions, and audit-friendly access controls across every module.',
       stack: ['Role-based access', 'Secure login', 'Permission sets', 'Activity controls']
     }
+  ];
+
+  readonly deliverySteps: DeliveryStep[] = [
+    {
+      icon: 'bi-clipboard-check',
+      title: 'Map your operations',
+      description:
+        'We help you decide which modules matter first — inventory, sales, CRM, finance — based on how you actually work today.',
+    },
+    {
+      icon: 'bi-people',
+      title: 'Set roles & ownership',
+      description:
+        'Invite warehouse, sales, and finance with permissions that match their jobs so access stays clean from day one.',
+    },
+    {
+      icon: 'bi-graph-up',
+      title: 'Go live with clarity',
+      description:
+        'Start with the workflows that hurt most, then expand. Live dashboards replace end-of-month spreadsheet rebuilds.',
+    },
+  ];
+
+  readonly trustPoints: TrustPoint[] = [
+    {
+      icon: 'bi-check2-circle',
+      title: 'Connected modules',
+      description: 'A sale updates stock, invoices, and analytics — no re-entry between tools.',
+    },
+    {
+      icon: 'bi-shield-check',
+      title: 'Permission-aware',
+      description: 'Every teammate sees the modules they need. Sensitive finance stays restricted.',
+    },
+    {
+      icon: 'bi-clock-history',
+      title: 'Built for uptime',
+      description: 'Designed for daily operations with a 99.9% uptime target and human support.',
+    },
+    {
+      icon: 'bi-journal-text',
+      title: 'Clear documentation',
+      description: 'FAQ and Privacy pages explain setup, access, and how we handle your data.',
+    },
   ];
 
   readonly categories = computed(() => {

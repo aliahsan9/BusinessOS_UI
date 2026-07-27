@@ -13,7 +13,7 @@
       <i class="bi bi-search" aria-hidden="true"></i>
       <input
         type="search"
-        placeholder="Search products, orders, customers..."
+        [placeholder]="searchPlaceholder()"
         [value]="searchQuery()"
         (input)="onSearchInput($event)"
         (keydown.enter)="submitSearch()"

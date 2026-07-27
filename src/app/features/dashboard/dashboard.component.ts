@@ -82,6 +82,7 @@ export class DashboardComponent implements OnInit {
   readonly ordersLoading = signal(false);
   readonly showAddMenu = signal(false);
   readonly tasks = signal<DashboardTask[]>([]);
+  readonly chartHeight = signal(280);
 
   readonly routes = ROUTES;
   readonly periods: ReadonlyArray<{ label: string; value: DashboardPeriod }> = [
@@ -208,6 +209,20 @@ export class DashboardComponent implements OnInit {
     this.loadRecentOrders();
     void this.notificationState.refresh(5);
     this.seedTasks();
+    this.syncChartHeight();
+  }
+
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    this.syncChartHeight();
+  }
+
+  private syncChartHeight(): void {
+    if (typeof window === 'undefined') return;
+    const w = window.innerWidth;
+    if (w < 420) this.chartHeight.set(180);
+    else if (w < 768) this.chartHeight.set(220);
+    else this.chartHeight.set(280);
   }
 
   @HostListener('document:click', ['$event'])

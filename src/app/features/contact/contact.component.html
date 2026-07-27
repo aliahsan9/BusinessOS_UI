@@ -152,5 +152,35 @@
     </div>
   </section>
 
+  <section class="contact-help">
+    <div class="container">
+      <div class="mkt-section-head">
+        <span class="mkt-eyebrow">
+          <i class="bi bi-lightbulb"></i>
+          Before you write
+        </span>
+        <h2>Quick answers many teams need first</h2>
+        <p>
+          Browse common questions or our privacy commitments — then message us
+          if you still need a personal reply.
+        </p>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-md-4" *ngFor="let topic of helpTopics">
+          <article class="help-card h-100">
+            <span class="mkt-icon-box"><i class="bi" [ngClass]="topic.icon"></i></span>
+            <h3>{{ topic.title }}</h3>
+            <p>{{ topic.description }}</p>
+            <a [routerLink]="topic.link" class="help-card__link">
+              {{ topic.linkLabel }}
+              <i class="bi bi-arrow-right"></i>
+            </a>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <app-footer></app-footer>
 </div>

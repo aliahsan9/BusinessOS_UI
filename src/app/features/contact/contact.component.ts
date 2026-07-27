@@ -16,6 +16,14 @@ interface ContactChannel {
   href: string;
 }
 
+interface HelpTopic {
+  icon: string;
+  title: string;
+  description: string;
+  link: string;
+  linkLabel: string;
+}
+
 @Component({
   selector: 'app-contact',
   standalone: true,
@@ -47,6 +55,33 @@ export class ContactComponent {
       value: 'Faisalabad, Pakistan',
       href: '#'
     }
+  ];
+
+  readonly helpTopics: HelpTopic[] = [
+    {
+      icon: 'bi-question-circle',
+      title: 'Common questions',
+      description:
+        'Trials, modules, team access, billing, and setup — answered in plain language.',
+      link: '/faq',
+      linkLabel: 'Browse FAQ',
+    },
+    {
+      icon: 'bi-shield-check',
+      title: 'Privacy & data',
+      description:
+        'How we collect, use, and protect business information — without selling your records.',
+      link: '/privacy',
+      linkLabel: 'Read privacy policy',
+    },
+    {
+      icon: 'bi-layers',
+      title: 'What we offer',
+      description:
+        'Inventory, sales, CRM, finance, analytics, and secure access — see each service in detail.',
+      link: '/services',
+      linkLabel: 'Explore services',
+    },
   ];
 
   contactForm = this.fb.group({

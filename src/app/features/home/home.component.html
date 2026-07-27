@@ -142,7 +142,102 @@
     </div>
   </section>
 
+  <section class="home-how">
+    <div class="container">
+      <div class="mkt-section-head">
+        <span class="mkt-eyebrow">
+          <i class="bi bi-signpost-2"></i>
+          How it works
+        </span>
+        <h2>From signup to live operations</h2>
+        <p>
+          A short path to a working system — so new users understand what they get
+          before they invest weeks in setup.
+        </p>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-lg-4 col-md-4" *ngFor="let step of howSteps">
+          <article class="how-card h-100">
+            <span class="how-card__step">{{ step.step }}</span>
+            <span class="mkt-icon-box"><i class="bi" [ngClass]="step.icon"></i></span>
+            <h3>{{ step.title }}</h3>
+            <p>{{ step.description }}</p>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="home-audience">
+    <div class="container">
+      <div class="mkt-section-head">
+        <span class="mkt-eyebrow">
+          <i class="bi bi-people"></i>
+          Who it is for
+        </span>
+        <h2>Built for operators, not slide decks</h2>
+        <p>
+          BusinessOS fits teams that need inventory, sales, customers, and cash flow
+          in one place — without hiring a full IT department to glue tools together.
+        </p>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-lg-3 col-md-6" *ngFor="let item of audiences">
+          <article class="audience-card h-100">
+            <span class="mkt-icon-box"><i class="bi" [ngClass]="item.icon"></i></span>
+            <h3>{{ item.title }}</h3>
+            <p>{{ item.description }}</p>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <app-landing></app-landing>
   <app-testimonials></app-testimonials>
+
+  <section class="home-trust-pillars">
+    <div class="container">
+      <div class="mkt-section-head">
+        <span class="mkt-eyebrow">
+          <i class="bi bi-shield-check"></i>
+          Why teams trust us
+        </span>
+        <h2>Real control. Clear support. No mystery.</h2>
+        <p>
+          We earn trust with transparent access controls, connected modules, and
+          people you can reach when something matters.
+        </p>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-lg-4" *ngFor="let pillar of trustPillars">
+          <article class="trust-pillar h-100">
+            <span class="mkt-icon-box"><i class="bi" [ngClass]="pillar.icon"></i></span>
+            <h3>{{ pillar.title }}</h3>
+            <p>{{ pillar.description }}</p>
+          </article>
+        </div>
+      </div>
+
+      <div class="home-trust-pillars__links">
+        <a routerLink="/faq" class="mkt-btn mkt-btn--ghost">
+          <i class="bi bi-question-circle"></i>
+          Read FAQ
+        </a>
+        <a routerLink="/privacy" class="mkt-btn mkt-btn--ghost">
+          <i class="bi bi-shield-check"></i>
+          Privacy &amp; security
+        </a>
+        <a routerLink="/contact" class="mkt-btn mkt-btn--primary">
+          Talk to us
+          <i class="bi bi-arrow-right"></i>
+        </a>
+      </div>
+    </div>
+  </section>
+
   <app-footer></app-footer>
 </div>

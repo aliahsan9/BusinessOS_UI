@@ -1,0 +1,134 @@
+<div class="mkt-page faq-page">
+  <app-home-navbar></app-home-navbar>
+
+  <section class="faq-hero">
+    <div class="container text-center">
+      <span class="mkt-eyebrow">
+        <i class="bi bi-question-circle"></i>
+        FAQ
+      </span>
+      <h1>Answers before you commit</h1>
+      <p>
+        Straight answers about what BusinessOS does, how setup works, and how we
+        protect your data — so you can decide with confidence.
+      </p>
+    </div>
+  </section>
+
+  <section class="faq-body">
+    <div class="container">
+      <div class="faq-filters" role="tablist" aria-label="Filter FAQs by topic">
+        @for (cat of categories; track cat.id) {
+          <button
+            type="button"
+            class="faq-filter"
+            [class.is-active]="activeCategory() === cat.id"
+            (click)="setCategory(cat.id)"
+            role="tab"
+            [attr.aria-selected]="activeCategory() === cat.id"
+          >
+            <i class="bi" [ngClass]="cat.icon"></i>
+            {{ cat.label }}
+          </button>
+        }
+      </div>
+
+      <div class="row g-4 g-lg-5">
+        <div class="col-lg-8">
+          <div class="faq-accordion" role="list">
+            @for (item of filteredFaqs(); track item.id) {
+              <article class="faq-item" [class.is-open]="isOpen(item.id)" role="listitem">
+                <button
+                  type="button"
+                  class="faq-item__q"
+                  (click)="toggle(item.id)"
+                  [attr.aria-expanded]="isOpen(item.id)"
+                  [attr.aria-controls]="'faq-a-' + item.id"
+                  [id]="'faq-q-' + item.id"
+                >
+                  <span>{{ item.question }}</span>
+                  <i
+                    class="bi"
+                    [class.bi-chevron-down]="!isOpen(item.id)"
+                    [class.bi-chevron-up]="isOpen(item.id)"
+                    aria-hidden="true"
+                  ></i>
+                </button>
+                @if (isOpen(item.id)) {
+                  <div
+                    class="faq-item__a"
+                    [id]="'faq-a-' + item.id"
+                    role="region"
+                    [attr.aria-labelledby]="'faq-q-' + item.id"
+                  >
+                    <p>{{ item.answer }}</p>
+                  </div>
+                }
+              </article>
+            }
+          </div>
+        </div>
+
+        <div class="col-lg-4">
+          <aside class="faq-aside">
+            <div class="faq-aside__card">
+              <span class="mkt-icon-box"><i class="bi bi-headset"></i></span>
+              <h2>Still have questions?</h2>
+              <p>
+                Tell us about your business and we will help you map the right
+                modules and rollout plan.
+              </p>
+              <a routerLink="/contact" class="mkt-btn mkt-btn--primary w-100">
+                Contact us
+                <i class="bi bi-arrow-right"></i>
+              </a>
+              <a routerLink="/privacy" class="faq-aside__link">
+                <i class="bi bi-shield-check"></i>
+                Read our privacy policy
+              </a>
+            </div>
+
+            <div class="faq-trust">
+              <div class="faq-trust__item">
+                <i class="bi bi-shield-lock"></i>
+                <span>Encrypted connections</span>
+              </div>
+              <div class="faq-trust__item">
+                <i class="bi bi-people"></i>
+                <span>Role-based access</span>
+              </div>
+              <div class="faq-trust__item">
+                <i class="bi bi-clock-history"></i>
+                <span>99.9% uptime target</span>
+              </div>
+              <div class="faq-trust__item">
+                <i class="bi bi-person-check"></i>
+                <span>Human support</span>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="faq-cta">
+    <div class="container">
+      <div class="faq-cta__box">
+        <div>
+          <h2>Ready to see BusinessOS with your own data?</h2>
+          <p>Start a free trial — no credit card required.</p>
+        </div>
+        <div class="faq-cta__actions">
+          <a routerLink="/auth/register" class="mkt-btn mkt-btn--primary">
+            Start free trial
+            <i class="bi bi-arrow-right"></i>
+          </a>
+          <a routerLink="/services" class="mkt-btn mkt-btn--ghost">Explore services</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <app-footer></app-footer>
+</div>

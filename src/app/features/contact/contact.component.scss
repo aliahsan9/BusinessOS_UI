@@ -212,6 +212,48 @@
   }
 }
 
+.contact-help {
+  padding: 1rem 0 4rem;
+}
+
+.help-card {
+  padding: 1.4rem;
+  background: #fff;
+  border: 1px solid var(--mkt-border);
+  border-radius: var(--mkt-radius);
+  box-shadow: var(--mkt-shadow-sm);
+
+  h3 {
+    margin: 1rem 0 0.5rem;
+    font-family: var(--mkt-font-display);
+    font-size: 1.08rem;
+    font-weight: 700;
+    color: var(--mkt-ink);
+  }
+
+  p {
+    margin: 0 0 1rem;
+    font-size: 0.93rem;
+    line-height: 1.6;
+    color: var(--mkt-muted);
+  }
+
+  &__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--mkt-accent);
+    font-family: var(--mkt-font-display);
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
 @media (max-width: 575.98px) {
   .contact-hero {
     padding-top: 2rem;

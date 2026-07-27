@@ -33,6 +33,25 @@ interface ModuleItem {
   tag?: string;
 }
 
+interface HowStep {
+  step: string;
+  icon: string;
+  title: string;
+  description: string;
+}
+
+interface AudienceItem {
+  icon: string;
+  title: string;
+  description: string;
+}
+
+interface TrustPillar {
+  icon: string;
+  title: string;
+  description: string;
+}
+
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -122,6 +141,71 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       title: 'Projects',
       description: 'Tasks and timelines tied to the customers and invoices they belong to.',
       metric: 'Every task linked back to its invoice',
+    },
+  ];
+
+  readonly howSteps: HowStep[] = [
+    {
+      step: '01',
+      icon: 'bi-person-plus',
+      title: 'Create your workspace',
+      description:
+        'Sign up, name your business, and invite the people who need access — with roles from day one.',
+    },
+    {
+      step: '02',
+      icon: 'bi-box-seam',
+      title: 'Add what you already run',
+      description:
+        'Bring in products, customers, and opening balances so dashboards reflect real operations, not demo data.',
+    },
+    {
+      step: '03',
+      icon: 'bi-graph-up-arrow',
+      title: 'Run the business live',
+      description:
+        'Orders update stock and finance together. Leaders see the same numbers your floor team acts on.',
+    },
+  ];
+
+  readonly audiences: AudienceItem[] = [
+    {
+      icon: 'bi-shop',
+      title: 'Retail & wholesale',
+      description: 'Stock, sales, and suppliers in one loop — fewer stockouts and less spreadsheet chase.',
+    },
+    {
+      icon: 'bi-truck',
+      title: 'Distribution',
+      description: 'Orders, deliveries, and receivables tracked against the same customer record.',
+    },
+    {
+      icon: 'bi-briefcase',
+      title: 'Service businesses',
+      description: 'Projects, invoices, and client history tied together so billing matches the work.',
+    },
+    {
+      icon: 'bi-buildings',
+      title: 'Growing teams',
+      description: 'Role-based access so warehouse, sales, and finance share data without oversharing.',
+    },
+  ];
+
+  readonly trustPillars: TrustPillar[] = [
+    {
+      icon: 'bi-shield-lock',
+      title: 'Secure by default',
+      description: 'Encrypted connections, authenticated sessions, and permissions scoped to each role.',
+    },
+    {
+      icon: 'bi-people',
+      title: 'Built for real teams',
+      description: 'Shared live data across modules so handoffs stop depending on chat threads and exports.',
+    },
+    {
+      icon: 'bi-headset',
+      title: 'Humans when you need them',
+      description: 'Clear answers on setup, roles, and rollout — not a wall of bots before support.',
     },
   ];
 

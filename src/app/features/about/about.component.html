@@ -138,6 +138,69 @@
     </div>
   </section>
 
+  <section class="about-values">
+    <div class="container">
+      <div class="mkt-section-head">
+        <span class="mkt-eyebrow">
+          <i class="bi bi-heart"></i>
+          What we stand for
+        </span>
+        <h2>Principles that shape the product</h2>
+        <p>
+          BusinessOS is built for teams who need dependable operations software —
+          not hype, not black boxes.
+        </p>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-lg-3 col-md-6" *ngFor="let value of values">
+          <article class="value-card h-100">
+            <span class="mkt-icon-box"><i class="bi" [ngClass]="value.icon"></i></span>
+            <h3>{{ value.title }}</h3>
+            <p>{{ value.description }}</p>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="about-commitments">
+    <div class="container">
+      <div class="mkt-section-head">
+        <span class="mkt-eyebrow">
+          <i class="bi bi-handshake"></i>
+          How we earn trust
+        </span>
+        <h2>Commitments you can verify</h2>
+        <p>
+          Read the details, ask questions, and decide with a clear picture of how
+          we handle your business.
+        </p>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-lg-4" *ngFor="let item of commitments">
+          <article class="commitment-card h-100">
+            <span class="mkt-icon-box"><i class="bi" [ngClass]="item.icon"></i></span>
+            <h3>{{ item.title }}</h3>
+            <p>{{ item.description }}</p>
+          </article>
+        </div>
+      </div>
+
+      <div class="about-commitments__links">
+        <a routerLink="/privacy" class="mkt-btn mkt-btn--ghost">
+          <i class="bi bi-shield-check"></i>
+          Privacy policy
+        </a>
+        <a routerLink="/faq" class="mkt-btn mkt-btn--ghost">
+          <i class="bi bi-question-circle"></i>
+          FAQ
+        </a>
+      </div>
+    </div>
+  </section>
+
   <section class="about-cta">
     <div class="container">
       <div class="about-cta__box">

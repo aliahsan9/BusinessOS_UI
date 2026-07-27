@@ -69,6 +69,69 @@
     </div>
   </section>
 
+  <section class="services-delivery">
+    <div class="container">
+      <div class="mkt-section-head">
+        <span class="mkt-eyebrow">
+          <i class="bi bi-signpost-split"></i>
+          How we deliver value
+        </span>
+        <h2>A practical rollout, not a big-bang project</h2>
+        <p>
+          New users should understand what they get and how adoption works —
+          before they commit time or budget.
+        </p>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-lg-4" *ngFor="let step of deliverySteps">
+          <article class="delivery-card h-100">
+            <span class="mkt-icon-box"><i class="bi" [ngClass]="step.icon"></i></span>
+            <h3>{{ step.title }}</h3>
+            <p>{{ step.description }}</p>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="services-trust">
+    <div class="container">
+      <div class="mkt-section-head">
+        <span class="mkt-eyebrow">
+          <i class="bi bi-award"></i>
+          Why operators choose us
+        </span>
+        <h2>Services you can trust day to day</h2>
+        <p>
+          Connected workflows, clear permissions, and documentation that answers
+          the questions teams actually ask.
+        </p>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-lg-3 col-md-6" *ngFor="let point of trustPoints">
+          <article class="trust-card h-100">
+            <span class="mkt-icon-box"><i class="bi" [ngClass]="point.icon"></i></span>
+            <h3>{{ point.title }}</h3>
+            <p>{{ point.description }}</p>
+          </article>
+        </div>
+      </div>
+
+      <div class="services-trust__links">
+        <a routerLink="/faq" class="mkt-btn mkt-btn--ghost">
+          <i class="bi bi-question-circle"></i>
+          FAQ
+        </a>
+        <a routerLink="/privacy" class="mkt-btn mkt-btn--ghost">
+          <i class="bi bi-shield-check"></i>
+          Privacy
+        </a>
+      </div>
+    </div>
+  </section>
+
   <section class="services-cta">
     <div class="container">
       <div class="services-cta__box text-center">

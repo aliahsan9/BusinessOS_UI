@@ -4,23 +4,24 @@ import { onboardingRedirectGuard } from './core/guards/onboarding.guard';
 import { themeGuard } from './core/theme/theme.guard';
 import { buildFeatureRoutes } from './app-feature.routes';
 import { ROUTES } from './core/constants/route.constants';
-import { HomeComponent } from './features/home/home.component';
 import { AboutComponent } from './features/about/about.component';
 import { ServicesComponent } from './features/services/services.component';
 import { ContactComponent } from './features/contact/contact.component';
+import { FaqComponent } from './features/faq/faq.component';
+import { PrivacyComponent } from './features/privacy/privacy.component';
 
 export const routes: Routes = [
-  { path: 'about', component: AboutComponent },
-  { path: 'services', component: ServicesComponent },
-  { path: 'contact', component: ContactComponent },
+  { path: 'about', component: AboutComponent, title: 'About | BusinessOS' },
+  { path: 'services', component: ServicesComponent, title: 'Services | BusinessOS' },
+  { path: 'contact', component: ContactComponent, title: 'Contact | BusinessOS' },
+  { path: 'faq', component: FaqComponent, title: 'FAQ | BusinessOS' },
+  { path: 'privacy', component: PrivacyComponent, title: 'Privacy | BusinessOS' },
   {
-  path: '',
-  loadComponent: () =>
-    import('./features/home/home.component').then(
-      (m) => m.HomeComponent
-    ),
-  title: 'BusinessOS | Business Management Platform',
-},
+    path: '',
+    loadComponent: () =>
+      import('./features/home/home.component').then((m) => m.HomeComponent),
+    title: 'BusinessOS | Business Management Platform',
+  },
   {
     path: 'auth',
     loadChildren: () => import('./features/auth/auth.routes').then((m) => m.AUTH_ROUTES),

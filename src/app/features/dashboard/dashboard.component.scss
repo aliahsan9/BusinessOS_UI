@@ -130,6 +130,10 @@
     }
   }
 
+  &__add-label-short {
+    display: none;
+  }
+
   &__add-menu {
     position: absolute;
     top: calc(100% + 0.4rem);
@@ -141,6 +145,12 @@
     border: 1px solid var(--color-border);
     background: var(--color-surface);
     box-shadow: var(--shadow-lg);
+
+    @media (max-width: 420px) {
+      right: auto;
+      left: 0;
+      min-width: min(190px, calc(100vw - 2rem));
+    }
   }
 
   &__add-item {
@@ -232,14 +242,14 @@
     }
   }
 
-  /* Four horizontal KPI cards — height grows with content (never clips values) */
+  /* Four KPI cards — 2×2 on phones, row of 4 on wide desktops */
   &__kpi-grid {
     display: grid;
-    grid-template-columns: 1fr;
-    gap: 0.85rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
 
     @media (min-width: 576px) {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.85rem;
     }
 
     @media (min-width: 1200px) {
@@ -333,7 +343,7 @@
   &__value {
     display: block;
     margin: 0.15rem 0 0;
-    font-size: clamp(1.15rem, 0.95rem + 0.7vw, 1.45rem);
+    font-size: clamp(1.05rem, 0.9rem + 0.55vw, 1.45rem);
     font-weight: 700;
     letter-spacing: -0.025em;
     color: var(--color-text);
@@ -401,19 +411,6 @@
     }
     .kpi__spark {
       color: #f59e0b;
-    }
-  }
-
-  @media (max-width: 575.98px) {
-    min-height: 0;
-    padding: 1.05rem 1.1rem 0.75rem;
-
-    &__value {
-      font-size: 1.35rem;
-    }
-
-    &__spark {
-      height: 40px;
     }
   }
 }
@@ -790,6 +787,11 @@
     font-weight: 700;
     justify-self: start;
 
+    @media (max-width: 575.98px) {
+      grid-column: 2;
+      justify-self: start;
+    }
+
     &[data-tone='pending'] {
       color: #b45309;
       background: rgba(245, 158, 11, 0.16);
@@ -822,7 +824,8 @@
     white-space: nowrap;
 
     @media (max-width: 575.98px) {
-      grid-column: 2 / -1;
+      grid-column: 3;
+      justify-self: end;
     }
   }
 }
@@ -1043,45 +1046,259 @@
   }
 }
 
-@media (max-width: 575.98px) {
+@media (max-width: 767.98px) {
   .dash {
     &__header {
       flex-direction: column;
       align-items: stretch;
+      gap: 0.75rem;
+      margin-bottom: 0.85rem;
+    }
+
+    &__title {
+      font-size: 1.25rem;
+      gap: 0.35rem;
+      margin-bottom: 0.2rem;
+    }
+
+    &__title-icon {
+      width: 1.5rem;
+      height: 1.5rem;
+      font-size: 0.85rem;
+      border-radius: 6px;
+    }
+
+    &__subtitle {
+      font-size: 0.8rem;
+      line-height: 1.35;
     }
 
     &__actions {
       width: 100%;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      gap: 0.45rem;
+      align-items: center;
     }
 
     &__date {
-      flex: 1 1 auto;
       min-width: 0;
+      min-height: 2.25rem;
+      padding: 0.3rem 0.6rem;
+      border-radius: 10px;
     }
 
-    &__add {
-      flex: 1 1 auto;
+    &__date-select {
+      max-width: none;
+      flex: 1;
     }
 
     &__add-btn {
-      width: 100%;
-      justify-content: center;
+      min-height: 2.25rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 10px;
+      font-size: 0.8125rem;
+      white-space: nowrap;
     }
 
-    &__kpi-grid {
-      grid-template-columns: 1fr;
+    &__icon-btn {
+      width: 2.25rem;
+      height: 2.25rem;
+      border-radius: 10px;
+    }
+
+    &__main {
+      gap: 0.75rem;
+    }
+
+    &__charts,
+    &__lists {
+      gap: 0.75rem;
+    }
+
+    &__rail {
+      gap: 0.75rem;
     }
 
     &__rail .panel {
-      padding: 0.95rem 1rem;
+      padding: 0.85rem 0.9rem;
+    }
+  }
+
+  .kpi {
+    min-height: 0;
+    gap: 0.2rem;
+    padding: 0.75rem 0.8rem 0.5rem;
+    border-radius: 12px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+
+    &:hover {
+      transform: translateY(-1px);
+    }
+
+    &__icon {
+      width: 1.75rem;
+      height: 1.75rem;
+      border-radius: 8px;
+      font-size: 0.8rem;
+    }
+
+    &__label {
+      font-size: 0.7rem;
+    }
+
+    &__value {
+      margin-top: 0.05rem;
+      font-size: clamp(0.95rem, 2.8vw + 0.55rem, 1.15rem);
+      line-height: 1.2;
+    }
+
+    &__trend {
+      font-size: 0.65rem;
+    }
+
+    &__spark {
+      height: 26px;
+      margin-top: 0.1rem;
+    }
+  }
+
+  .panel {
+    padding: 0.85rem 0.9rem;
+    border-radius: 12px;
+
+    &__head {
+      margin-bottom: 0.65rem;
+      gap: 0.5rem;
+    }
+
+    &__title {
+      font-size: 0.9rem;
+    }
+
+    &__meta {
+      font-size: 0.78rem;
+      flex-wrap: wrap;
+
+      strong {
+        font-size: 0.9rem;
+      }
+    }
+
+    &__chart {
+      min-height: 180px;
+
+      &--tall {
+        min-height: 200px;
+      }
+    }
+  }
+
+  .category {
+    min-height: 0;
+    gap: 0.75rem;
+
+    &__chart {
+      width: min(100%, 150px);
+    }
+
+    &__legend {
+      gap: 0.45rem;
+    }
+
+    &__legend li {
+      font-size: 0.72rem;
     }
   }
 
   .product-list__item {
     grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 0.5rem;
+    padding: 0.55rem 0;
 
     .product-list__rank {
       display: none;
+    }
+
+    .product-list__avatar {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 8px;
+      font-size: 0.65rem;
+    }
+  }
+
+  .orders__row {
+    padding: 0.55rem 0;
+    gap: 0.35rem 0.5rem;
+  }
+
+  .orders__icon {
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 8px;
+  }
+
+  .ai-card {
+    padding: 0.85rem;
+
+    h3 {
+      font-size: 0.85rem;
+    }
+
+    p {
+      font-size: 0.7rem;
+      margin-bottom: 0.6rem;
+    }
+
+    &__art {
+      width: 2.75rem;
+      font-size: 1.75rem;
+    }
+  }
+}
+
+@media (max-width: 420px) {
+  .dash {
+    &__subtitle {
+      display: none;
+    }
+
+    &__add-label {
+      display: none;
+    }
+
+    &__add-label-short {
+      display: inline;
+    }
+
+    &__add-chevron {
+      display: none;
+    }
+
+    &__add-btn {
+      padding: 0.35rem 0.6rem;
+      gap: 0.25rem;
+    }
+
+    &__kpi-grid {
+      gap: 0.45rem;
+    }
+  }
+
+  .kpi {
+    padding: 0.65rem 0.7rem 0.4rem;
+
+    &__value {
+      font-size: 0.95rem;
+    }
+
+    &__spark {
+      height: 22px;
+    }
+
+    &__trend {
+      font-size: 0.62rem;
     }
   }
 }

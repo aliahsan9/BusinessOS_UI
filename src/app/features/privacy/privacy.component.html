@@ -1,0 +1,148 @@
+<div class="mkt-page privacy-page">
+  <app-home-navbar></app-home-navbar>
+
+  <section class="privacy-hero">
+    <div class="container">
+      <span class="mkt-eyebrow">
+        <i class="bi bi-shield-check"></i>
+        Privacy
+      </span>
+      <h1>Your business data stays yours</h1>
+      <p>
+        We built BusinessOS to run operations — not to monetize your customers,
+        inventory, or financial records. Here is how we handle information, in plain language.
+      </p>
+      <p class="privacy-hero__updated">
+        <i class="bi bi-calendar3"></i>
+        Last updated {{ lastUpdated }}
+      </p>
+    </div>
+  </section>
+
+  <section class="privacy-principles">
+    <div class="container">
+      <div class="row g-4">
+        @for (item of principles; track item.title) {
+          <div class="col-lg-3 col-md-6">
+            <article class="principle-card h-100">
+              <span class="mkt-icon-box"><i class="bi" [ngClass]="item.icon"></i></span>
+              <h2>{{ item.title }}</h2>
+              <p>{{ item.description }}</p>
+            </article>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="privacy-body">
+    <div class="container">
+      <div class="row g-4 g-lg-5">
+        <div class="col-lg-8">
+          <div class="privacy-sections">
+            @for (section of sections; track section.id) {
+              <article class="privacy-section" [id]="section.id">
+                <div class="privacy-section__head">
+                  <span class="mkt-icon-box"><i class="bi" [ngClass]="section.icon"></i></span>
+                  <div>
+                    <h2>{{ section.title }}</h2>
+                    <p>{{ section.summary }}</p>
+                  </div>
+                </div>
+                <ul>
+                  @for (point of section.points; track point) {
+                    <li>
+                      <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+                      <span>{{ point }}</span>
+                    </li>
+                  }
+                </ul>
+              </article>
+            }
+          </div>
+        </div>
+
+        <div class="col-lg-4">
+          <aside class="privacy-aside">
+            <div class="privacy-aside__card">
+              <h2>
+                <i class="bi bi-bookmark-check"></i>
+                On this page
+              </h2>
+              <nav aria-label="Privacy sections">
+                <ul>
+                  @for (section of sections; track section.id) {
+                    <li>
+                      <a [href]="'#' + section.id">{{ section.title }}</a>
+                    </li>
+                  }
+                </ul>
+              </nav>
+            </div>
+
+            <div class="privacy-aside__card privacy-aside__card--cta">
+              <span class="mkt-icon-box"><i class="bi bi-question-circle"></i></span>
+              <h3>Questions about privacy?</h3>
+              <p>We are happy to clarify how your data is handled.</p>
+              <a routerLink="/contact" class="mkt-btn mkt-btn--primary w-100">
+                Contact support
+              </a>
+              <a routerLink="/faq" class="privacy-aside__link">
+                <i class="bi bi-chat-left-text"></i>
+                Browse FAQ
+              </a>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="privacy-badges">
+    <div class="container">
+      <div class="mkt-section-head">
+        <span class="mkt-eyebrow">
+          <i class="bi bi-award"></i>
+          Security &amp; trust
+        </span>
+        <h2>Built for operators who need control</h2>
+        <p>
+          Clear access rules and secure sessions so your team can move fast without
+          exposing the wrong data.
+        </p>
+      </div>
+
+      <div class="row g-4">
+        @for (badge of badges; track badge.label) {
+          <div class="col-lg-3 col-md-6">
+            <div class="badge-card h-100">
+              <i class="bi" [ngClass]="badge.icon"></i>
+              <h3>{{ badge.label }}</h3>
+              <p>{{ badge.detail }}</p>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="privacy-cta">
+    <div class="container">
+      <div class="privacy-cta__box">
+        <div>
+          <h2>Trust starts with clarity</h2>
+          <p>Try BusinessOS and see how roles, modules, and your data fit together.</p>
+        </div>
+        <div class="privacy-cta__actions">
+          <a routerLink="/auth/register" class="mkt-btn mkt-btn--primary">
+            Start free trial
+            <i class="bi bi-arrow-right"></i>
+          </a>
+          <a routerLink="/about" class="mkt-btn mkt-btn--ghost">About BusinessOS</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <app-footer></app-footer>
+</div>

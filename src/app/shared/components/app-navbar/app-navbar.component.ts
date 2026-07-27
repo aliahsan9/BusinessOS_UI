@@ -43,9 +43,14 @@ export class AppNavbarComponent implements OnInit {
   readonly menuToggle = output<void>();
   readonly isMobileMenuOpen = signal(false);
   readonly searchQuery = signal('');
+  readonly isCompactNav = signal(false);
 
   readonly routes = APP_ROUTE_PATHS;
   readonly settingsRoutes = ROUTES;
+
+  readonly searchPlaceholder = computed(() =>
+    this.isCompactNav() ? 'Search...' : 'Search products, orders, customers...',
+  );
 
   readonly resolvedAppearance = this.themeService.resolvedAppearance;
   readonly isDarkMode = computed(() => this.resolvedAppearance() === 'dark');
@@ -123,6 +128,16 @@ export class AppNavbarComponent implements OnInit {
 
   ngOnInit(): void {
     this.notificationState.initialize();
+    this.syncCompactNav();
+  }
+
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    this.syncCompactNav();
+  }
+
+  private syncCompactNav(): void {
+    this.isCompactNav.set(typeof window !== 'undefined' && window.innerWidth < 768);
   }
 
   @HostListener('document:keydown', ['$event'])

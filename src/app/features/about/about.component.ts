@@ -46,6 +46,18 @@ interface Capability {
   description: string;
 }
 
+interface ValueItem {
+  icon: string;
+  title: string;
+  description: string;
+}
+
+interface TrustCommitment {
+  icon: string;
+  title: string;
+  description: string;
+}
+
 @Component({
   selector: 'app-about',
   standalone: true,
@@ -140,6 +152,51 @@ export class AboutComponent implements OnInit, AfterViewInit, OnDestroy {
     { icon: 'bi-cash-coin', name: 'Financial Tracking', description: 'Invoices, expenses, and cash flow in real time.' },
     { icon: 'bi-people-fill', name: 'Team Collaboration', description: 'Shared tasks, comments, and handoffs across teams.' },
     { icon: 'bi-bar-chart-fill', name: 'Business Analytics', description: 'Live dashboards instead of end-of-month reports.' },
+  ];
+
+  readonly values: ValueItem[] = [
+    {
+      icon: 'bi-eye',
+      title: 'Clarity over clutter',
+      description:
+        'We design for operators who need the next action, not another dashboard full of noise.',
+    },
+    {
+      icon: 'bi-link-45deg',
+      title: 'Connected by default',
+      description:
+        'Inventory, sales, customers, and finance share one source of truth — so teams stop retyping the same facts.',
+    },
+    {
+      icon: 'bi-shield-check',
+      title: 'Trust through control',
+      description:
+        'Role-based access and clear permissions mean people see what they need — and nothing they should not.',
+    },
+    {
+      icon: 'bi-chat-heart',
+      title: 'Human support',
+      description:
+        'When setup gets stuck, you talk to people who understand business operations, not a ticket void.',
+    },
+  ];
+
+  readonly commitments: TrustCommitment[] = [
+    {
+      icon: 'bi-database-lock',
+      title: 'Your data stays yours',
+      description: 'We do not sell business records. Read how we handle information on our Privacy page.',
+    },
+    {
+      icon: 'bi-arrow-repeat',
+      title: 'No lock-in games',
+      description: 'Export what you need and change plans as you grow. Trust means you can leave with your data.',
+    },
+    {
+      icon: 'bi-lightning',
+      title: 'Honest product scope',
+      description: 'We tell you what BusinessOS does today — inventory, sales, CRM, finance, analytics, and access.',
+    },
   ];
 
   // ----- Animated system-monitor stats -----

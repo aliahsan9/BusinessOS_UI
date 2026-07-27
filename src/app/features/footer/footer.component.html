@@ -26,6 +26,7 @@
           <li><a routerLink="/">Home</a></li>
           <li><a routerLink="/about">About</a></li>
           <li><a routerLink="/services">Services</a></li>
+          <li><a routerLink="/faq">FAQ</a></li>
           <li><a routerLink="/contact">Contact</a></li>
         </ul>
       </div>
@@ -38,7 +39,7 @@
           <li><a routerLink="/services">Finance</a></li>
           <li><a routerLink="/services">CRM</a></li>
           <li><a routerLink="/services">Analytics</a></li>
-          <li><a routerLink="/services">Team access</a></li>
+          <li><a routerLink="/privacy">Privacy &amp; security</a></li>
         </ul>
       </div>
 
@@ -61,8 +62,8 @@
     <div class="bos-footer__bottom">
       <p>&copy; {{ currentYear }} BusinessOS. All rights reserved.</p>
       <div class="bos-footer__legal">
-        <a href="#">Privacy</a>
-        <a href="#">Terms</a>
+        <a routerLink="/privacy">Privacy</a>
+        <a routerLink="/faq">FAQ</a>
         <a routerLink="/contact">Support</a>
       </div>
     </div>
