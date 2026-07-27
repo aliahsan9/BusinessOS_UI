@@ -56,17 +56,7 @@ export class AuthService extends BaseApiService {
   }
 
   forgotPassword(request: ForgotPasswordRequest): Observable<{ message: string }> {
-    return this.post<{ message: string }>(API_ENDPOINTS.auth.forgotPassword, request).pipe(
-      catchError((error: ApiError) => {
-        if (error.status === 404) {
-          return throwError(() => ({
-            ...error,
-            detail: 'Password reset is not yet available. Please contact your administrator.',
-          }));
-        }
-        return throwError(() => error);
-      }),
-    );
+    return this.post<{ message: string }>(API_ENDPOINTS.auth.forgotPassword, request);
   }
 
   resetPassword(request: ResetPasswordRequest): Observable<{ message: string }> {
