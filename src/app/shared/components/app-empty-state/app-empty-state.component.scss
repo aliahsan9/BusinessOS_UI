@@ -4,29 +4,35 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: clamp(1.5rem, 4vw, 3rem) clamp(1rem, 3vw, 1.5rem);
+  padding: clamp(1.75rem, 5vw, 3.5rem) clamp(1rem, 3vw, 1.5rem);
 
   &__icon {
-    font-size: clamp(1.75rem, 4vw, 2.5rem);
-    margin-bottom: 1rem;
-    color: var(--color-text-muted);
+    display: grid;
+    place-items: center;
+    width: 4rem;
+    height: 4rem;
+    margin: 0 auto 1.1rem;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--color-primary) 10%, var(--color-gray-50));
+    color: var(--color-primary);
+    font-size: 1.6rem;
     line-height: 1;
 
-    .bi {
-      display: inline-block;
-    }
+    .bi { display: inline-block; }
   }
 
   &__title {
     margin: 0 0 0.5rem;
     font-size: clamp(1rem, 2.5vw, 1.125rem);
     font-weight: var(--font-weight-semibold);
+    color: var(--color-text);
   }
 
   &__description {
     margin: 0 0 1.5rem;
     color: var(--color-text-muted);
-    max-width: 360px;
+    max-width: 320px;
     font-size: 0.9375rem;
+    line-height: 1.5;
   }
 }

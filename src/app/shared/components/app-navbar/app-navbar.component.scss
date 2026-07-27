@@ -1,13 +1,14 @@
 :root {
-  --navbar-bg-primary: #0a192f;
-  --navbar-bg-secondary: #112240;
-  --navbar-accent: #64ffda;
-  --navbar-text: #ffffff;
-  --navbar-text-muted: #a8b2d1;
-  --navbar-border: rgba(100, 255, 218, 0.1);
-  --navbar-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  --navbar-radius: 12px;
-  --navbar-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Softer, friendlier navy — still professional, less harsh */
+  --navbar-bg-primary: #1a2d4f;
+  --navbar-bg-secondary: #1e3461;
+  --navbar-accent: #60a5fa;
+  --navbar-text: #f0f4ff;
+  --navbar-text-muted: #94afd8;
+  --navbar-border: rgba(96, 165, 250, 0.12);
+  --navbar-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
+  --navbar-radius: 10px;
+  --navbar-transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .app-navbar {
@@ -43,17 +44,24 @@
     flex-shrink: 0;
   }
 
-  &__brand {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--navbar-text);
+  &__brand,
+  &__page-hint {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--navbar-text-muted);
     white-space: nowrap;
-    letter-spacing: 0.5px;
-    text-shadow: 0 0 20px rgba(100, 255, 218, 0.2);
+    letter-spacing: 0.01em;
 
     @media (max-width: 991px) {
+      /* Sidebar already shows the brand; keep the bar uncluttered on tablet */
       display: none;
     }
+  }
+
+  &__page-hint {
+    color: var(--navbar-text-muted);
+    font-weight: 500;
+    opacity: 0.9;
   }
 
   &__menu-btn {

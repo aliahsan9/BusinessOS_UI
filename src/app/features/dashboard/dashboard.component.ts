@@ -69,12 +69,45 @@ export class DashboardComponent implements OnInit {
   ];
   readonly breadcrumbs = [{ label: 'Home', route: '/dashboard' }, { label: 'Overview' }];
 
-  /** Simple jump links — fewer options so non-technical users are not overwhelmed. */
+  /** Simple jump links — plain language so anyone can find their way. */
   readonly sections: ReadonlyArray<{ id: string; label: string; icon: string }> = [
-    { id: 'section-overview', label: 'Numbers', icon: 'bi-grid-1x2' },
+    { id: 'section-overview', label: 'At a glance', icon: 'bi-grid-1x2' },
     { id: 'section-attention', label: 'To do', icon: 'bi-exclamation-circle' },
-    { id: 'section-trends', label: 'Charts', icon: 'bi-graph-up' },
-    { id: 'section-details', label: 'Details', icon: 'bi-list-ul' },
+    { id: 'section-trends', label: 'Trends', icon: 'bi-graph-up' },
+    { id: 'section-details', label: 'More info', icon: 'bi-list-ul' },
+  ];
+
+  /** Common next steps — shortcuts for people who are not power users. */
+  readonly quickActions: ReadonlyArray<{
+    label: string;
+    hint: string;
+    icon: string;
+    route: string;
+  }> = [
+    {
+      label: 'New sale',
+      hint: 'Create a customer order',
+      icon: 'bi-cart-plus',
+      route: ROUTES.orders.create,
+    },
+    {
+      label: 'Add product',
+      hint: 'Put something new on the shelf',
+      icon: 'bi-box',
+      route: ROUTES.products.create,
+    },
+    {
+      label: 'Check stock',
+      hint: 'See what is running low',
+      icon: 'bi-box-seam',
+      route: ROUTES.inventory.stockLevels,
+    },
+    {
+      label: 'Add customer',
+      hint: 'Save a buyer’s details',
+      icon: 'bi-person-plus',
+      route: ROUTES.customers.create,
+    },
   ];
 
   // --- State passthroughs -----------------------------------------------------
@@ -129,7 +162,7 @@ export class DashboardComponent implements OnInit {
 
   readonly healthHint = computed(() => {
     const o = this.overview();
-    if (!o) return 'Numbers below update as you sell and restock.';
+    if (!o) return 'The numbers below update as you sell and restock.';
     const out = o.outOfStockProducts ?? 0;
     const low = o.lowStockProducts ?? 0;
     if (out > 0) {
@@ -138,7 +171,7 @@ export class DashboardComponent implements OnInit {
     if (low > 0) {
       return `${low} product${low === 1 ? '' : 's'} running low on stock.`;
     }
-    return `Showing results for ${this.currentPeriodLabel().toLowerCase()}.`;
+    return `Showing results for ${this.currentPeriodLabel().toLowerCase()}. Everything looks on track.`;
   });
 
   // --- Table sorting (client-side, view-only — underlying data is untouched) --

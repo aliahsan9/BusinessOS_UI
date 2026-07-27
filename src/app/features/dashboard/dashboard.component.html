@@ -5,38 +5,45 @@
       <p class="dashboard__greeting">{{ greeting() }}</p>
       <h1 class="dashboard__title">How is your business doing?</h1>
       <p class="dashboard__subtitle">
-        A simple snapshot of money, orders, customers, and stock —
+        A plain-language snapshot of money, orders, customers, and stock —
         {{ currentPeriodLabel().toLowerCase() || 'this period' }}.
       </p>
     </div>
 
     <div class="dashboard__toolbar">
-      <div class="dashboard__period-pills d-none d-md-inline-flex" role="tablist" aria-label="Show numbers for">
-        @for (p of periods; track p.value) {
-          <button
-            type="button"
-            role="tab"
-            class="dashboard__period-pill"
-            [class.dashboard__period-pill--active]="p.value === period()"
-            [attr.aria-selected]="p.value === period()"
-            (click)="setPeriod(p.value)"
-          >
-            {{ p.label }}
-          </button>
-        }
+      <div class="dashboard__period-block d-none d-md-flex">
+        <span class="dashboard__period-label" id="period-pills-label">Looking at</span>
+        <div
+          class="dashboard__period-pills"
+          role="tablist"
+          aria-labelledby="period-pills-label"
+        >
+          @for (p of periods; track p.value) {
+            <button
+              type="button"
+              role="tab"
+              class="dashboard__period-pill"
+              [class.dashboard__period-pill--active]="p.value === period()"
+              [attr.aria-selected]="p.value === period()"
+              (click)="setPeriod(p.value)"
+            >
+              {{ p.label }}
+            </button>
+          }
+        </div>
       </div>
 
       <div class="dashboard__period-select d-md-none">
         <label for="period-select">
           <i class="bi bi-calendar3" aria-hidden="true"></i>
-          Show numbers for
+          Looking at
         </label>
         <select
           id="period-select"
           class="form-select form-select-sm"
           [value]="period()"
           (change)="onPeriodChange($event)"
-          aria-label="Show numbers for"
+          aria-label="Looking at"
         >
           @for (p of periods; track p.value) {
             <option [value]="p.value">{{ p.label }}</option>
@@ -73,7 +80,7 @@
     </div>
     <div class="row g-3 dashboard__stats" aria-live="polite" aria-busy="true">
       @for (i of [1, 2, 3, 4]; track i) {
-        <div class="col-6 col-md-3">
+        <div class="col-12 col-sm-6 col-xl-3">
           <app-skeleton variant="rect" height="140px" />
         </div>
       }
@@ -127,6 +134,28 @@
       }
     </section>
 
+    <!-- Everyday shortcuts -->
+    <section class="dashboard__actions dashboard__animate-in" aria-label="Common tasks">
+      <div class="dashboard__actions-head">
+        <h2 class="dashboard__actions-title">Common tasks</h2>
+        <p class="dashboard__actions-desc">Start here — no menus to hunt through.</p>
+      </div>
+      <div class="dashboard__actions-grid">
+        @for (action of quickActions; track action.route) {
+          <a class="dashboard__action" [routerLink]="action.route">
+            <span class="dashboard__action-icon" aria-hidden="true">
+              <i class="bi" [class]="action.icon"></i>
+            </span>
+            <span class="dashboard__action-copy">
+              <span class="dashboard__action-label">{{ action.label }}</span>
+              <span class="dashboard__action-hint">{{ action.hint }}</span>
+            </span>
+            <i class="bi bi-chevron-right dashboard__action-arrow" aria-hidden="true"></i>
+          </a>
+        }
+      </div>
+    </section>
+
     <!-- Compact jump nav -->
     <nav class="dashboard__quicknav" aria-label="Jump to section">
       <ul class="dashboard__quicknav-list">
@@ -143,44 +172,55 @@
 
     <!-- Big numbers first -->
     <section id="section-overview" class="row g-3 dashboard__stats dashboard__animate-in" aria-label="Key numbers">
-      <div class="col-6 col-md-3">
+      <div class="col-12 col-sm-6 col-xl-3">
         <div class="stat-card dashboard__stat dashboard__stat--revenue h-100">
           <div class="dashboard__stat-top">
-            <span class="dashboard__stat-label">Money in</span>
+            <span class="dashboard__stat-label">Money received</span>
             <span class="dashboard__stat-icon" aria-hidden="true"><i class="bi bi-cash-stack"></i></span>
           </div>
           <span class="dashboard__stat-value">{{ overview()?.totalRevenue | appCurrency }}</span>
-          <span class="dashboard__stat-meta">This month: {{ sales()?.monthlySales | appCurrency }}</span>
+          <span class="dashboard__stat-meta">
+            For {{ currentPeriodLabel().toLowerCase() || 'this period' }}
+          </span>
+          <span class="dashboard__stat-tip">Total sales paid to you</span>
         </div>
       </div>
-      <div class="col-6 col-md-3">
+      <div class="col-12 col-sm-6 col-xl-3">
         <div class="stat-card dashboard__stat dashboard__stat--orders h-100">
           <div class="dashboard__stat-top">
-            <span class="dashboard__stat-label">Orders</span>
+            <span class="dashboard__stat-label">Customer orders</span>
             <span class="dashboard__stat-icon" aria-hidden="true"><i class="bi bi-cart3"></i></span>
           </div>
           <span class="dashboard__stat-value">{{ overview()?.totalOrders | number }}</span>
-          <span class="dashboard__stat-meta">Avg order: {{ sales()?.averageOrderValue | appCurrency }}</span>
+          <span class="dashboard__stat-meta">
+            Typical order: {{ sales()?.averageOrderValue | appCurrency }}
+          </span>
+          <span class="dashboard__stat-tip">How many times people bought</span>
         </div>
       </div>
-      <div class="col-6 col-md-3">
+      <div class="col-12 col-sm-6 col-xl-3">
         <div class="stat-card dashboard__stat dashboard__stat--customers h-100">
           <div class="dashboard__stat-top">
             <span class="dashboard__stat-label">Customers</span>
             <span class="dashboard__stat-icon" aria-hidden="true"><i class="bi bi-people"></i></span>
           </div>
           <span class="dashboard__stat-value">{{ overview()?.totalCustomers | number }}</span>
-          <span class="dashboard__stat-meta">New: {{ customers()?.newCustomers | number }}</span>
+          <span class="dashboard__stat-meta">New this period: {{ customers()?.newCustomers | number }}</span>
+          <span class="dashboard__stat-tip">People who buy from you</span>
         </div>
       </div>
-      <div class="col-6 col-md-3">
+      <div class="col-12 col-sm-6 col-xl-3">
         <div class="stat-card dashboard__stat dashboard__stat--products h-100">
           <div class="dashboard__stat-top">
-            <span class="dashboard__stat-label">Products</span>
+            <span class="dashboard__stat-label">Products for sale</span>
             <span class="dashboard__stat-icon" aria-hidden="true"><i class="bi bi-box-seam"></i></span>
           </div>
           <span class="dashboard__stat-value">{{ overview()?.totalProducts | number }}</span>
-          <span class="dashboard__stat-meta">{{ overview()?.totalCategories | number }} categories</span>
+          <span class="dashboard__stat-meta">
+            In {{ overview()?.totalCategories | number }}
+            {{ (overview()?.totalCategories ?? 0) === 1 ? 'group' : 'groups' }}
+          </span>
+          <span class="dashboard__stat-tip">Items in your catalog</span>
         </div>
       </div>
     </section>
@@ -189,26 +229,30 @@
     <section class="row g-3 dashboard__stats dashboard__stats--secondary dashboard__animate-in" aria-label="Stock and order health">
       <div class="col-6 col-lg-3">
         <div class="stat-card dashboard__stat dashboard__stat--compact h-100">
-          <span class="dashboard__stat-label">Stock value</span>
+          <span class="dashboard__stat-label">Value of stock</span>
           <span class="dashboard__stat-value dashboard__stat-value--sm">{{ overview()?.totalInventoryValue | appCurrency }}</span>
+          <span class="dashboard__stat-tip">What your shelves are worth</span>
         </div>
       </div>
       <div class="col-6 col-lg-3">
         <div class="stat-card dashboard__stat dashboard__stat--compact h-100" [class.dashboard__stat--pulse-warn]="(overview()?.lowStockProducts ?? 0) > 0">
           <span class="dashboard__stat-label">Running low</span>
           <span class="dashboard__stat-value dashboard__stat-value--sm dashboard__stat-value--warning">{{ overview()?.lowStockProducts | number }}</span>
+          <span class="dashboard__stat-tip">Need a restock soon</span>
         </div>
       </div>
       <div class="col-6 col-lg-3">
         <div class="stat-card dashboard__stat dashboard__stat--compact h-100" [class.dashboard__stat--pulse-danger]="(overview()?.outOfStockProducts ?? 0) > 0">
           <span class="dashboard__stat-label">Sold out</span>
           <span class="dashboard__stat-value dashboard__stat-value--sm dashboard__stat-value--danger">{{ overview()?.outOfStockProducts | number }}</span>
+          <span class="dashboard__stat-tip">Nothing left to sell</span>
         </div>
       </div>
       <div class="col-6 col-lg-3">
         <div class="stat-card dashboard__stat dashboard__stat--compact h-100">
-          <span class="dashboard__stat-label">Completed orders</span>
+          <span class="dashboard__stat-label">Finished orders</span>
           <span class="dashboard__stat-value dashboard__stat-value--sm dashboard__stat-value--success">{{ sales()?.completedOrders | number }}</span>
+          <span class="dashboard__stat-tip">Delivered or completed</span>
         </div>
       </div>
     </section>
@@ -223,7 +267,7 @@
     </section>
 
     <!-- Charts -->
-    <section id="section-trends" class="dashboard__animate-in" aria-label="Charts">
+    <section id="section-trends" class="dashboard__animate-in" aria-label="Trends">
       <div class="dashboard__section-intro">
         <h2 class="dashboard__section-title">How things are trending</h2>
         <p class="dashboard__section-desc">Money and orders over time — so you can spot ups and downs.</p>
@@ -369,7 +413,7 @@
                 </table>
               </div>
             } @else {
-              <app-empty-state title="No customers yet" />
+              <app-empty-state title="No customers yet" description="They’ll appear here after their first purchase." />
             }
           }
         </app-card>
@@ -405,7 +449,7 @@
                       </th>
                       <th scope="col" class="text-end">
                         <button type="button" class="dashboard__sort-btn dashboard__sort-btn--end" (click)="toggleProductSort('totalRevenue')">
-                          Revenue
+                          Money made
                           <i class="bi dashboard__sort-icon"
                              [class.bi-arrow-down]="productSortState().field === 'totalRevenue' && productSortState().direction === 'desc'"
                              [class.bi-arrow-up]="productSortState().field === 'totalRevenue' && productSortState().direction === 'asc'"
@@ -423,14 +467,14 @@
                           <br /><small class="text-muted">{{ product.sku }}</small>
                         </td>
                         <td data-label="Sold">{{ product.totalQuantitySold | number }}</td>
-                        <td data-label="Revenue" class="text-end">{{ product.totalRevenue | appCurrency }}</td>
+                        <td data-label="Money made" class="text-end">{{ product.totalRevenue | appCurrency }}</td>
                       </tr>
                     }
                   </tbody>
                 </table>
               </div>
             } @else {
-              <app-empty-state title="No product sales yet" />
+              <app-empty-state title="No product sales yet" description="Best sellers show up after customers buy." />
             }
           }
         </app-card>
@@ -482,7 +526,7 @@
       </div>
 
       <div class="col-12 col-md-6 col-xl-4">
-        <app-card title="Latest invoices" subtitle="Recently created bills" class="h-100">
+        <app-card title="Latest bills" subtitle="Recently created invoices" class="h-100">
           @if (widgetsLoading()) {
             <div aria-live="polite" aria-busy="true">
               @for (i of [1, 2, 3]; track i) {
@@ -490,7 +534,7 @@
               }
             </div>
           } @else if (latestInvoices().length === 0) {
-            <app-empty-state title="No invoices yet" />
+            <app-empty-state title="No invoices yet" description="Bills you send to customers will show here." />
           } @else {
             <ul class="dashboard__activity-list list-unstyled">
               @for (invoice of latestInvoices(); track invoice.id) {
