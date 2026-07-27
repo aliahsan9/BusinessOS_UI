@@ -1,7 +1,10 @@
-import { Injectable, PLATFORM_ID, computed, effect, inject, signal } from '@angular/core';
+import { Injectable, PLATFORM_ID, computed, effect, inject, signal, untracked } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { ThemeMode } from '../enums';
 import { SettingsService } from '../services/settings.service';
+import { TokenService } from '../services/token.service';
+import { STORAGE_KEYS } from '../constants/storage.constants';
+import { StorageHelper } from '../helpers/storage.helper';
 import { catchError, map, Observable, of, switchMap, throwError } from 'rxjs';
 import {
   BUILT_IN_THEMES,
@@ -27,10 +30,12 @@ import { ThemeStorage } from './theme.storage';
 export class ThemeService {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly settingsService = inject(SettingsService);
+  private readonly tokenService = inject(TokenService);
   private readonly isBrowser = isPlatformBrowser(this.platformId);
   private readonly initialized = signal(false);
   private fontLinkEl: HTMLLinkElement | null = null;
   private customStyleEl: HTMLStyleElement | null = null;
+  private lastTenantId: string | null = null;
 
   private readonly _preferences = signal<ThemePreferences>({ ...DEFAULT_THEME_PREFERENCES });
 
@@ -51,13 +56,13 @@ export class ThemeService {
   });
 
   readonly resolvedAppearance = computed<'light' | 'dark'>(() => {
-    const theme = this.activeTheme();
-    if (theme?.isDark) {
-      return 'dark';
-    }
+    // Explicit light/dark preference always wins (navbar toggle + appearance settings).
     const scheme = this._preferences().colorScheme;
     if (scheme === 'dark') return 'dark';
     if (scheme === 'light') return 'light';
+
+    // System: dark palettes stay dark; otherwise follow OS preference.
+    if (this.activeTheme()?.isDark) return 'dark';
     return this.getSystemPreference();
   });
 
@@ -66,11 +71,22 @@ export class ThemeService {
 
   constructor() {
     if (this.isBrowser) {
-      const prefs = ThemeStorage.load();
-      this._preferences.set(prefs);
+      const tenantId = this.resolveTenantId();
+      this.lastTenantId = tenantId;
+      this._preferences.set(ThemeStorage.load(tenantId));
 
       effect(() => {
         this.applyAll(this._preferences(), this.resolvedAppearance());
+      });
+
+      // Keep local cache isolated when the authenticated tenant changes.
+      effect(() => {
+        const nextTenantId = this.tokenService.tenantId() ?? this.resolveTenantId();
+        if (nextTenantId === this.lastTenantId) return;
+        this.lastTenantId = nextTenantId;
+        untracked(() => {
+          this._preferences.set(ThemeStorage.load(nextTenantId));
+        });
       });
 
       window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
@@ -108,7 +124,7 @@ export class ThemeService {
         if (!settings?.theme) return;
         const backendTheme = settings.theme.trim();
         if (this.isValidThemeId(backendTheme)) {
-          this.setThemeId(backendTheme as ThemeId, { persist: false, trackRecent: false });
+          this.setThemeId(backendTheme as ThemeId, { persist: true, trackRecent: false, syncBackend: false });
         } else {
           try {
             const parsed = JSON.parse(backendTheme) as Partial<ThemePreferences>;
@@ -118,7 +134,7 @@ export class ThemeService {
           } catch {
             const migrated = backendTheme as ColorScheme;
             if (['light', 'dark', 'system'].includes(migrated)) {
-              this.setColorScheme(migrated as ColorScheme, { persist: false });
+              this.setColorScheme(migrated as ColorScheme, { persist: true, syncBackend: false });
             }
           }
         }
@@ -181,7 +197,15 @@ export class ThemeService {
 
   toggleDarkMode(): void {
     const next = this.resolvedAppearance() === 'dark' ? 'light' : 'dark';
-    this.setColorScheme(next);
+    const patch: Partial<ThemePreferences> = { colorScheme: next };
+
+    // A dark palette theme-id would keep painting dark surfaces even in light mode.
+    if (next === 'light' && this.activeTheme()?.isDark) {
+      patch.themeId = 'light';
+    }
+
+    // Persist locally per tenant and sync to tenant settings so other tenants stay unaffected.
+    this.updatePreferences(patch, { persist: true, syncBackend: true });
   }
 
   /** @deprecated Use setColorScheme */
@@ -206,10 +230,10 @@ export class ThemeService {
     const { persist = true, syncBackend = false } = options ?? {};
     this._preferences.update((current) => ({ ...current, ...partial }));
     if (persist && this.isBrowser) {
-      ThemeStorage.save(this._preferences());
+      ThemeStorage.save(this._preferences(), this.resolveTenantId());
     }
     if (syncBackend) {
-      this.syncToBackend().subscribe();
+      this.syncToBackend().pipe(catchError(() => of(undefined))).subscribe();
     }
   }
 
@@ -240,13 +264,13 @@ export class ThemeService {
   importTheme(json: string): void {
     const prefs = ThemeStorage.importPreferences(json);
     this._preferences.set(prefs);
-    ThemeStorage.save(prefs);
+    ThemeStorage.save(prefs, this.resolveTenantId());
     this.applyAll(prefs, this.resolvedAppearance());
   }
 
   resetToDefaults(): void {
     this._preferences.set({ ...DEFAULT_THEME_PREFERENCES });
-    ThemeStorage.save(this._preferences());
+    ThemeStorage.save(this._preferences(), this.resolveTenantId());
     this.removeCustomStyle();
     this.applyAll(this._preferences(), this.resolvedAppearance());
   }
@@ -294,6 +318,10 @@ export class ThemeService {
       return BUILT_IN_THEMES[themeId as keyof typeof BUILT_IN_THEMES];
     }
     return this._preferences().customThemes.find((t) => t.id === themeId);
+  }
+
+  private resolveTenantId(): string | null {
+    return this.tokenService.tenantId() ?? StorageHelper.getString(STORAGE_KEYS.tenantId);
   }
 
   private applyAll(prefs: ThemePreferences, appearance: 'light' | 'dark'): void {

@@ -23,10 +23,22 @@
   </div>
 
   <div class="app-navbar__actions">
+    <a
+      class="btn app-navbar__icon-btn"
+      [routerLink]="settingsRoutes.ai.workspace"
+      routerLinkActive="active"
+      aria-label="AI Workspace"
+      title="AI Workspace"
+      (click)="onAiWorkspaceClick()"
+    >
+      <i class="bi bi-stars"></i>
+    </a>
+
     <button
       type="button"
       class="btn app-navbar__icon-btn"
-      [attr.aria-label]="isDarkMode() ? 'Light mode' : 'Dark mode'"
+      [attr.aria-label]="isDarkMode() ? 'Switch to light mode' : 'Switch to dark mode'"
+      [attr.title]="isDarkMode() ? 'Switch to light mode' : 'Switch to dark mode'"
       (click)="toggleDarkMode()"
     >
       <i
@@ -34,16 +46,6 @@
         [class.bi-sun]="isDarkMode()"
         [class.bi-moon-stars]="!isDarkMode()"
       ></i>
-    </button>
-
-    <button
-      type="button"
-      class="btn app-navbar__icon-btn"
-      [class.active]="aiAssistantOpen()"
-      aria-label="BusinessOS AI"
-      (click)="toggleAiAssistant()"
-    >
-      <i class="bi bi-stars"></i>
     </button>
 
     @if (canViewNotifications()) {

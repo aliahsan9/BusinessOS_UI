@@ -19,6 +19,22 @@ describe('ThemeStorage', () => {
     expect(loaded.colorScheme).toBe('dark');
   });
 
+  it('should isolate preferences per tenant', () => {
+    ThemeStorage.save(
+      { ...DEFAULT_THEME_PREFERENCES, themeId: 'dark' as const, colorScheme: 'dark' as const },
+      'tenant-a',
+    );
+    ThemeStorage.save(
+      { ...DEFAULT_THEME_PREFERENCES, themeId: 'light' as const, colorScheme: 'light' as const },
+      'tenant-b',
+    );
+
+    expect(ThemeStorage.load('tenant-a').colorScheme).toBe('dark');
+    expect(ThemeStorage.load('tenant-b').colorScheme).toBe('light');
+    expect(localStorage.getItem(`${THEME_STORAGE_KEY}.tenant-a`)).toBeTruthy();
+    expect(localStorage.getItem(`${THEME_STORAGE_KEY}.tenant-b`)).toBeTruthy();
+  });
+
   it('should migrate legacy theme mode values', () => {
     localStorage.setItem(THEME_LEGACY_KEY, 'dark');
     const loaded = ThemeStorage.load();

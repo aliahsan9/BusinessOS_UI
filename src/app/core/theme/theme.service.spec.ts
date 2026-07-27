@@ -5,6 +5,7 @@ import { ThemeStorage } from './theme.storage';
 import { THEME_STORAGE_KEY } from './theme.constants';
 import { DEFAULT_THEME_PREFERENCES } from './theme.model';
 import { SettingsService } from '../services/settings.service';
+import { TokenService } from '../services/token.service';
 import { TenantSettingsDto } from '../models/settings.model';
 import { ThemeMode } from '../enums';
 
@@ -18,17 +19,25 @@ const mockSettings = (overrides: Partial<TenantSettingsDto> = {}): TenantSetting
   emailFromAddress: null,
   theme: 'light',
   logoUrl: null,
+  timezone: 'UTC',
+  aiAssistantEnabled: true,
+  aiShowSuggestions: true,
   emailNotificationsEnabled: true,
   systemNotificationsEnabled: true,
   orderNotificationsEnabled: true,
   inventoryAlertsEnabled: true,
   paymentAlertsEnabled: true,
+  taskNotificationsEnabled: true,
+  invoiceNotificationsEnabled: true,
+  customerNotificationsEnabled: true,
+  projectNotificationsEnabled: true,
   ...overrides,
 });
 
 describe('ThemeService', () => {
   let service: ThemeService;
   let settingsService: jasmine.SpyObj<SettingsService>;
+  let tokenService: { tenantId: jasmine.Spy };
 
   beforeEach(() => {
     localStorage.clear();
@@ -40,9 +49,13 @@ describe('ThemeService', () => {
     settingsService = jasmine.createSpyObj('SettingsService', ['getSettings', 'updateSettings']);
     settingsService.getSettings.and.returnValue(of(mockSettings()));
     settingsService.updateSettings.and.returnValue(of(mockSettings()));
+    tokenService = { tenantId: jasmine.createSpy('tenantId').and.returnValue('tenant-1') };
 
     TestBed.configureTestingModule({
-      providers: [{ provide: SettingsService, useValue: settingsService }],
+      providers: [
+        { provide: SettingsService, useValue: settingsService },
+        { provide: TokenService, useValue: tokenService },
+      ],
     });
     service = TestBed.inject(ThemeService);
     service.initialize();
@@ -75,23 +88,28 @@ describe('ThemeService', () => {
     expect(document.documentElement.getAttribute('data-bs-theme')).toBe('light');
   });
 
-  it('should toggle dark mode', () => {
-    service.setColorScheme('light');
+  it('should toggle dark mode and sync tenant settings', fakeAsync(() => {
+    service.setColorScheme('light', { syncBackend: false });
     service.toggleDarkMode();
+    tick();
     expect(service.resolvedAppearance()).toBe('dark');
-    service.toggleDarkMode();
-    expect(service.resolvedAppearance()).toBe('light');
-  });
+    expect(settingsService.updateSettings).toHaveBeenCalled();
+    expect(localStorage.getItem(`${THEME_STORAGE_KEY}.tenant-1`)).toBeTruthy();
 
-  it('should persist preferences to local storage', () => {
+    service.toggleDarkMode();
+    tick();
+    expect(service.resolvedAppearance()).toBe('light');
+  }));
+
+  it('should persist preferences to tenant-scoped local storage', () => {
     service.setThemeId('purple-executive');
     service.updatePreferences({ fontFamily: 'poppins', compactMode: true });
 
-    const stored = ThemeStorage.load();
+    const stored = ThemeStorage.load('tenant-1');
     expect(stored.themeId).toBe('purple-executive');
     expect(stored.fontFamily).toBe('poppins');
     expect(stored.compactMode).toBeTrue();
-    expect(localStorage.getItem(THEME_STORAGE_KEY)).toBeTruthy();
+    expect(localStorage.getItem(`${THEME_STORAGE_KEY}.tenant-1`)).toBeTruthy();
   });
 
   it('should track recent themes', () => {

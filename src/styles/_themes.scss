@@ -196,3 +196,32 @@
     border-top: 3px solid var(--primary-color);
   }
 }
+
+// Appearance mode must override palette tokens from [data-theme-id='...'] above.
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --primary-color: #7c5cfc;
+  --primary-hover-color: #6d4ef0;
+  --primary-light-color: rgba(124, 92, 252, 0.18);
+  --secondary-color: #9aa3b5;
+  --background-color: #0b0f19;
+  --surface-color: #151a24;
+  --text-color: #f3f5f9;
+  --text-muted-color: #8b93a7;
+  --border-color: #232a38;
+  --sidebar-background: #0e121c;
+  --navbar-background: #0e121c;
+  --sidebar-text-color: #9aa3b5;
+  --table-header-background: #10151f;
+  --shadow-color: rgba(0, 0, 0, 0.35);
+  --overlay-backdrop-color: rgba(0, 0, 0, 0.65);
+  --chart-primary-color: #7c5cfc;
+  --chart-secondary-color: #9aa3b5;
+  --color-gray-50: #10151f;
+  --color-gray-100: #151a24;
+  --color-gray-200: #232a38;
+}

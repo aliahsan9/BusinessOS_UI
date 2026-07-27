@@ -9,7 +9,7 @@ import {
   output,
   signal,
 } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 
 import { AuthService } from '../../../core/services/auth.service';
 import { TokenService } from '../../../core/services/token.service';
@@ -17,7 +17,6 @@ import { TenantSettingsStoreService } from '../../../core/services/tenant-settin
 import { ThemeService } from '../../../core/theme/theme.service';
 
 import { NotificationStateService } from '../../../state/notification.state';
-import { AiAssistantStateService } from '../../../state/ai-assistant.state';
 
 import { APP_ROUTE_PATHS } from '../../constants/nav.constants';
 import { ROUTES } from '../../../core/constants/route.constants';
@@ -26,7 +25,7 @@ import { NotificationBellComponent } from '../notification-bell/notification-bel
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [RouterLink, NotificationBellComponent],
+  imports: [RouterLink, RouterLinkActive, NotificationBellComponent],
   templateUrl: './app-navbar.component.html',
   styleUrl: './app-navbar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -36,7 +35,6 @@ export class AppNavbarComponent implements OnInit {
   private readonly tokenService = inject(TokenService);
   private readonly tenantSettingsStore = inject(TenantSettingsStoreService);
   private readonly notificationState = inject(NotificationStateService);
-  private readonly aiAssistantState = inject(AiAssistantStateService);
   private readonly themeService = inject(ThemeService);
   private readonly router = inject(Router);
 
@@ -110,8 +108,6 @@ export class AppNavbarComponent implements OnInit {
   readonly canViewNotifications = computed(() =>
     this.tokenService.hasPermission('Notification.View'),
   );
-
-  readonly aiAssistantOpen = this.aiAssistantState.isOpen;
 
   constructor() {
     effect(() => {
@@ -204,10 +200,9 @@ export class AppNavbarComponent implements OnInit {
     this.themeService.toggleDarkMode();
   }
 
-  toggleAiAssistant(): void {
+  onAiWorkspaceClick(): void {
     this.showProfile.set(false);
     this.notificationState.closePanel();
-    this.aiAssistantState.toggle();
   }
 
   onLogoLoad(): void {

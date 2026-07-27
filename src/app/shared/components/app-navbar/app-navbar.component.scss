@@ -130,6 +130,7 @@
     color: var(--navbar-muted);
     border: 1px solid transparent;
     transition: var(--navbar-transition);
+    text-decoration: none;
 
     i {
       font-size: 1.1rem;
@@ -139,6 +140,7 @@
       background: color-mix(in srgb, var(--navbar-accent) 10%, transparent);
       color: var(--navbar-text);
       border-color: color-mix(in srgb, var(--navbar-accent) 20%, transparent);
+      text-decoration: none;
     }
 
     &.active {
