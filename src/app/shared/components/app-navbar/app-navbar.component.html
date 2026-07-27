@@ -1,254 +1,121 @@
 <header class="app-navbar">
-
-  <!-- Left Section -->
   <div class="app-navbar__start">
-
     <button
       type="button"
       class="btn app-navbar__menu-btn"
       aria-label="Toggle navigation"
-      (click)="menuToggle.emit()">
-
+      (click)="menuToggle.emit()"
+    >
       <i class="bi bi-list"></i>
-
     </button>
 
-    <span class="app-navbar__page-hint d-none d-sm-inline">
-      Your business hub
-    </span>
-
+    <label class="app-navbar__search" aria-label="Search">
+      <i class="bi bi-search" aria-hidden="true"></i>
+      <input
+        type="search"
+        placeholder="Search products, orders, customers..."
+        [value]="searchQuery()"
+        (input)="onSearchInput($event)"
+        (keydown.enter)="submitSearch()"
+      />
+      <kbd class="app-navbar__search-kbd">Ctrl K</kbd>
+    </label>
   </div>
 
-  <!-- Navigation Links -->
-  <nav class="app-navbar__nav" aria-label="Main navigation">
-
-    @for (item of navItems; track item.route) {
-
-      <a
-        [routerLink]="item.route"
-        routerLinkActive="app-navbar__nav-link--active"
-        [routerLinkActiveOptions]="{ exact: true }"
-        class="app-navbar__nav-link"
-        [title]="item.description"
-        (click)="closeMobileMenu()">
-
-        <i class="bi" [class]="item.icon"></i>
-
-        <span class="app-navbar__nav-text">
-          {{ item.label }}
-        </span>
-
-      </a>
-
-    }
-
-  </nav>
-
-  <!-- Right Actions -->
   <div class="app-navbar__actions">
-
-    <!-- Theme Toggle -->
     <button
       type="button"
       class="btn app-navbar__icon-btn"
       [attr.aria-label]="isDarkMode() ? 'Light mode' : 'Dark mode'"
-      (click)="toggleDarkMode()">
-
+      (click)="toggleDarkMode()"
+    >
       <i
         class="bi"
         [class.bi-sun]="isDarkMode()"
-        [class.bi-moon-stars]="!isDarkMode()">
-      </i>
-
+        [class.bi-moon-stars]="!isDarkMode()"
+      ></i>
     </button>
 
-    <!-- AI Assistant -->
     <button
       type="button"
       class="btn app-navbar__icon-btn"
       [class.active]="aiAssistantOpen()"
       aria-label="BusinessOS AI"
-      (click)="toggleAiAssistant()">
-
+      (click)="toggleAiAssistant()"
+    >
       <i class="bi bi-stars"></i>
-
     </button>
 
-    <!-- Notifications -->
     @if (canViewNotifications()) {
       <app-notification-bell />
     }
 
-    <!-- Profile Dropdown -->
     <div class="app-navbar__dropdown">
-
       <button
         type="button"
         class="app-navbar__profile"
         [attr.aria-expanded]="showProfile()"
-        (click)="toggleProfile()">
-
+        (click)="toggleProfile()"
+      >
         @if (showCompanyLogo()) {
-
           <img
             class="app-navbar__avatar"
             [src]="companyLogoUrl()!"
             alt="Company Logo"
             (load)="onLogoLoad()"
-            (error)="onLogoError()">
-
+            (error)="onLogoError()"
+          />
         } @else {
-
-          <span class="app-navbar__avatar">
-            {{ userInitial() }}
-          </span>
-
+          <span class="app-navbar__avatar">{{ userInitial() }}</span>
         }
 
         <div class="app-navbar__profile-info">
-
-          <span class="app-navbar__profile-name">
-            {{ userDisplayName() }}
-          </span>
-
-          <small class="text-body-secondary">
-            Account
-          </small>
-
+          <span class="app-navbar__profile-name">{{ userDisplayName() }}</span>
+          <small>{{ userRoleLabel() }}</small>
         </div>
 
         <i class="bi bi-chevron-down"></i>
-
       </button>
 
-      <!-- Dropdown Menu -->
       @if (showProfile()) {
-
         <div class="app-navbar__dropdown-menu">
-
           <div class="app-navbar__dropdown-header">
-
             {{ currentUser()?.email }}
-
           </div>
 
           <a
             class="dropdown-item"
             [routerLink]="routes.profile"
-            (click)="closeProfileMenu()">
-
+            (click)="closeProfileMenu()"
+          >
             <i class="bi bi-person"></i>
-
             <span>Profile</span>
-
           </a>
 
           <a
             class="dropdown-item"
             [routerLink]="settingsRoutes.settings.appearance"
-            (click)="closeProfileMenu()">
-
+            (click)="closeProfileMenu()"
+          >
             <i class="bi bi-palette"></i>
-
             <span>Appearance</span>
-
           </a>
 
           <a
             class="dropdown-item"
             [routerLink]="settingsRoutes.settings.hub"
-            (click)="closeProfileMenu()">
-
+            (click)="closeProfileMenu()"
+          >
             <i class="bi bi-gear"></i>
-
             <span>Settings</span>
-
           </a>
 
-          <button
-            type="button"
-            class="dropdown-item text-danger"
-            (click)="logout()">
-
+          <button type="button" class="dropdown-item text-danger" (click)="logout()">
             <i class="bi bi-box-arrow-right"></i>
-
             <span>Sign Out</span>
-
           </button>
-
         </div>
-
       }
-
     </div>
-
   </div>
-
 </header>
-
-<!-- Mobile Sidebar Overlay -->
-<div
-  class="mobile-sidebar-overlay"
-  [class.active]="isMobileMenuOpen()"
-  (click)="closeMobileMenu()">
-</div>
-
-<!-- Mobile Sidebar -->
-<div
-  class="mobile-sidebar"
-  [class.active]="isMobileMenuOpen()">
-
-  <div class="mobile-sidebar__header">
-
-    <span class="mobile-sidebar__brand">
-      BusinessOS
-    </span>
-
-    <button
-      type="button"
-      class="mobile-sidebar__close"
-      (click)="closeMobileMenu()">
-
-      <i class="bi bi-x-lg"></i>
-
-    </button>
-
-  </div>
-
-  <nav class="mobile-sidebar__nav">
-
-    @for (item of navItems; track item.route) {
-
-      <a
-        [routerLink]="item.route"
-        routerLinkActive="mobile-sidebar__link--active"
-        [routerLinkActiveOptions]="{ exact: true }"
-        class="mobile-sidebar__link"
-        (click)="closeMobileMenu()">
-
-        <i class="bi" [class]="item.icon"></i>
-
-        <span>{{ item.label }}</span>
-
-      </a>
-
-    }
-
-  </nav>
-
-  <div class="mobile-sidebar__footer">
-
-    <button
-      type="button"
-      class="mobile-sidebar__logout"
-      (click)="logout()">
-
-      <i class="bi bi-box-arrow-right"></i>
-
-      <span>Sign Out</span>
-
-    </button>
-
-  </div>
-
-</div>

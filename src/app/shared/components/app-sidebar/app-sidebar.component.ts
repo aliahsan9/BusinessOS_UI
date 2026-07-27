@@ -1,7 +1,7 @@
 // app-sidebar.component.ts
 import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal, OnInit, OnDestroy } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { NAV_GROUP_ORDER, NAV_ITEMS, NavItem } from '../../constants/nav.constants';
+import { NAV_GROUP_ORDER, NAV_ITEMS, NavItem, ROUTES } from '../../constants/nav.constants';
 import { TokenService } from '../../../core/services/token.service';
 import { ThemeService } from '../../../core/theme/theme.service';
 import { STORAGE_KEYS } from '../../../core/constants/storage.constants';
@@ -25,6 +25,7 @@ export class AppSidebarComponent implements OnInit, OnDestroy {
   readonly mobileOpen = input(false);
   readonly collapsed = signal(StorageHelper.get<boolean>(STORAGE_KEYS.sidebarCollapsed) ?? false);
   readonly tabletOpen = signal(false);
+  readonly billingRoute = ROUTES.billing.base;
 
   readonly mobileClose = output<void>();
 

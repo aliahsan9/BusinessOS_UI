@@ -87,8 +87,8 @@ export const TOP_NAV_ITEMS: NavItem[] = [
 
 export const NAV_ITEMS: NavItem[] = [
   {
-    label: 'Home',
-    icon: 'bi-house-door',
+    label: 'Dashboard',
+    icon: 'bi-grid-1x2',
     route: ROUTES.dashboard,
     description: 'See how your business is doing at a glance.',
     group: 'Home',

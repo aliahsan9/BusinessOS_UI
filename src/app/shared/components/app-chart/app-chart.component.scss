@@ -1,4 +1,11 @@
 .app-chart {
   position: relative;
   width: 100%;
+  min-height: 160px;
+
+  canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+  }
 }

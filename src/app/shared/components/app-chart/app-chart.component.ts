@@ -1,5 +1,4 @@
 import {
-  AfterViewInit,
   ChangeDetectionStrategy,
   Component,
   ElementRef,
@@ -22,119 +21,142 @@ Chart.register(...registerables);
   styleUrl: './app-chart.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AppChartComponent implements AfterViewInit, OnDestroy {
+export class AppChartComponent implements OnDestroy {
   readonly data = input<ChartDataResponse | null>(null);
   readonly height = input(280);
 
   private readonly themeService = inject(ThemeService);
-  private readonly canvasRef = viewChild.required<ElementRef<HTMLCanvasElement>>('canvas');
+  private readonly canvasRef = viewChild<ElementRef<HTMLCanvasElement>>('canvas');
   private chart: Chart | null = null;
   private chartType: 'line' | 'bar' | 'doughnut' = 'line';
 
   constructor() {
     effect(() => {
+      const canvas = this.canvasRef()?.nativeElement;
       const chartData = this.data();
-      if (this.chart && chartData) {
-        this.updateChart(chartData);
-      }
-    });
-
-    effect(() => {
       this.themeService.themeId();
       this.themeService.resolvedAppearance();
-      const chartData = this.data();
-      if (this.chart && chartData) {
-        this.updateChart(chartData);
-      }
-    });
-  }
 
-  ngAfterViewInit(): void {
-    const chartData = this.data();
-    if (chartData) {
-      this.createChart(chartData);
-    }
+      if (!canvas || !chartData) {
+        return;
+      }
+
+      const nextType = this.mapChartType(chartData.chartType);
+      if (!this.chart || this.chartType !== nextType) {
+        this.chart?.destroy();
+        this.chart = null;
+        this.createChart(canvas, chartData);
+        return;
+      }
+
+      this.applyData(chartData);
+    });
   }
 
   ngOnDestroy(): void {
     this.chart?.destroy();
+    this.chart = null;
   }
 
-  private createChart(chartData: ChartDataResponse): void {
-    const canvas = this.canvasRef().nativeElement;
+  private createChart(canvas: HTMLCanvasElement, chartData: ChartDataResponse): void {
     const colors = this.getChartColors();
     const palette = this.getDatasetPalette();
-    const config: ChartConfiguration = {
-      type: this.mapChartType(chartData.chartType),
+    const chartType = this.mapChartType(chartData.chartType);
+    const isDoughnut = chartType === 'doughnut';
+
+    const config = {
+      type: chartType,
       data: {
         labels: chartData.labels,
-        datasets: chartData.datasets.map((ds, index) => {
-          const color = palette[index % palette.length];
-          const isLine = ds.chartStyle === 'line' || ds.chartStyle === 'area';
-          return {
-            label: ds.label,
-            data: ds.data,
-            borderColor: color.border,
-            backgroundColor: isLine ? color.fill : color.solid,
-            tension: 0.35,
-            fill: ds.chartStyle === 'line' || ds.chartStyle === 'area',
-            borderRadius: 6,
-          };
-        }),
+        datasets: this.buildDatasets(chartData, palette, colors, isDoughnut),
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
         animation: { duration: 750, easing: 'easeInOutQuart' },
         plugins: {
-          legend: { display: chartData.datasets.length > 1 || this.mapChartType(chartData.chartType) === 'doughnut', position: 'bottom' },
-          tooltip: { enabled: true, mode: 'index', intersect: false },
+          legend: {
+            display: !isDoughnut && chartData.datasets.length > 1,
+            position: 'bottom',
+            labels: { color: colors.text, boxWidth: 10, usePointStyle: true },
+          },
+          tooltip: {
+            enabled: true,
+            mode: isDoughnut ? 'nearest' : 'index',
+            intersect: isDoughnut,
+          },
         },
-        scales: this.mapChartType(chartData.chartType) === 'doughnut'
-          ? undefined
+        scales: isDoughnut
+          ? {}
           : {
-              y: { beginAtZero: true, grid: { color: colors.grid } },
-              x: { grid: { display: false } },
+              y: {
+                beginAtZero: true,
+                grid: { color: colors.grid },
+                ticks: { color: colors.textMuted, font: { size: 11 } },
+                border: { display: false },
+              },
+              x: {
+                grid: { display: false },
+                ticks: { color: colors.textMuted, font: { size: 11 } },
+                border: { display: false },
+              },
             },
+        ...(isDoughnut ? { cutout: '68%' } : {}),
       },
-    };
+    } as ChartConfiguration;
+
     this.chart = new Chart(canvas, config);
-    this.chartType = this.mapChartType(chartData.chartType);
+    this.chartType = chartType;
   }
 
-  private updateChart(chartData: ChartDataResponse): void {
-    const nextType = this.mapChartType(chartData.chartType);
-    if (!this.chart || this.chartType !== nextType) {
-      this.chart?.destroy();
-      this.chart = null;
-      this.createChart(chartData);
-      return;
-    }
+  private applyData(chartData: ChartDataResponse): void {
+    if (!this.chart) return;
     const colors = this.getChartColors();
     const palette = this.getDatasetPalette();
+    const isDoughnut = this.chartType === 'doughnut';
     this.chart.data.labels = chartData.labels;
-    this.chart.data.datasets = chartData.datasets.map((ds, index) => {
+    this.chart.data.datasets = this.buildDatasets(chartData, palette, colors, isDoughnut) as never;
+    this.chart.update();
+  }
+
+  private buildDatasets(
+    chartData: ChartDataResponse,
+    palette: Array<{ border: string; fill: string; solid: string }>,
+    colors: ReturnType<AppChartComponent['getChartColors']>,
+    isDoughnut: boolean,
+  ) {
+    const doughnutColors = ['#7c5cfc', '#3b82f6', '#10b981', '#f59e0b', '#94a3b8', '#ec4899'];
+
+    return chartData.datasets.map((ds, index) => {
       const color = palette[index % palette.length];
       const isLine = ds.chartStyle === 'line' || ds.chartStyle === 'area';
+
+      if (isDoughnut) {
+        return {
+          label: ds.label,
+          data: ds.data,
+          backgroundColor: doughnutColors.slice(0, Math.max(ds.data.length, 1)),
+          borderColor: colors.surface,
+          borderWidth: 3,
+          hoverOffset: 6,
+        };
+      }
+
       return {
         label: ds.label,
         data: ds.data,
         borderColor: color.border,
         backgroundColor: isLine ? color.fill : color.solid,
-        tension: 0.35,
+        tension: 0.4,
         fill: ds.chartStyle === 'line' || ds.chartStyle === 'area',
         borderRadius: 6,
+        pointRadius: isLine ? 4 : 0,
+        pointHoverRadius: isLine ? 6 : 0,
+        pointBackgroundColor: color.border,
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
       };
     });
-    if (this.mapChartType(chartData.chartType) === 'doughnut') {
-      this.chart.options.scales = undefined;
-    } else {
-      this.chart.options.scales = {
-        y: { beginAtZero: true, grid: { color: colors.grid } },
-        x: { grid: { display: false } },
-      };
-    }
-    this.chart.update();
   }
 
   private getChartColors(): {
@@ -142,18 +164,24 @@ export class AppChartComponent implements AfterViewInit, OnDestroy {
     primaryFaded: string;
     primarySolid: string;
     grid: string;
+    text: string;
+    textMuted: string;
+    surface: string;
   } {
     const root = document.documentElement;
     const primary =
       getComputedStyle(root).getPropertyValue('--chart-primary-color').trim() ||
       getComputedStyle(root).getPropertyValue('--primary-color').trim() ||
-      '#2563eb';
+      '#7c5cfc';
     const isDark = this.themeService.resolvedAppearance() === 'dark';
     return {
       primary,
-      primaryFaded: this.withAlpha(primary, 0.1),
+      primaryFaded: this.withAlpha(primary, 0.18),
       primarySolid: this.withAlpha(primary, 0.7),
-      grid: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)',
+      grid: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
+      text: isDark ? '#f3f5f9' : '#111827',
+      textMuted: isDark ? '#8b93a7' : '#6b7280',
+      surface: isDark ? '#151a24' : '#ffffff',
     };
   }
 

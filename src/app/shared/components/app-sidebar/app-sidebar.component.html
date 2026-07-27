@@ -9,7 +9,7 @@
 >
   <div class="app-sidebar__brand">
     <div class="app-sidebar__logo" aria-hidden="true">
-      <i class="bi bi-boxes"></i>
+      <i class="bi bi-hexagon-fill"></i>
     </div>
     @if (!hideLabels()) {
       <span class="app-sidebar__name">BusinessOS</span>
@@ -46,6 +46,17 @@
   </nav>
 
   <div class="app-sidebar__footer">
+    @if (!hideLabels()) {
+      <div class="app-sidebar__pro">
+        <div class="app-sidebar__pro-badge">PRO</div>
+        <p class="app-sidebar__pro-title">BusinessOS Pro</p>
+        <p class="app-sidebar__pro-copy">Unlock advanced analytics &amp; AI tools</p>
+        <a class="app-sidebar__pro-btn" [routerLink]="billingRoute" (click)="onNavClick()">
+          Manage Subscription
+        </a>
+      </div>
+    }
+
     <button
       type="button"
       class="app-sidebar__toggle"
@@ -54,6 +65,9 @@
       title="Toggle sidebar"
     >
       <i class="bi" [class]="isCollapsedView() ? 'bi-chevron-right' : 'bi-chevron-left'"></i>
+      @if (!hideLabels()) {
+        <span>Collapse</span>
+      }
     </button>
   </div>
 </aside>

@@ -103,21 +103,24 @@
 }
 
 [data-theme='dark'] {
-  --background-color: #0f172a;
-  --surface-color: #1e293b;
-  --sidebar-background: #1e293b;
-  --navbar-background: #1e293b;
-  --sidebar-text-color: #94a3b8;
-  --text-color: #f1f5f9;
-  --text-muted-color: #94a3b8;
-  --border-color: #334155;
-  --table-header-background: #0f172a;
-  --primary-light-color: #1e3a5f;
-  --shadow-color: rgba(0, 0, 0, 0.25);
-  --overlay-backdrop-color: rgba(0, 0, 0, 0.6);
-  --color-gray-50: #0f172a;
-  --color-gray-100: #1e293b;
-  --color-gray-200: #334155;
+  --primary-color: #7c5cfc;
+  --primary-hover-color: #6d4ef0;
+  --primary-light-color: rgba(124, 92, 252, 0.18);
+  --background-color: #0b0f19;
+  --surface-color: #151a24;
+  --sidebar-background: #0e121c;
+  --navbar-background: #0e121c;
+  --sidebar-text-color: #9aa3b5;
+  --text-color: #f3f5f9;
+  --text-muted-color: #8b93a7;
+  --border-color: #232a38;
+  --table-header-background: #10151f;
+  --shadow-color: rgba(0, 0, 0, 0.35);
+  --overlay-backdrop-color: rgba(0, 0, 0, 0.65);
+  --chart-primary-color: #7c5cfc;
+  --color-gray-50: #10151f;
+  --color-gray-100: #151a24;
+  --color-gray-200: #232a38;
 }
 
 [data-large-font] {
