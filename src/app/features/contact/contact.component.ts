@@ -24,6 +24,12 @@ interface HelpTopic {
   linkLabel: string;
 }
 
+interface AssistItem {
+  icon: string;
+  title: string;
+  description: string;
+}
+
 @Component({
   selector: 'app-contact',
   standalone: true,
@@ -57,6 +63,38 @@ export class ContactComponent {
     }
   ];
 
+  readonly assistItems: AssistItem[] = [
+    {
+      icon: 'bi-rocket-takeoff',
+      title: 'Getting started',
+      description: 'Trial setup, first modules, and inviting your team with the right roles.',
+    },
+    {
+      icon: 'bi-boxes',
+      title: 'Operations fit',
+      description: 'How inventory, sales, CRM, and finance map to your current workflows.',
+    },
+    {
+      icon: 'bi-building',
+      title: 'Multi-location rollout',
+      description: 'Warehouses, branches, and permissions for teams that grow beyond one site.',
+    },
+    {
+      icon: 'bi-credit-card',
+      title: 'Plans & pricing',
+      description: 'Which plan fits your team size — and what is included before you pay.',
+    },
+  ];
+
+  readonly topicOptions = [
+    'Getting started',
+    'Product demo',
+    'Pricing & plans',
+    'Technical support',
+    'Partnership',
+    'Other',
+  ];
+
   readonly helpTopics: HelpTopic[] = [
     {
       icon: 'bi-question-circle',
@@ -88,6 +126,7 @@ export class ContactComponent {
     fullName: ['', Validators.required],
     email: ['', [Validators.required, Validators.email]],
     company: [''],
+    topic: ['', Validators.required],
     subject: ['', Validators.required],
     message: ['', Validators.required]
   });

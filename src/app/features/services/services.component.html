@@ -69,6 +69,35 @@
     </div>
   </section>
 
+  <section class="services-outcomes">
+    <div class="container">
+      <div class="mkt-section-head">
+        <span class="mkt-eyebrow">
+          <i class="bi bi-lightbulb"></i>
+          Problems we solve
+        </span>
+        <h2>Clear pain points. Connected fixes.</h2>
+        <p>
+          If these sound familiar, BusinessOS was built to remove the busywork
+          that keeps growing teams from running cleanly.
+        </p>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-lg-3 col-md-6" *ngFor="let item of businessOutcomes">
+          <article class="outcome-solve h-100">
+            <span class="mkt-icon-box"><i class="bi" [ngClass]="item.icon"></i></span>
+            <h3>{{ item.problem }}</h3>
+            <p>
+              <i class="bi bi-arrow-right-circle" aria-hidden="true"></i>
+              {{ item.solution }}
+            </p>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section class="services-delivery">
     <div class="container">
       <div class="mkt-section-head">

@@ -123,6 +123,18 @@ export class PrivacyComponent {
       ],
     },
     {
+      id: 'cookies',
+      icon: 'bi-sliders',
+      title: 'Cookies and similar tech',
+      summary: 'We use essential cookies to keep you signed in and the product reliable.',
+      points: [
+        'Essential cookies support login sessions, security, and basic site function.',
+        'We may use limited analytics to understand feature usage and improve reliability.',
+        'We do not use advertising trackers to sell or profile your business records.',
+        'You can control non-essential cookies in your browser settings where available.',
+      ],
+    },
+    {
       id: 'contact-privacy',
       icon: 'bi-envelope-open',
       title: 'Privacy questions',

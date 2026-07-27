@@ -17,6 +17,12 @@ interface FaqCategory {
   icon: string;
 }
 
+interface FaqHighlight {
+  icon: string;
+  title: string;
+  description: string;
+}
+
 @Component({
   selector: 'app-faq',
   standalone: true,
@@ -33,6 +39,29 @@ export class FaqComponent {
     { id: 'security', label: 'Security', icon: 'bi-shield-check' },
   ];
 
+  readonly highlights: FaqHighlight[] = [
+    {
+      icon: 'bi-box-seam',
+      title: 'What you get',
+      description: 'Inventory, sales, CRM, finance, analytics, and secure team access in one place.',
+    },
+    {
+      icon: 'bi-clock',
+      title: 'Time to value',
+      description: 'Most teams are productive within a day — guided onboarding, no empty dashboard.',
+    },
+    {
+      icon: 'bi-shield-lock',
+      title: 'Trust & control',
+      description: 'Role-based access, encrypted sessions, and a clear privacy policy.',
+    },
+    {
+      icon: 'bi-headset',
+      title: 'Real support',
+      description: 'Human replies within one business day — not a bot wall before help.',
+    },
+  ];
+
   readonly faqs: FaqItem[] = [
     {
       id: 'what-is',
@@ -47,6 +76,13 @@ export class FaqComponent {
       question: 'Who is BusinessOS built for?',
       answer:
         'Growing businesses that need clearer operations — retailers, distributors, service teams, and multi-location companies that have outgrown spreadsheets and want one system for stock, orders, customers, and cash flow.',
+    },
+    {
+      id: 'how-helps',
+      category: 'getting-started',
+      question: 'How does BusinessOS help my business grow?',
+      answer:
+        'It removes the busywork between tools. Sales update stock and invoices automatically, CRM keeps one customer timeline, and leaders see live KPIs — so teams spend time serving customers instead of rebuilding reports.',
     },
     {
       id: 'trial',
@@ -67,7 +103,7 @@ export class FaqComponent {
       category: 'platform',
       question: 'Which modules are included?',
       answer:
-        'Inventory, sales & orders, customer CRM, finance & cash flow, analytics & reporting, and security with role-based access. Everything stays connected — a sale updates stock, invoices, and dashboards automatically.',
+        'Inventory, sales & orders, suppliers & purchasing, customer CRM, finance & cash flow, analytics & reporting, team collaboration, and security with role-based access. Everything stays connected — a sale updates stock, invoices, and dashboards automatically.',
     },
     {
       id: 'integrations',
@@ -82,6 +118,13 @@ export class FaqComponent {
       question: 'Can I bring existing customers and products over?',
       answer:
         'Yes. You can add records manually or import in batches during setup. If you have a large catalog or customer list, contact us and we will help you plan a clean migration so you start with accurate data.',
+    },
+    {
+      id: 'mobile',
+      category: 'platform',
+      question: 'Does BusinessOS work on phones and tablets?',
+      answer:
+        'Yes. The marketing site and app layouts are built to be responsive. Your team can review dashboards, check stock alerts, and follow up on customers from desktop or mobile browsers.',
     },
     {
       id: 'pricing',

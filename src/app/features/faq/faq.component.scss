@@ -29,6 +29,37 @@
   padding: 0 0 3rem;
 }
 
+.faq-highlights {
+  padding: 0 0 2rem;
+}
+
+.faq-highlight {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  height: 100%;
+  padding: 1.15rem;
+  background: #fff;
+  border: 1px solid var(--mkt-border);
+  border-radius: var(--mkt-radius);
+  box-shadow: var(--mkt-shadow-sm);
+
+  h2 {
+    margin: 0 0 0.3rem;
+    font-family: var(--mkt-font-display);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--mkt-ink);
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.88rem;
+    line-height: 1.5;
+    color: var(--mkt-muted);
+  }
+}
+
 .faq-filters {
   display: flex;
   flex-wrap: wrap;

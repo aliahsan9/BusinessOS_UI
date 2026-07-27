@@ -29,6 +29,33 @@
   padding: 0 0 4rem;
 }
 
+.contact-assist {
+  padding: 0 0 2.5rem;
+}
+
+.assist-card {
+  padding: 1.35rem;
+  background: #fff;
+  border: 1px solid var(--mkt-border);
+  border-radius: var(--mkt-radius);
+  box-shadow: var(--mkt-shadow-sm);
+
+  h3 {
+    margin: 1rem 0 0.45rem;
+    font-family: var(--mkt-font-display);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--mkt-ink);
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.93rem;
+    line-height: 1.55;
+    color: var(--mkt-muted);
+  }
+}
+
 .contact-channel {
   display: block;
   height: 100%;
@@ -102,7 +129,8 @@
     color: var(--mkt-ink-soft);
   }
 
-  .form-control {
+  .form-control,
+  .form-select {
     padding: 0.8rem 0.95rem;
     border: 1px solid var(--mkt-border);
     border-radius: 10px;

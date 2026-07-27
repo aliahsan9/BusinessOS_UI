@@ -58,6 +58,12 @@ interface TrustCommitment {
   description: string;
 }
 
+interface HelpOutcome {
+  icon: string;
+  title: string;
+  description: string;
+}
+
 @Component({
   selector: 'app-about',
   standalone: true,
@@ -145,6 +151,33 @@ export class AboutComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   // ----- "Running processes" list -----
+  readonly helpOutcomes: HelpOutcome[] = [
+    {
+      icon: 'bi-diagram-3',
+      title: 'Replace tool sprawl',
+      description:
+        'Inventory in one app, invoices in another, CRM somewhere else — we replace that patchwork with one connected system.',
+    },
+    {
+      icon: 'bi-lightning-charge',
+      title: 'Speed up daily work',
+      description:
+        'Orders update stock and finance together. Teams stop waiting on exports and start acting on live numbers.',
+    },
+    {
+      icon: 'bi-shield-check',
+      title: 'Grow without losing control',
+      description:
+        'Role-based access keeps warehouse, sales, and finance productive while sensitive data stays restricted.',
+    },
+    {
+      icon: 'bi-graph-up',
+      title: 'Plan with confidence',
+      description:
+        'Analytics refresh with real operations so leaders see revenue, stock health, and cash position in one place.',
+    },
+  ];
+
   readonly capabilities: Capability[] = [
     { icon: 'bi-boxes', name: 'Inventory Management', description: 'Stock levels, reorder points, and warehouse visibility.' },
     { icon: 'bi-lightning-charge-fill', name: 'Sales Automation', description: 'Quotes, follow-ups, and approvals that run themselves.' },

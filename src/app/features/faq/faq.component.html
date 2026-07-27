@@ -15,6 +15,24 @@
     </div>
   </section>
 
+  <section class="faq-highlights">
+    <div class="container">
+      <div class="row g-3">
+        @for (item of highlights; track item.title) {
+          <div class="col-lg-3 col-md-6">
+            <article class="faq-highlight">
+              <span class="mkt-icon-box"><i class="bi" [ngClass]="item.icon"></i></span>
+              <div>
+                <h2>{{ item.title }}</h2>
+                <p>{{ item.description }}</p>
+              </div>
+            </article>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
   <section class="faq-body">
     <div class="container">
       <div class="faq-filters" role="tablist" aria-label="Filter FAQs by topic">

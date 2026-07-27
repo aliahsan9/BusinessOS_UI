@@ -26,6 +26,12 @@ interface TrustPoint {
   description: string;
 }
 
+interface BusinessOutcome {
+  icon: string;
+  problem: string;
+  solution: string;
+}
+
 @Component({
   selector: 'app-services',
   standalone: true,
@@ -54,6 +60,16 @@ export class ServicesComponent {
       description:
         'Create orders, issue invoices, and track payment status while revenue updates across finance and analytics automatically.',
       stack: ['Order pipeline', 'Invoicing', 'Payment tracking', 'Sales history']
+    },
+    {
+      id: 'suppliers',
+      icon: 'bi bi-truck',
+      category: 'Operations',
+      title: 'Suppliers & purchasing',
+      tagline: 'Keep vendors and purchase orders in sync with stock.',
+      description:
+        'Manage supplier records and purchase flows so replenishment ties back to the same inventory your sales team relies on.',
+      stack: ['Supplier directory', 'Purchase orders', 'Receive stock', 'Vendor history']
     },
     {
       id: 'crm',
@@ -86,6 +102,16 @@ export class ServicesComponent {
       stack: ['Live dashboards', 'KPI tracking', 'Trend analysis', 'Export-ready reports']
     },
     {
+      id: 'team',
+      icon: 'bi bi-person-badge',
+      category: 'Growth',
+      title: 'Team & collaboration',
+      tagline: 'The right people on the right work.',
+      description:
+        'Invite teammates, assign ownership, and keep operational handoffs inside the platform instead of scattered chats.',
+      stack: ['Team invites', 'Task ownership', 'Shared activity', 'Handoff clarity']
+    },
+    {
       id: 'security',
       icon: 'bi bi-shield-lock',
       category: 'Security',
@@ -95,6 +121,29 @@ export class ServicesComponent {
         'Protect business data with authentication, role-based permissions, and audit-friendly access controls across every module.',
       stack: ['Role-based access', 'Secure login', 'Permission sets', 'Activity controls']
     }
+  ];
+
+  readonly businessOutcomes: BusinessOutcome[] = [
+    {
+      icon: 'bi-exclamation-triangle',
+      problem: 'Stockouts and overstock surprises',
+      solution: 'Live inventory with reorder alerts tied to every sale and receipt.',
+    },
+    {
+      icon: 'bi-files',
+      problem: 'Invoices rebuilt from chat threads',
+      solution: 'Orders flow into invoicing and payment tracking automatically.',
+    },
+    {
+      icon: 'bi-person-x',
+      problem: 'Customer history split across tools',
+      solution: 'One CRM profile with orders, notes, and follow-ups attached.',
+    },
+    {
+      icon: 'bi-pie-chart',
+      problem: 'Month-end spreadsheet marathons',
+      solution: 'Dashboards that refresh with operations — not end-of-month exports.',
+    },
   ];
 
   readonly deliverySteps: DeliveryStep[] = [

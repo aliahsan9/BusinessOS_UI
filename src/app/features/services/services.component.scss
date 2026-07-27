@@ -150,11 +150,13 @@
 }
 
 .services-delivery,
+.services-outcomes,
 .services-trust {
   padding: 1rem 0 3rem;
 }
 
 .delivery-card,
+.outcome-solve,
 .trust-card {
   padding: 1.4rem;
   background: #fff;
@@ -175,6 +177,18 @@
     font-size: 0.93rem;
     line-height: 1.6;
     color: var(--mkt-muted);
+  }
+}
+
+.outcome-solve p {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+
+  i {
+    margin-top: 0.2rem;
+    color: var(--mkt-accent);
+    flex-shrink: 0;
   }
 }
 

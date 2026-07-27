@@ -111,6 +111,32 @@
     </div>
   </section>
 
+  <section class="about-help">
+    <div class="container">
+      <div class="mkt-section-head">
+        <span class="mkt-eyebrow">
+          <i class="bi bi-hand-thumbs-up"></i>
+          How we help
+        </span>
+        <h2>Practical help for businesses that want to run better</h2>
+        <p>
+          Whether you are fixing stock chaos, billing delays, or blind spots in reporting,
+          BusinessOS gives your team a clearer way to operate every day.
+        </p>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-lg-3 col-md-6" *ngFor="let item of helpOutcomes">
+          <article class="help-outcome h-100">
+            <span class="mkt-icon-box"><i class="bi" [ngClass]="item.icon"></i></span>
+            <h3>{{ item.title }}</h3>
+            <p>{{ item.description }}</p>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section class="about-mission">
     <div class="container">
       <div class="row g-4">

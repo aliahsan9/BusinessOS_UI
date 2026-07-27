@@ -169,6 +169,48 @@
     </div>
   </section>
 
+  <section class="home-outcomes">
+    <div class="container">
+      <div class="mkt-section-head">
+        <span class="mkt-eyebrow">
+          <i class="bi bi-trophy"></i>
+          How we help
+        </span>
+        <h2>Make the business easier to run — and easier to grow</h2>
+        <p>
+          BusinessOS is not another dashboard for its own sake. It connects the work
+          your teams already do so you spend less time chasing data and more time
+          serving customers.
+        </p>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-lg-3 col-md-6" *ngFor="let item of outcomes">
+          <article class="outcome-card h-100">
+            <span class="mkt-icon-box"><i class="bi" [ngClass]="item.icon"></i></span>
+            <h3>{{ item.title }}</h3>
+            <p>{{ item.description }}</p>
+            <span class="outcome-card__result">
+              <i class="bi bi-check2-circle"></i>
+              {{ item.result }}
+            </span>
+          </article>
+        </div>
+      </div>
+
+      <div class="home-outcomes__cta">
+        <a routerLink="/services" class="mkt-btn mkt-btn--ghost">
+          <i class="bi bi-layers"></i>
+          See all services
+        </a>
+        <a routerLink="/auth/register" class="mkt-btn mkt-btn--primary">
+          Start free trial
+          <i class="bi bi-arrow-right"></i>
+        </a>
+      </div>
+    </div>
+  </section>
+
   <section class="home-audience">
     <div class="container">
       <div class="mkt-section-head">

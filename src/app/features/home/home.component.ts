@@ -52,6 +52,13 @@ interface TrustPillar {
   description: string;
 }
 
+interface OutcomeItem {
+  icon: string;
+  title: string;
+  description: string;
+  result: string;
+}
+
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -188,6 +195,37 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       icon: 'bi-buildings',
       title: 'Growing teams',
       description: 'Role-based access so warehouse, sales, and finance share data without oversharing.',
+    },
+  ];
+
+  readonly outcomes: OutcomeItem[] = [
+    {
+      icon: 'bi-box-seam',
+      title: 'Fewer stockouts',
+      description:
+        'Live inventory and reorder alerts keep shelves and warehouses stocked before customers feel the gap.',
+      result: 'Stock moves with every sale',
+    },
+    {
+      icon: 'bi-receipt',
+      title: 'Faster billing cycles',
+      description:
+        'Quotes become invoices and payments without retyping — cash flow stays visible to finance and leadership.',
+      result: 'Orders sync to finance',
+    },
+    {
+      icon: 'bi-people',
+      title: 'Stronger customer follow-through',
+      description:
+        'One CRM timeline for every account means sales and support stop hunting across chats and spreadsheets.',
+      result: 'One record per customer',
+    },
+    {
+      icon: 'bi-graph-up-arrow',
+      title: 'Decisions from live numbers',
+      description:
+        'Dashboards refresh with real operations so you plan next week from truth — not last month’s export.',
+      result: 'KPIs without rebuilds',
     },
   ];
 

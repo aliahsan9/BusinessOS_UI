@@ -15,6 +15,32 @@
     </div>
   </section>
 
+  <section class="contact-assist">
+    <div class="container">
+      <div class="mkt-section-head">
+        <span class="mkt-eyebrow">
+          <i class="bi bi-life-preserver"></i>
+          We can help with
+        </span>
+        <h2>Tell us where you are stuck — we will meet you there</h2>
+        <p>
+          From first login to multi-location growth, our team helps you understand
+          what BusinessOS can do for your operations.
+        </p>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-lg-3 col-md-6" *ngFor="let item of assistItems">
+          <article class="assist-card h-100">
+            <span class="mkt-icon-box"><i class="bi" [ngClass]="item.icon"></i></span>
+            <h3>{{ item.title }}</h3>
+            <p>{{ item.description }}</p>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section class="contact-body">
     <div class="container">
       <div class="row g-4 mb-4">
@@ -84,6 +110,16 @@
                 </div>
 
                 <div class="col-md-6">
+                  <label class="form-label" for="topic">Topic</label>
+                  <select id="topic" class="form-select" formControlName="topic">
+                    <option value="" disabled>Select a topic</option>
+                    @for (option of topicOptions; track option) {
+                      <option [value]="option">{{ option }}</option>
+                    }
+                  </select>
+                </div>
+
+                <div class="col-12">
                   <label class="form-label" for="subject">Subject</label>
                   <input
                     id="subject"

@@ -334,12 +334,14 @@
 }
 
 .home-how,
+.home-outcomes,
 .home-audience,
 .home-trust-pillars {
   padding: 1rem 0 3.5rem;
 }
 
 .how-card,
+.outcome-card,
 .audience-card,
 .trust-pillar {
   position: relative;
@@ -364,6 +366,40 @@
     line-height: 1.6;
     color: var(--mkt-muted);
   }
+}
+
+.outcome-card {
+  display: flex;
+  flex-direction: column;
+
+  p {
+    flex: 1;
+  }
+
+  &__result {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 1rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid var(--mkt-border);
+    font-family: var(--mkt-font-display);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--mkt-accent);
+
+    i {
+      font-size: 1rem;
+    }
+  }
+}
+
+.home-outcomes__cta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 2rem;
 }
 
 .how-card__step {
@@ -480,6 +516,7 @@
     grid-template-columns: 1fr;
   }
 
+  .home-outcomes__cta,
   .home-trust-pillars__links {
     flex-direction: column;
 
