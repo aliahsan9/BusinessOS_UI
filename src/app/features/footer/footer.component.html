@@ -1,168 +1,70 @@
-<footer class="business-footer">
-
-  <div class="footer-glow"></div>
-
+<footer class="bos-footer">
   <div class="container">
-
     <div class="row gy-5">
-
-      <!-- Company -->
-
-      <div class="col-lg-4">
-
-        <div class="footer-brand">
-
-          <div class="logo-circle">
-            B
-          </div>
-
+      <div class="col-lg-4 col-md-6">
+        <div class="bos-footer__brand">
+          <span class="bos-footer__mark" aria-hidden="true">
+            <i class="bi bi-grid-1x2-fill"></i>
+          </span>
           <h3>BusinessOS</h3>
-
         </div>
-
-        <p class="footer-description">
-          The all-in-one platform for managing inventory,
-          sales, finance, customers, analytics, and team
-          operations from a single powerful dashboard.
+        <p class="bos-footer__desc">
+          The operating system for growing businesses — inventory, sales,
+          finance, customers, and teams in one secure platform.
         </p>
-
-        <div class="social-links">
-
-          <a href="#">
-            <i class="bi bi-facebook"></i>
-          </a>
-
-          <a href="#">
-            <i class="bi bi-linkedin"></i>
-          </a>
-
-          <a href="#">
-            <i class="bi bi-twitter-x"></i>
-          </a>
-
-          <a href="#">
-            <i class="bi bi-instagram"></i>
-          </a>
-
+        <div class="bos-footer__social">
+          <a href="#" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a>
+          <a href="#" aria-label="X"><i class="bi bi-twitter-x"></i></a>
+          <a href="#" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+          <a href="#" aria-label="YouTube"><i class="bi bi-youtube"></i></a>
         </div>
-
       </div>
 
-      <!-- Navigation -->
-
-      <div class="col-lg-2 col-md-4">
-
-        <h5>Navigation</h5>
-
+      <div class="col-lg-2 col-md-3 col-6">
+        <h5>Company</h5>
         <ul>
-
-          <li>
-            <button (click)="scrollToSection('home')">
-              Home
-            </button>
-          </li>
-
-          <li>
-            <button (click)="scrollToSection('about')">
-              About
-            </button>
-          </li>
-
-          <li>
-            <button (click)="scrollToSection('services')">
-              Services
-            </button>
-          </li>
-
-          <li>
-            <button (click)="scrollToSection('contact')">
-              Contact
-            </button>
-          </li>
-
+          <li><a routerLink="/">Home</a></li>
+          <li><a routerLink="/about">About</a></li>
+          <li><a routerLink="/services">Services</a></li>
+          <li><a routerLink="/contact">Contact</a></li>
         </ul>
-
       </div>
 
-      <!-- Platform -->
-
-      <div class="col-lg-3 col-md-4">
-
+      <div class="col-lg-3 col-md-3 col-6">
         <h5>Platform</h5>
-
         <ul>
-
-          <li>Inventory Management</li>
-
-          <li>Sales & Orders</li>
-
-          <li>Finance Tracking</li>
-
-          <li>Analytics Dashboard</li>
-
-          <li>Team Management</li>
-
-          <li>Customer CRM</li>
-
+          <li><a routerLink="/services">Inventory</a></li>
+          <li><a routerLink="/services">Sales &amp; orders</a></li>
+          <li><a routerLink="/services">Finance</a></li>
+          <li><a routerLink="/services">CRM</a></li>
+          <li><a routerLink="/services">Analytics</a></li>
+          <li><a routerLink="/services">Team access</a></li>
         </ul>
-
       </div>
 
-      <!-- Newsletter -->
-
-      <div class="col-lg-3 col-md-4">
-
-        <h5>Stay Updated</h5>
-
-        <p class="newsletter-text">
-          Get product updates, feature releases,
-          and business growth insights.
+      <div class="col-lg-3 col-md-12">
+        <h5>Get started</h5>
+        <p class="bos-footer__cta-text">
+          Start a free trial and see your operations in one dashboard.
         </p>
-
-        <div class="newsletter-box">
-
-          <input
-            type="email"
-            placeholder="Enter your email"
-          />
-
-          <button>
-            Subscribe
-          </button>
-
+        <a routerLink="/auth/register" class="mkt-btn mkt-btn--primary bos-footer__cta">
+          Create account
+          <i class="bi bi-arrow-right"></i>
+        </a>
+        <div class="bos-footer__trust">
+          <span><i class="bi bi-shield-lock"></i> Encrypted</span>
+          <span><i class="bi bi-check2-circle"></i> Role-based access</span>
         </div>
-
       </div>
-
     </div>
 
-    <hr />
-
-    <div class="footer-bottom">
-
-      <p>
-        © {{ currentYear }} BusinessOS.
-        All Rights Reserved.
-      </p>
-
-      <div class="footer-links">
-
-        <a href="#">
-          Privacy Policy
-        </a>
-
-        <a href="#">
-          Terms of Service
-        </a>
-
-        <a href="#">
-          Support
-        </a>
-
+    <div class="bos-footer__bottom">
+      <p>&copy; {{ currentYear }} BusinessOS. All rights reserved.</p>
+      <div class="bos-footer__legal">
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+        <a routerLink="/contact">Support</a>
       </div>
-
     </div>
-
   </div>
-
 </footer>

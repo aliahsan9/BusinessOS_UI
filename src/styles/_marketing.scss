@@ -1,0 +1,177 @@
+// Shared marketing / public-site design tokens.
+// Used by home, about, services, contact, landing, testimonials,
+// marketing navbar/footer, and auth pages so the background and brand
+// language stay consistent.
+
+:root {
+  --mkt-bg: #eef2f6;
+  --mkt-bg-deep: #e3e9f0;
+  --mkt-surface: #ffffff;
+  --mkt-ink: #0b1f33;
+  --mkt-ink-soft: #1a3348;
+  --mkt-muted: #5c6b7a;
+  --mkt-accent: #0d6e6e;
+  --mkt-accent-hover: #0a5555;
+  --mkt-accent-soft: #d8efef;
+  --mkt-accent-mid: #149191;
+  --mkt-border: #d5dde6;
+  --mkt-border-strong: #b8c4d1;
+  --mkt-success: #1f7a4d;
+  --mkt-warning: #b45309;
+  --mkt-danger: #b42318;
+  --mkt-shadow: 0 12px 40px rgba(11, 31, 51, 0.08);
+  --mkt-shadow-sm: 0 4px 16px rgba(11, 31, 51, 0.06);
+  --mkt-radius: 14px;
+  --mkt-radius-sm: 10px;
+  --mkt-font-display: 'Outfit', system-ui, sans-serif;
+  --mkt-font-body: 'Source Sans 3', 'Segoe UI', sans-serif;
+  --mkt-nav-height: 72px;
+}
+
+.mkt-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse 80% 50% at 10% -10%, rgba(13, 110, 110, 0.09), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 100% 0%, rgba(26, 51, 72, 0.06), transparent 50%),
+    linear-gradient(180deg, var(--mkt-bg) 0%, var(--mkt-bg-deep) 100%);
+  color: var(--mkt-ink);
+  font-family: var(--mkt-font-body);
+  padding-top: var(--mkt-nav-height);
+}
+
+.mkt-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  background: var(--mkt-accent-soft);
+  color: var(--mkt-accent);
+  font-family: var(--mkt-font-display);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.mkt-section-head {
+  max-width: 640px;
+  margin: 0 auto 3rem;
+  text-align: center;
+
+  h2 {
+    margin: 0.85rem 0 0.75rem;
+    font-family: var(--mkt-font-display);
+    font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: var(--mkt-ink);
+    line-height: 1.2;
+  }
+
+  p {
+    margin: 0;
+    font-size: 1.05rem;
+    line-height: 1.65;
+    color: var(--mkt-muted);
+  }
+}
+
+.mkt-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.5rem;
+  border-radius: 10px;
+  border: none;
+  font-family: var(--mkt-font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+
+  &:focus-visible {
+    outline: 2px solid var(--mkt-accent);
+    outline-offset: 3px;
+  }
+}
+
+.mkt-btn--primary {
+  background: var(--mkt-accent);
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(13, 110, 110, 0.28);
+
+  &:hover {
+    background: var(--mkt-accent-hover);
+    color: #fff;
+    transform: translateY(-1px);
+  }
+}
+
+.mkt-btn--ghost {
+  background: transparent;
+  color: var(--mkt-ink);
+  border: 1.5px solid var(--mkt-border-strong);
+
+  &:hover {
+    border-color: var(--mkt-accent);
+    color: var(--mkt-accent);
+    background: var(--mkt-accent-soft);
+  }
+}
+
+.mkt-btn--light {
+  background: #fff;
+  color: var(--mkt-accent);
+  border: 1.5px solid transparent;
+
+  &:hover {
+    background: var(--mkt-accent-soft);
+    color: var(--mkt-accent-hover);
+  }
+}
+
+.mkt-icon-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--mkt-accent-soft);
+  color: var(--mkt-accent);
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.mkt-surface {
+  background: var(--mkt-surface);
+  border: 1px solid var(--mkt-border);
+  border-radius: var(--mkt-radius);
+  box-shadow: var(--mkt-shadow-sm);
+}
+
+.mkt-reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.55s ease, transform 0.55s ease;
+
+  &.is-visible {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mkt-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .mkt-btn:hover {
+    transform: none;
+  }
+}

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit, computed, signal } from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { FooterComponent } from '../footer/footer.component';
@@ -21,73 +21,70 @@ interface ServiceItem {
   templateUrl: './services.component.html',
   styleUrls: ['./services.component.scss']
 })
-export class ServicesComponent implements OnInit, OnDestroy {
-
-  // ---- Data -----------------------------------------------------------
+export class ServicesComponent {
   readonly services: ServiceItem[] = [
     {
-      id: 'custom-software',
-      icon: 'bi bi-code-slash',
-      category: 'Web & Software',
-      title: 'Custom Software Development',
-      tagline: 'Systems built around how your business actually runs.',
+      id: 'inventory',
+      icon: 'bi bi-box-seam',
+      category: 'Operations',
+      title: 'Inventory management',
+      tagline: 'Stock levels that stay accurate as sales move.',
       description:
-        'Tailored software that replaces spreadsheets and manual workarounds with something built for the way your team works.',
-      stack: ['ASP.NET Core', 'EF Core', 'SQL Server', 'Clean Architecture']
+        'Track products, warehouses, and reorder points with alerts that fire when inventory drops — no end-of-day reconciliation required.',
+      stack: ['SKU tracking', 'Low-stock alerts', 'Multi-location stock', 'Movement history']
     },
     {
-      id: 'web-apps',
-      icon: 'bi bi-window-stack',
-      category: 'Web & Software',
-      title: 'Web Application Development',
-      tagline: 'Fast, modern interfaces backed by solid APIs.',
+      id: 'sales',
+      icon: 'bi bi-cart-check',
+      category: 'Operations',
+      title: 'Sales & order management',
+      tagline: 'Quotes, invoices, and payments in one flow.',
       description:
-        'Responsive, secure web applications built end-to-end — from the API layer to the last pixel in the browser.',
-      stack: ['Angular', 'Angular Signals', 'RxJS', '.NET Core APIs']
+        'Create orders, issue invoices, and track payment status while revenue updates across finance and analytics automatically.',
+      stack: ['Order pipeline', 'Invoicing', 'Payment tracking', 'Sales history']
     },
     {
-      id: 'mobile',
-      icon: 'bi bi-phone',
-      category: 'Web & Software',
-      title: 'Mobile-Ready Experiences',
-      tagline: 'One codebase, every screen size.',
+      id: 'crm',
+      icon: 'bi bi-people',
+      category: 'Growth',
+      title: 'Customer CRM',
+      tagline: 'One record for every relationship.',
       description:
-        'Interfaces that hold up from a small phone in one hand to a wide monitor at a desk, with no separate "mobile version" to maintain.',
-      stack: ['Responsive UI', 'Progressive Web App', 'Cross-Device Testing', 'Accessibility']
+        'Centralize customer profiles, conversations, and purchase history so sales and support always work from the same timeline.',
+      stack: ['Customer profiles', 'Purchase history', 'Follow-ups', 'Loyalty tracking']
     },
     {
-      id: 'cloud-devops',
-      icon: 'bi bi-cloud-arrow-up',
-      category: 'Cloud & DevOps',
-      title: 'Cloud & DevOps',
-      tagline: 'Ship changes without holding your breath.',
+      id: 'finance',
+      icon: 'bi bi-cash-stack',
+      category: 'Finance',
+      title: 'Finance & cash flow',
+      tagline: 'Books that reflect live operations.',
       description:
-        'Deployment pipelines and cloud infrastructure set up so releases are routine, not risky.',
-      stack: ['Azure', 'CI/CD Pipelines', 'Docker', 'Monitoring & Logging']
+        'Monitor expenses, receivables, and cash position against real order data instead of rebuilding spreadsheets every week.',
+      stack: ['Expenses', 'Receivables', 'Cash overview', 'Financial reports']
     },
     {
-      id: 'ai-automation',
-      icon: 'bi bi-cpu',
-      category: 'AI & Automation',
-      title: 'AI & Automation',
-      tagline: 'Put your data and workflows to work.',
+      id: 'analytics',
+      icon: 'bi bi-graph-up-arrow',
+      category: 'Growth',
+      title: 'Analytics & reporting',
+      tagline: 'KPIs that refresh with the business.',
       description:
-        'Practical AI features — search, retrieval, and automation — wired into real workflows instead of bolted on as a demo.',
-      stack: ['RAG Pipelines', 'Vector Search', 'LLM Integration', 'Workflow Automation']
+        'Interactive dashboards for revenue, orders, inventory health, and team activity — available whenever leaders need them.',
+      stack: ['Live dashboards', 'KPI tracking', 'Trend analysis', 'Export-ready reports']
     },
     {
-      id: 'support',
-      icon: 'bi bi-shield-check',
-      category: 'Support',
-      title: 'Maintenance & Support',
-      tagline: 'Software that keeps working after launch day.',
+      id: 'security',
+      icon: 'bi bi-shield-lock',
+      category: 'Security',
+      title: 'Security & team access',
+      tagline: 'The right people see the right modules.',
       description:
-        'Ongoing monitoring, fixes, and tuning so performance and security don\u2019t quietly decay after go-live.',
-      stack: ['Bug Fixes', 'Uptime Monitoring', 'Security Patches', 'Performance Tuning']
+        'Protect business data with authentication, role-based permissions, and audit-friendly access controls across every module.',
+      stack: ['Role-based access', 'Secure login', 'Permission sets', 'Activity controls']
     }
   ];
 
-  // ---- Filtering state --------------------------------------------------
   readonly categories = computed(() => {
     const unique = Array.from(new Set(this.services.map(s => s.category)));
     return ['All', ...unique];
@@ -102,12 +99,11 @@ export class ServicesComponent implements OnInit, OnDestroy {
       : this.services.filter(s => s.category === active);
   });
 
+  private readonly expandedIds = signal<Set<string>>(new Set());
+
   setCategory(category: string): void {
     this.activeCategory.set(category);
   }
-
-  // ---- Expand / collapse stack details ----------------------------------
-  private readonly expandedIds = signal<Set<string>>(new Set());
 
   isExpanded(id: string): boolean {
     return this.expandedIds().has(id);
@@ -121,36 +117,5 @@ export class ServicesComponent implements OnInit, OnDestroy {
 
   trackById(_index: number, item: ServiceItem): string {
     return item.id;
-  }
-
-  // ---- Hero terminal typing effect --------------------------------------
-  readonly typedCommand = signal<string>('');
-  private readonly fullCommand = 'services --list --stack=full';
-  private typingHandle?: ReturnType<typeof setInterval>;
-
-  ngOnInit(): void {
-    const prefersReducedMotion =
-      typeof window !== 'undefined' &&
-      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-
-    if (prefersReducedMotion) {
-      this.typedCommand.set(this.fullCommand);
-      return;
-    }
-
-    let charIndex = 0;
-    this.typingHandle = setInterval(() => {
-      charIndex++;
-      this.typedCommand.set(this.fullCommand.slice(0, charIndex));
-      if (charIndex >= this.fullCommand.length) {
-        clearInterval(this.typingHandle);
-      }
-    }, 55);
-  }
-
-  ngOnDestroy(): void {
-    if (this.typingHandle) {
-      clearInterval(this.typingHandle);
-    }
   }
 }

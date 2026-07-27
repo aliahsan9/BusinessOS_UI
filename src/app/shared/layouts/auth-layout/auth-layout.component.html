@@ -1,102 +1,67 @@
-<app-home-navbar></app-home-navbar>
-<div class="auth-layout">
+<div class="mkt-page auth-page">
+  <app-home-navbar></app-home-navbar>
 
-  <!-- Floating Shapes -->
-  <div class="shape shape-1"></div>
-  <div class="shape shape-2"></div>
-  <div class="shape shape-3"></div>
+  <div class="auth-layout">
+    <div class="container">
+      <div class="row g-4 g-lg-5 align-items-stretch auth-layout__row">
+        <div class="col-lg-6 d-none d-lg-flex">
+          <aside class="auth-brand">
+            <p class="auth-brand__name">BusinessOS</p>
+            <h1>Run your business with clarity and control</h1>
+            <p class="auth-brand__lead">
+              Sign in to manage inventory, sales, customers, finance, and your team
+              from one secure operating system.
+            </p>
 
-  <div class="container-fluid h-100">
+            <ul class="auth-brand__features">
+              <li>
+                <i class="bi bi-graph-up-arrow"></i>
+                <div>
+                  <strong>Live analytics</strong>
+                  <span>Revenue and operations in one view</span>
+                </div>
+              </li>
+              <li>
+                <i class="bi bi-people"></i>
+                <div>
+                  <strong>Team collaboration</strong>
+                  <span>Roles and permissions per module</span>
+                </div>
+              </li>
+              <li>
+                <i class="bi bi-shield-check"></i>
+                <div>
+                  <strong>Trusted security</strong>
+                  <span>Encrypted access and audit-ready controls</span>
+                </div>
+              </li>
+            </ul>
 
-    <div class="row min-vh-100">
-
-      <!-- LEFT SIDE -->
-
-      <div class="col-lg-6 d-none d-lg-flex auth-brand-panel">
-
-        <div class="brand-content">
-
-          <div class="brand-badge">
-            Smart Business Management Platform
-          </div>
-
-          <h1 class="brand-title">
-            Run Your Business
-            <span>Without Limits</span>
-          </h1>
-
-          <p class="brand-description">
-            Streamline operations, manage customers,
-            track inventory, analyze performance,
-            and scale your organization from a single platform.
-          </p>
-
-          <div class="brand-features">
-
-            <div class="feature-card">
-              <i class="bi bi-graph-up-arrow"></i>
+            <div class="auth-brand__stats">
               <div>
-                <h6>Analytics Dashboard</h6>
-                <p>Real-time business intelligence</p>
+                <strong>99.9%</strong>
+                <span>Uptime</span>
+              </div>
+              <div>
+                <strong>10K+</strong>
+                <span>Businesses</span>
+              </div>
+              <div>
+                <strong>24/7</strong>
+                <span>Monitoring</span>
               </div>
             </div>
-
-            <div class="feature-card">
-              <i class="bi bi-people-fill"></i>
-              <div>
-                <h6>Team Collaboration</h6>
-                <p>Manage departments efficiently</p>
-              </div>
-            </div>
-
-            <div class="feature-card">
-              <i class="bi bi-shield-check"></i>
-              <div>
-                <h6>Enterprise Security</h6>
-                <p>Role-based secure access</p>
-              </div>
-            </div>
-
-          </div>
-
-          <div class="stats-row">
-
-            <div class="stat-box">
-              <h3>99.9%</h3>
-              <span>Uptime</span>
-            </div>
-
-            <div class="stat-box">
-              <h3>500+</h3>
-              <span>Businesses</span>
-            </div>
-
-            <div class="stat-box">
-              <h3>24/7</h3>
-              <span>Support</span>
-            </div>
-
-          </div>
-
+          </aside>
         </div>
 
-      </div>
-
-      <!-- RIGHT SIDE -->
-
-      <div class="col-lg-6 auth-form-panel">
-
-        <div class="form-wrapper">
-
-          <router-outlet></router-outlet>
-
+        <div class="col-lg-6">
+          <div class="auth-form-shell">
+            <router-outlet></router-outlet>
+          </div>
         </div>
-
       </div>
-
     </div>
-
   </div>
 
+  <app-footer></app-footer>
 </div>
-<app-footer></app-footer>

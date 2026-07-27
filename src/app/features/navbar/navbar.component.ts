@@ -5,6 +5,7 @@ import { RouterModule } from '@angular/router';
 interface NavItem {
   label: string;
   route: string;
+  icon: string;
 }
 
 @Component({
@@ -19,10 +20,10 @@ export class NavbarComponent {
   isSidebarOpen = signal(false);
 
   navItems: NavItem[] = [
-    { label: 'Home', route: '/' },
-    { label: 'About', route: '/about' },
-    { label: 'Services', route: '/services' },
-    { label: 'Contact', route: '/contact' }
+    { label: 'Home', route: '/', icon: 'bi-house' },
+    { label: 'About', route: '/about', icon: 'bi-building' },
+    { label: 'Services', route: '/services', icon: 'bi-layers' },
+    { label: 'Contact', route: '/contact', icon: 'bi-envelope' }
   ];
 
   @HostListener('window:scroll')

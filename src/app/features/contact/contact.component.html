@@ -1,204 +1,156 @@
-<app-home-navbar></app-home-navbar>
-<section class="contact-page">
+<div class="mkt-page contact-page">
+  <app-home-navbar></app-home-navbar>
 
-  <div class="container">
-
-    <!-- Hero -->
-
-    <div class="hero-section text-center">
-
-      <span class="section-badge">
-        CONTACT US
+  <section class="contact-hero">
+    <div class="container text-center">
+      <span class="mkt-eyebrow">
+        <i class="bi bi-envelope"></i>
+        Contact
       </span>
-
-      <h1>
-        Let's Build Something Great Together
-      </h1>
-
+      <h1>Talk with the BusinessOS team</h1>
       <p>
-        Have questions about BusinessOS? Need a custom solution?
-        We'd love to hear from you.
+        Questions about modules, pricing, onboarding, or a custom rollout?
+        We respond quickly and help you find the right fit.
       </p>
-
     </div>
+  </section>
 
-    <!-- Contact Cards -->
-
-    <div class="row g-4 mb-5">
-
-      <div class="col-lg-4">
-        <div class="contact-card">
-
-          <div class="icon-box">
-            <i class="bi bi-envelope"></i>
-          </div>
-
-          <h5>Email Us</h5>
-
-          <p>
-            support&#64;businessos.com
-          </p>
-
+  <section class="contact-body">
+    <div class="container">
+      <div class="row g-4 mb-4">
+        <div class="col-lg-4 col-md-4" *ngFor="let channel of channels">
+          <a class="contact-channel" [href]="channel.href">
+            <span class="mkt-icon-box"><i class="bi" [ngClass]="channel.icon"></i></span>
+            <h2>{{ channel.title }}</h2>
+            <p>{{ channel.value }}</p>
+          </a>
         </div>
       </div>
 
-      <div class="col-lg-4">
-        <div class="contact-card">
+      <div class="row g-4">
+        <div class="col-lg-8">
+          <div class="contact-form-card">
+            <h3>
+              <i class="bi bi-send"></i>
+              Send a message
+            </h3>
+            <p class="contact-form-card__lead">
+              Share a few details and we will get back within one business day.
+            </p>
 
-          <div class="icon-box">
-            <i class="bi bi-telephone"></i>
+            @if (submitted()) {
+              <div class="contact-success" role="status">
+                <i class="bi bi-check-circle-fill"></i>
+                <div>
+                  <strong>Message received</strong>
+                  <span>Thanks for reaching out. Our team will follow up shortly.</span>
+                </div>
+              </div>
+            }
+
+            <form [formGroup]="contactForm" (ngSubmit)="submit()">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label" for="fullName">Full name</label>
+                  <input
+                    id="fullName"
+                    type="text"
+                    class="form-control"
+                    placeholder="Your name"
+                    formControlName="fullName"
+                  />
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label" for="email">Work email</label>
+                  <input
+                    id="email"
+                    type="email"
+                    class="form-control"
+                    placeholder="you@company.com"
+                    formControlName="email"
+                  />
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label" for="company">Company</label>
+                  <input
+                    id="company"
+                    type="text"
+                    class="form-control"
+                    placeholder="Company name"
+                    formControlName="company"
+                  />
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label" for="subject">Subject</label>
+                  <input
+                    id="subject"
+                    type="text"
+                    class="form-control"
+                    placeholder="How can we help?"
+                    formControlName="subject"
+                  />
+                </div>
+
+                <div class="col-12">
+                  <label class="form-label" for="message">Message</label>
+                  <textarea
+                    id="message"
+                    rows="6"
+                    class="form-control"
+                    placeholder="Tell us about your business and what you need..."
+                    formControlName="message"
+                  ></textarea>
+                </div>
+
+                <div class="col-12">
+                  <button type="submit" class="mkt-btn mkt-btn--primary">
+                    Send message
+                    <i class="bi bi-arrow-right"></i>
+                  </button>
+                </div>
+              </div>
+            </form>
           </div>
-
-          <h5>Call Us</h5>
-
-          <p>
-            +92 300 1234567
-          </p>
-
         </div>
-      </div>
 
-      <div class="col-lg-4">
-        <div class="contact-card">
+        <div class="col-lg-4">
+          <aside class="contact-aside">
+            <h3>
+              <i class="bi bi-clock"></i>
+              Business hours
+            </h3>
+            <ul>
+              <li><span>Monday – Friday</span><strong>9 AM – 6 PM</strong></li>
+              <li><span>Saturday</span><strong>10 AM – 3 PM</strong></li>
+              <li><span>Sunday</span><strong>Closed</strong></li>
+            </ul>
 
-          <div class="icon-box">
-            <i class="bi bi-geo-alt"></i>
-          </div>
-
-          <h5>Office</h5>
-
-          <p>
-            Faisalabad, Pakistan
-          </p>
-
-        </div>
-      </div>
-
-    </div>
-
-    <!-- Main Section -->
-
-    <div class="row g-4">
-
-      <!-- Form -->
-
-      <div class="col-lg-8">
-
-        <div class="contact-form-card">
-
-          <h3>
-            Send Us a Message
-          </h3>
-
-          <form
-            [formGroup]="contactForm"
-            (ngSubmit)="submit()"
-          >
-
-            <div class="row g-3">
-
-              <div class="col-md-6">
-
-                <input
-                  type="text"
-                  class="form-control"
-                  placeholder="Full Name"
-                  formControlName="fullName"
-                >
-
+            <div class="contact-aside__trust">
+              <div>
+                <i class="bi bi-shield-check"></i>
+                <span>Your information stays private</span>
               </div>
-
-              <div class="col-md-6">
-
-                <input
-                  type="email"
-                  class="form-control"
-                  placeholder="Email Address"
-                  formControlName="email"
-                >
-
+              <div>
+                <i class="bi bi-headset"></i>
+                <span>Human support, not bots only</span>
               </div>
-
-              <div class="col-md-6">
-
-                <input
-                  type="text"
-                  class="form-control"
-                  placeholder="Company Name"
-                  formControlName="company"
-                >
-
+              <div>
+                <i class="bi bi-geo-alt"></i>
+                <span>Based in Faisalabad, Pakistan</span>
               </div>
-
-              <div class="col-md-6">
-
-                <input
-                  type="text"
-                  class="form-control"
-                  placeholder="Subject"
-                  formControlName="subject"
-                >
-
-              </div>
-
-              <div class="col-12">
-
-                <textarea
-                  rows="6"
-                  class="form-control"
-                  placeholder="Your Message..."
-                  formControlName="message"
-                ></textarea>
-
-              </div>
-
-              <div class="col-12">
-
-                <button
-                  type="submit"
-                  class="btn btn-send"
-                >
-                  Send Message
-                </button>
-
-              </div>
-
             </div>
 
-          </form>
-
+            <a routerLink="/auth/register" class="mkt-btn mkt-btn--ghost w-100">
+              Or start a free trial
+            </a>
+          </aside>
         </div>
-
       </div>
-
-      <!-- Info -->
-
-      <div class="col-lg-4">
-
-        <div class="info-card">
-
-          <h4>
-            Business Hours
-          </h4>
-
-          <ul>
-            <li>Monday - Friday : 9 AM - 6 PM</li>
-            <li>Saturday : 10 AM - 3 PM</li>
-            <li>Sunday : Closed</li>
-          </ul>
-
-          <div class="map-placeholder">
-            <i class="bi bi-map"></i>
-            <span>Office Location</span>
-          </div>
-
-        </div>
-
-      </div>
-
     </div>
+  </section>
 
-  </div>
-
-</section>
-<app-footer></app-footer>
+  <app-footer></app-footer>
+</div>

@@ -1,74 +1,64 @@
 <section class="testimonials-section" id="testimonials">
-
   <div class="container">
-
-    <div class="section-header">
-
-      <span class="section-badge">
-        Trusted By Businesses
+    <div class="mkt-section-head">
+      <span class="mkt-eyebrow">
+        <i class="bi bi-chat-quote"></i>
+        Trusted by operators
       </span>
-
-      <h2>
-        What Our Clients Say
-      </h2>
-
+      <h2>What teams say about BusinessOS</h2>
       <p>
-        Thousands of professionals trust BusinessOS to
-        streamline operations, improve productivity,
-        and accelerate growth.
+        Growing businesses use BusinessOS to centralize operations, improve
+        visibility, and make decisions with confidence.
       </p>
-
     </div>
 
     <div class="row g-4">
-
       @for (item of testimonials; track item.name) {
-
-      <div class="col-lg-4 col-md-6">
-
-        <div class="testimonial-card">
-
-          <div class="stars" aria-label="5 out of 5 stars">
-            <i class="bi bi-star-fill" aria-hidden="true"></i>
-            <i class="bi bi-star-fill" aria-hidden="true"></i>
-            <i class="bi bi-star-fill" aria-hidden="true"></i>
-            <i class="bi bi-star-fill" aria-hidden="true"></i>
-            <i class="bi bi-star-fill" aria-hidden="true"></i>
-          </div>
-
-          <p class="review">
-            "{{ item.review }}"
-          </p>
-
-          <div class="client">
-
-            <img
-              [src]="item.image"
-              [alt]="item.name"
-            />
-
-            <div>
-
-              <h5>
-                {{ item.name }}
-              </h5>
-
-              <span>
-                {{ item.designation }}
-              </span>
-
+        <div class="col-lg-4 col-md-6">
+          <article class="testimonial-card">
+            <div class="testimonial-card__rating" [attr.aria-label]="item.rating + ' out of 5'">
+              @for (star of [1, 2, 3, 4, 5]; track star) {
+                <i
+                  class="bi"
+                  [class.bi-star-fill]="star <= item.rating"
+                  [class.bi-star]="star > item.rating"
+                ></i>
+              }
             </div>
 
-          </div>
+            <p class="testimonial-card__review">{{ item.review }}</p>
 
+            <div class="testimonial-card__client">
+              <div class="testimonial-card__avatar" aria-hidden="true">
+                {{ item.initials }}
+              </div>
+              <div>
+                <h3>{{ item.name }}</h3>
+                <span>{{ item.designation }}</span>
+              </div>
+            </div>
+          </article>
         </div>
-
-      </div>
-
       }
-
     </div>
 
+    <div class="testimonials-trust">
+      <div class="testimonials-trust__item">
+        <i class="bi bi-shield-lock"></i>
+        <span>Secure by design</span>
+      </div>
+      <div class="testimonials-trust__item">
+        <i class="bi bi-clock-history"></i>
+        <span>99.9% uptime target</span>
+      </div>
+      <div class="testimonials-trust__item">
+        <i class="bi bi-people"></i>
+        <span>Role-based access</span>
+      </div>
+      <div class="testimonials-trust__item">
+        <i class="bi bi-headset"></i>
+        <span>Human support</span>
+      </div>
+    </div>
   </div>
-
 </section>

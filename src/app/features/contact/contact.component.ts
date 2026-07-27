@@ -1,22 +1,53 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
   ReactiveFormsModule,
   Validators
 } from '@angular/forms';
-import { FooterComponent } from "../footer/footer.component";
+import { RouterLink } from '@angular/router';
+import { FooterComponent } from '../footer/footer.component';
 import { NavbarComponent } from '../navbar/navbar.component';
+
+interface ContactChannel {
+  icon: string;
+  title: string;
+  value: string;
+  href: string;
+}
 
 @Component({
   selector: 'app-contact',
   standalone: true,
-  imports: [ReactiveFormsModule, NavbarComponent, FooterComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, NavbarComponent, FooterComponent],
   templateUrl: './contact.component.html',
   styleUrls: ['./contact.component.scss']
 })
 export class ContactComponent {
-
   private fb = inject(FormBuilder);
+
+  submitted = signal(false);
+
+  readonly channels: ContactChannel[] = [
+    {
+      icon: 'bi-envelope',
+      title: 'Email',
+      value: 'support@businessos.com',
+      href: 'mailto:support@businessos.com'
+    },
+    {
+      icon: 'bi-telephone',
+      title: 'Phone',
+      value: '+92 300 1234567',
+      href: 'tel:+923001234567'
+    },
+    {
+      icon: 'bi-geo-alt',
+      title: 'Office',
+      value: 'Faisalabad, Pakistan',
+      href: '#'
+    }
+  ];
 
   contactForm = this.fb.group({
     fullName: ['', Validators.required],
@@ -33,7 +64,7 @@ export class ContactComponent {
     }
 
     console.log(this.contactForm.value);
-
     this.contactForm.reset();
+    this.submitted.set(true);
   }
 }

@@ -1,149 +1,148 @@
-<app-home-navbar></app-home-navbar>
+<div class="mkt-page home-page">
+  <app-home-navbar></app-home-navbar>
 
-<section class="hero">
-  <div class="hero__bg" aria-hidden="true"></div>
-
-  <div class="container">
-    <div class="hero__grid">
-
-      <div class="hero__content">
-        <span class="eyebrow">Business Operating System</span>
-
-        <h1 class="hero__title">
-          Every part of your business.
-          <span>One control panel.</span>
-        </h1>
-
-        <p class="hero__lead">
-          Inventory, sales, customers, finance, and your team —
-          running on a single system built to keep every
-          module talking to the others.
-        </p>
-
-        <div class="hero__actions">
-          <a routerLink="/auth/register" class="btn-cta">
-            Start free trial
-            <i class="bi bi-arrow-right"></i>
-          </a>
-
-          <a href="#modules" class="btn-ghost">
-            <i class="bi bi-grid-1x2"></i>
-            See the modules
-          </a>
-        </div>
-
-        <div class="hero__stats" #statsRef>
-          <div class="stat">
-            <h3 class="stat__value">{{ displayedBusinesses() }}<span>+</span></h3>
-            <p class="stat__label">Businesses running BusinessOS</p>
-          </div>
-
-          <div class="stat">
-            <h3 class="stat__value">{{ displayedUsers() }}<span>+</span></h3>
-            <p class="stat__label">Daily active users</p>
-          </div>
-
-          <div class="stat">
-            <h3 class="stat__value">{{ displayedUptime() }}<span>%</span></h3>
-            <p class="stat__label">Platform uptime</p>
+  <section class="home-hero">
+    <div class="container">
+      <div class="home-hero__grid">
+        <div class="home-hero__content">
+          <p class="home-hero__brand">BusinessOS</p>
+          <h1 class="home-hero__title">
+            Run your entire business from one control panel.
+          </h1>
+          <p class="home-hero__lead">
+            Inventory, sales, customers, finance, and your team — connected in a
+            single operating system built for clarity, control, and trust.
+          </p>
+          <div class="home-hero__actions">
+            <a routerLink="/auth/register" class="mkt-btn mkt-btn--primary">
+              Start free trial
+              <i class="bi bi-arrow-right"></i>
+            </a>
+            <a href="#modules" class="mkt-btn mkt-btn--ghost">
+              <i class="bi bi-grid-1x2"></i>
+              Explore modules
+            </a>
           </div>
         </div>
-      </div>
 
-      <div class="hero__visual">
-        <div
-          class="ledger-panel"
-          #ledgerPanel
-          [attr.style]="tiltStyle()"
-          (mousemove)="onPanelMouseMove($event)"
-          (mouseleave)="resetTilt()"
-        >
-          <div class="ledger-panel__header">
-            <div class="ledger-panel__dots">
-              <span class="dot dot--red"></span>
-              <span class="dot dot--amber"></span>
-              <span class="dot dot--green"></span>
+        <div class="home-hero__visual" aria-hidden="false">
+          <div
+            class="ledger-panel"
+            #ledgerPanel
+            [attr.style]="tiltStyle()"
+            (mousemove)="onPanelMouseMove($event)"
+            (mouseleave)="resetTilt()"
+          >
+            <div class="ledger-panel__header">
+              <span class="ledger-panel__live">
+                <span class="pulse-dot"></span>
+                Live activity
+              </span>
+              <span class="ledger-panel__title">
+                <i class="bi bi-activity"></i>
+                Operations feed
+              </span>
             </div>
-            <span class="ledger-panel__title">
-              <i class="bi bi-activity"></i>
-              live.ledger
-            </span>
-          </div>
 
-          <div class="ledger-panel__body">
-            <div class="ledger-track">
-              <div class="ledger-row" *ngFor="let event of ledgerLoop">
-                <span class="ledger-row__time">{{ event.time }}</span>
-                <span class="ledger-row__icon">
-                  <i class="bi" [ngClass]="event.icon"></i>
-                </span>
-                <span class="ledger-row__desc">{{ event.desc }}</span>
-                <span
-                  class="ledger-row__amount"
-                  [class.is-positive]="event.trend === 'up'"
-                  [class.is-negative]="event.trend === 'down'"
-                >
-                  {{ event.amount }}
-                </span>
+            <div class="ledger-panel__body">
+              <div class="ledger-track">
+                <div class="ledger-row" *ngFor="let event of ledgerLoop">
+                  <span class="ledger-row__time">{{ event.time }}</span>
+                  <span class="ledger-row__icon">
+                    <i class="bi" [ngClass]="event.icon"></i>
+                  </span>
+                  <span class="ledger-row__desc">{{ event.desc }}</span>
+                  <span
+                    class="ledger-row__amount"
+                    [class.is-positive]="event.trend === 'up'"
+                    [class.is-negative]="event.trend === 'down'"
+                  >
+                    {{ event.amount }}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div class="ledger-panel__footer">
-            <span class="pulse-dot"></span>
-            Syncing across every module
+            <div class="ledger-panel__footer">
+              <i class="bi bi-arrow-repeat"></i>
+              Syncing across every module
+            </div>
           </div>
         </div>
       </div>
-
     </div>
-  </div>
-</section>
+  </section>
 
-<section id="modules" class="modules">
-  <div class="container">
-
-    <div class="section-head">
-      <span class="eyebrow">Modules</span>
-      <h2>Everything your business runs on</h2>
-      <p>Six connected modules. No exports, no re-keying data, no gaps between teams. Tap a module to see what it tracks.</p>
-    </div>
-
-    <div class="modules__grid">
-
-      <article
-        *ngFor="let m of modules; let i = index"
-        class="module-card"
-        [class.module-card--featured]="m.id === 'analytics'"
-        [class.is-active]="activeModule() === m.id"
-        role="button"
-        tabindex="0"
-        [attr.aria-expanded]="activeModule() === m.id"
-        #revealEl
-        [attr.data-reveal-delay]="i * 60"
-        (click)="selectModule(m.id)"
-        (keydown.enter)="selectModule(m.id)"
-        (keydown.space)="selectModule(m.id); $event.preventDefault()"
-      >
-        <div class="module-card__top">
-          <span class="module-card__icon"><i class="bi" [ngClass]="m.icon"></i></span>
-          <span class="module-card__tag" *ngIf="m.tag">{{ m.tag }}</span>
+  <section class="home-trust" #statsRef>
+    <div class="container">
+      <div class="home-trust__grid">
+        <div class="home-trust__item">
+          <h3>{{ displayedBusinesses() }}<span>+</span></h3>
+          <p>Businesses on BusinessOS</p>
         </div>
-        <h3>{{ m.title }}</h3>
-        <p>{{ m.description }}</p>
-
-        <div class="module-card__expand">
-          <span class="module-card__metric">
-            <i class="bi bi-lightning-charge-fill"></i>
-            {{ m.metric }}
-          </span>
+        <div class="home-trust__item">
+          <h3>{{ displayedUsers() }}<span>+</span></h3>
+          <p>Daily active users</p>
         </div>
-      </article>
-
+        <div class="home-trust__item">
+          <h3>{{ displayedUptime() }}<span>%</span></h3>
+          <p>Platform uptime</p>
+        </div>
+        <div class="home-trust__item home-trust__item--badge">
+          <i class="bi bi-shield-check"></i>
+          <p>Enterprise-grade security &amp; role-based access</p>
+        </div>
+      </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<app-landing></app-landing>
-<app-testimonials></app-testimonials>
-<app-footer></app-footer>
+  <section id="modules" class="home-modules">
+    <div class="container">
+      <div class="mkt-section-head">
+        <span class="mkt-eyebrow">
+          <i class="bi bi-layers"></i>
+          Modules
+        </span>
+        <h2>Everything your business runs on</h2>
+        <p>
+          Six connected modules. No exports, no re-keying data, no gaps between teams.
+          Select a module to see what it tracks.
+        </p>
+      </div>
+
+      <div class="home-modules__grid">
+        <article
+          *ngFor="let m of modules; let i = index"
+          class="module-card mkt-reveal"
+          [class.module-card--featured]="m.id === 'analytics'"
+          [class.is-active]="activeModule() === m.id"
+          role="button"
+          tabindex="0"
+          [attr.aria-expanded]="activeModule() === m.id"
+          #revealEl
+          [attr.data-reveal-delay]="i * 60"
+          (click)="selectModule(m.id)"
+          (keydown.enter)="selectModule(m.id)"
+          (keydown.space)="selectModule(m.id); $event.preventDefault()"
+        >
+          <div class="module-card__top">
+            <span class="mkt-icon-box"><i class="bi" [ngClass]="m.icon"></i></span>
+            <span class="module-card__tag" *ngIf="m.tag">{{ m.tag }}</span>
+          </div>
+          <h3>{{ m.title }}</h3>
+          <p>{{ m.description }}</p>
+          <div class="module-card__expand" *ngIf="activeModule() === m.id">
+            <span class="module-card__metric">
+              <i class="bi bi-lightning-charge-fill"></i>
+              {{ m.metric }}
+            </span>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <app-landing></app-landing>
+  <app-testimonials></app-testimonials>
+  <app-footer></app-footer>
+</div>

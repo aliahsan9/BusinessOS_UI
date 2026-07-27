@@ -1,159 +1,115 @@
-<div class="register-card">
-
-  <div class="register-header">
-
-    <div class="register-icon">
+<div class="auth-card">
+  <div class="auth-card__header">
+    <div class="auth-card__icon">
       <i class="bi bi-person-plus"></i>
     </div>
-
-    <h2>Create Account</h2>
-
-    <p>
-      Start managing your business with BusinessOS
-    </p>
-
+    <h1>Create your account</h1>
+    <p>Start managing your business with BusinessOS</p>
   </div>
 
-  @if(errorMessage()) {
+  @if (errorMessage()) {
     <app-alert
       [message]="errorMessage()!"
       variant="danger"
       [dismissible]="true"
-      (dismissed)="errorMessage.set(null)">
-    </app-alert>
+      (dismissed)="errorMessage.set(null)"
+    ></app-alert>
   }
 
-  <form
-    [formGroup]="form"
-    (ngSubmit)="onSubmit()">
-
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
     <div class="row">
-
       <div class="col-md-6 mb-3">
-
-        <label class="form-label">
-          First Name
-        </label>
-
+        <label class="form-label" for="firstName">First name</label>
         <input
+          id="firstName"
           type="text"
           class="form-control auth-input"
           formControlName="firstName"
-          placeholder="Ali">
-
+          placeholder="Ali"
+          autocomplete="given-name"
+        />
       </div>
 
       <div class="col-md-6 mb-3">
-
-        <label class="form-label">
-          Last Name
-        </label>
-
+        <label class="form-label" for="lastName">Last name</label>
         <input
+          id="lastName"
           type="text"
           class="form-control auth-input"
           formControlName="lastName"
-          placeholder="Ahsan">
-
+          placeholder="Ahsan"
+          autocomplete="family-name"
+        />
       </div>
-
     </div>
 
     <div class="mb-3">
-
-      <label class="form-label">
-        Business Name
-      </label>
-
+      <label class="form-label" for="businessName">Business name</label>
       <input
+        id="businessName"
         type="text"
         class="form-control auth-input"
         formControlName="businessName"
-        placeholder="My Business">
-
+        placeholder="My Business"
+        autocomplete="organization"
+      />
     </div>
 
     <div class="mb-3">
-
-      <label class="form-label">
-        Email Address
-      </label>
-
+      <label class="form-label" for="registerEmail">Email address</label>
       <input
+        id="registerEmail"
         type="email"
         class="form-control auth-input"
         formControlName="email"
-        placeholder="you@company.com">
-
+        placeholder="you@company.com"
+        autocomplete="email"
+      />
     </div>
 
     <div class="mb-3">
-
-      <label class="form-label">
-        Password
-      </label>
-
+      <label class="form-label" for="registerPassword">Password</label>
       <input
+        id="registerPassword"
         type="password"
         class="form-control auth-input"
         formControlName="password"
-        placeholder="Create password">
-
+        placeholder="Create a strong password"
+        autocomplete="new-password"
+      />
       <small class="password-hint">
-        Minimum 8 characters with uppercase, lowercase and number
+        <i class="bi bi-info-circle"></i>
+        At least 8 characters with uppercase, lowercase, and a number
       </small>
-
     </div>
 
     <div class="mb-4">
-
-      <label class="form-label">
-        Confirm Password
-      </label>
-
+      <label class="form-label" for="confirmPassword">Confirm password</label>
       <input
+        id="confirmPassword"
         type="password"
         class="form-control auth-input"
         formControlName="confirmPassword"
-        placeholder="Confirm password">
-
+        placeholder="Confirm password"
+        autocomplete="new-password"
+      />
     </div>
 
-    <button
-      type="submit"
-      class="btn register-btn w-100"
-      [disabled]="loading()">
-
-      @if(loading()) {
-
-        <span
-          class="spinner-border spinner-border-sm me-2">
-        </span>
-
-        Creating Account...
-
+    <button type="submit" class="mkt-btn mkt-btn--primary w-100" [disabled]="loading()">
+      @if (loading()) {
+        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        Creating account...
       } @else {
-
-        Create Account
-
+        Create account
+        <i class="bi bi-arrow-right"></i>
       }
-
     </button>
 
-    <div class="divider">
-      <span>OR</span>
-    </div>
+    <div class="auth-card__divider"><span>or</span></div>
 
-    <p class="signin-text">
-
+    <p class="auth-card__switch">
       Already have an account?
-
-      <a routerLink="/auth/login">
-        Sign In
-      </a>
-
+      <a routerLink="/auth/login">Sign in</a>
     </p>
-
   </form>
-
 </div>
