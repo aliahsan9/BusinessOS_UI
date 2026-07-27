@@ -72,7 +72,7 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
   readonly welcomeMessage: AiChatMessage = {
     role: 'assistant',
     content:
-      "Hello — I'm Sophia, your Senior Business Analyst. Talk or type anytime. I can check inventory, prepare reports, explain your dashboard, and help run the business.",
+      "Hello — I'm Sophia, your Senior Business Analyst. Talk or type anytime. Try: \"Create purchase order for Laptop quantity 5\", \"Create supplier Acme\", \"What should I reorder?\", or \"Inventory summary\".",
     timestamp: new Date(),
     agentDisplayName: 'Sophia',
   };
@@ -284,6 +284,24 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
     return this.aiRetrievalService.formatMetadata(metadata);
   }
 
+  formatTools(tools: string[]): string {
+    return tools
+      .map((t) =>
+        t
+          .replace(/([a-z])([A-Z])/g, '$1 $2')
+          .replace(/^Get /i, '')
+          .replace(/^Create /i, ''),
+      )
+      .join(' · ');
+  }
+
+  friendlyEntity(entityType: string | null | undefined): string {
+    if (!entityType) return 'record';
+    return entityType
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .replace(/_/g, ' ');
+  }
+
   stepStatusIcon(status: AgentWorkflowStep['status']): string {
     const value = String(status);
     if (value === 'Completed' || value === '2') return 'bi-check-lg';
@@ -426,7 +444,11 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
       return copy;
     });
 
-    if (this.showSuggestions()) this.suggestions.set(response.suggestions ?? []);
+    if (response.suggestions?.length) {
+      this.suggestions.set(response.suggestions);
+    } else if (this.showSuggestions()) {
+      this.suggestions.set([]);
+    }
     this.quickActions.set(response.quickActions ?? []);
     this.searchResults.set(response.searchResults ?? []);
 

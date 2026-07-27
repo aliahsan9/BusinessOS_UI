@@ -10,9 +10,10 @@ import { RouterLink } from '@angular/router';
 import { AgentEmployeeService } from '../../../../core/services/agent-employee.service';
 import { AiChatService } from '../../../../core/services/ai-chat.service';
 import { AiAssistantStateService } from '../../../../state/ai-assistant.state';
-import { AskSophiaSuggestions } from '../../../../core/models/agent.model';
+import { AskSophiaSuggestion, AskSophiaSuggestions } from '../../../../core/models/agent.model';
 import { AiDashboardCopilot, AiProactiveInsight } from '../../../../core/models/ai.model';
 import { ROUTES } from '../../../../core/constants/route.constants';
+import { resolveBootstrapIcon } from '../../../utils/icon.util';
 import { AppCardComponent } from '../../app-card/app-card.component';
 
 @Component({
@@ -49,6 +50,17 @@ export class DashboardCopilotComponent implements OnInit {
       next: (data) => this.askSophia.set(data),
       error: () => undefined,
     });
+  }
+
+  suggestionIcon(item: AskSophiaSuggestion): string {
+    return resolveBootstrapIcon(item.icon, item.category, 'bi-stars');
+  }
+
+  insightIcon(severity: string | null | undefined): string {
+    const level = severity?.toLowerCase();
+    if (level === 'high') return 'bi-exclamation-circle-fill';
+    if (level === 'medium') return 'bi-exclamation-triangle';
+    return 'bi-lightbulb';
   }
 
   onFocus(message: string): void {

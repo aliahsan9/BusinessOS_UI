@@ -114,16 +114,16 @@
             </div>
           }
 
-          @if (msg.toolsUsed && msg.toolsUsed.length > 0) {
+          @if (msg.actionResult?.success && msg.toolsUsed && msg.toolsUsed.length > 0) {
             <div class="ai-chat__tools">
-              <strong>Tools:</strong>
-              {{ msg.toolsUsed.join(', ') }}
+              <strong>Done via</strong>
+              {{ formatTools(msg.toolsUsed) }}
             </div>
           }
 
           @if (msg.actionResult?.success && msg.actionResult?.route) {
             <button type="button" class="ai-chat__action-link" (click)="goTo(msg.actionResult!.route!)">
-              View {{ msg.actionResult?.entityType }}
+              Open {{ friendlyEntity(msg.actionResult?.entityType) }}
             </button>
           }
         </div>
@@ -231,7 +231,7 @@
 
     <input
       type="text"
-      placeholder="Ask Sophia anything…"
+      placeholder="e.g. Create purchase order for Laptop quantity 5"
       [ngModel]="inputText()"
       (ngModelChange)="inputText.set($event)"
       (keydown.enter)="sendMessage()"
