@@ -54,11 +54,20 @@ export class AppNavbarComponent implements OnInit {
   readonly showProfile = signal(false);
 
   readonly userInitial = computed(() => {
-    return this.currentUser()?.email?.charAt(0)?.toUpperCase() ?? 'U';
+    const user = this.currentUser();
+    const first = user?.firstName?.charAt(0) ?? '';
+    const last = user?.lastName?.charAt(0) ?? '';
+    const fromName = `${first}${last}`.trim();
+    if (fromName) return fromName.toUpperCase();
+    return user?.email?.charAt(0)?.toUpperCase() ?? 'U';
   });
 
   readonly userDisplayName = computed(() => {
-    const email = this.currentUser()?.email;
+    const user = this.currentUser();
+    if (user?.fullName?.trim()) return user.fullName.trim();
+    const composed = `${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim();
+    if (composed) return composed;
+    const email = user?.email;
     if (!email) return 'User';
     const local = email.split('@')[0] ?? 'User';
     return local
@@ -66,6 +75,11 @@ export class AppNavbarComponent implements OnInit {
       .filter(Boolean)
       .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
       .join(' ');
+  });
+
+  readonly userAvatarUrl = computed(() => {
+    const url = this.currentUser()?.avatarUrl?.trim();
+    return url || null;
   });
 
   readonly userRoleLabel = computed(() => {
@@ -78,9 +92,14 @@ export class AppNavbarComponent implements OnInit {
   readonly companyLogoUrl = this.tenantSettingsStore.logoUrl;
   readonly logoLoadFailed = signal(false);
   readonly logoLoading = signal(false);
+  readonly userAvatarBroken = signal(false);
 
   readonly showCompanyLogo = computed(() => {
     return !!this.companyLogoUrl() && !this.logoLoadFailed();
+  });
+
+  readonly showUserAvatar = computed(() => {
+    return !!this.userAvatarUrl() && !this.userAvatarBroken() && !this.showCompanyLogo();
   });
 
   readonly canViewNotifications = computed(() =>
@@ -94,6 +113,11 @@ export class AppNavbarComponent implements OnInit {
       const logo = this.companyLogoUrl();
       this.logoLoadFailed.set(false);
       this.logoLoading.set(!!logo);
+    });
+
+    effect(() => {
+      this.userAvatarUrl();
+      this.userAvatarBroken.set(false);
     });
   }
 
@@ -178,6 +202,10 @@ export class AppNavbarComponent implements OnInit {
   onLogoError(): void {
     this.logoLoadFailed.set(true);
     this.logoLoading.set(false);
+  }
+
+  onUserAvatarError(): void {
+    this.userAvatarBroken.set(true);
   }
 
   logout(): void {

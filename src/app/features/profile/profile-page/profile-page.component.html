@@ -1,0 +1,149 @@
+<app-breadcrumb [items]="breadcrumbs" />
+
+<app-page-header
+  title="Profile"
+  subtitle="View and update your account profile."
+/>
+
+@if (loading()) {
+  <div class="profile-page__loading">
+    <app-skeleton height="8rem" variant="rect" />
+    <app-skeleton height="16rem" variant="rect" />
+    <app-skeleton height="14rem" variant="rect" />
+  </div>
+} @else if (error()) {
+  <app-alert variant="danger" [message]="error()!" />
+  <div class="profile-page__retry">
+    <app-button label="Try again" (clicked)="load()" />
+  </div>
+} @else {
+  <div class="profile-page">
+    <section class="profile-hero">
+      <div class="profile-hero__identity">
+        @if (avatarPreview()) {
+          <img
+            class="profile-hero__avatar"
+            [src]="avatarPreview()!"
+            [alt]="displayName()"
+            (error)="onAvatarError()"
+          />
+        } @else {
+          <span class="profile-hero__avatar profile-hero__avatar--initials">{{ initials() }}</span>
+        }
+
+        <div class="profile-hero__meta">
+          <h2 class="profile-hero__name">{{ displayName() }}</h2>
+          <p class="profile-hero__email">{{ profile()?.email }}</p>
+          <div class="profile-hero__roles">
+            @for (role of profile()?.roles ?? []; track role) {
+              <app-badge [label]="role" variant="primary" />
+            }
+            @if (!(profile()?.roles?.length)) {
+              <app-badge label="Member" variant="neutral" />
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-hero__stats">
+        <div class="profile-stat">
+          <span class="profile-stat__label">Status</span>
+          <span class="profile-stat__value">{{ profile()?.isActive ? 'Active' : 'Inactive' }}</span>
+        </div>
+        @if (profile()?.joinedAt) {
+          <div class="profile-stat">
+            <span class="profile-stat__label">Joined</span>
+            <span class="profile-stat__value">{{ profile()?.joinedAt | date: 'mediumDate' }}</span>
+          </div>
+        }
+        @if (profile()?.lastActiveAt) {
+          <div class="profile-stat">
+            <span class="profile-stat__label">Last active</span>
+            <span class="profile-stat__value">{{ profile()?.lastActiveAt | date: 'medium' }}</span>
+          </div>
+        }
+      </div>
+    </section>
+
+    <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" class="profile-page__form">
+      <app-card title="Account details" subtitle="Update how your name and contact info appear across BusinessOS.">
+        <div class="form-grid">
+          <app-input
+            label="First name *"
+            formControlName="firstName"
+            [error]="fieldError('profile', 'firstName') ?? undefined"
+          />
+          <app-input
+            label="Last name *"
+            formControlName="lastName"
+            [error]="fieldError('profile', 'lastName') ?? undefined"
+          />
+          <app-input
+            label="Email *"
+            type="email"
+            formControlName="email"
+            [error]="fieldError('profile', 'email') ?? undefined"
+          />
+          <app-input
+            label="Phone"
+            type="tel"
+            formControlName="phoneNumber"
+            [error]="fieldError('profile', 'phoneNumber') ?? undefined"
+          />
+          <div class="form-grid__full">
+            <app-input
+              label="Avatar URL"
+              formControlName="avatarUrl"
+              hint="Paste an image URL to update your profile photo."
+              [error]="fieldError('profile', 'avatarUrl') ?? undefined"
+            />
+          </div>
+        </div>
+      </app-card>
+
+      <div class="profile-page__actions">
+        <app-button
+          label="Save changes"
+          type="submit"
+          [loading]="saving()"
+          [disabled]="profileForm.pristine || saving()"
+        />
+      </div>
+    </form>
+
+    <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" class="profile-page__form">
+      <app-card title="Security" subtitle="Change your password. Use at least 8 characters with upper, lower, and a number.">
+        <div class="form-grid">
+          <app-input
+            label="Current password *"
+            type="password"
+            formControlName="currentPassword"
+            [error]="fieldError('password', 'currentPassword') ?? undefined"
+          />
+          <app-input
+            label="New password *"
+            type="password"
+            formControlName="newPassword"
+            [error]="fieldError('password', 'newPassword') ?? undefined"
+          />
+          <app-input
+            label="Confirm new password *"
+            type="password"
+            formControlName="confirmPassword"
+            [error]="fieldError('password', 'confirmPassword') ?? undefined"
+          />
+        </div>
+      </app-card>
+
+      <div class="profile-page__actions">
+        <app-button
+          label="Update password"
+          type="submit"
+          [variant]="ButtonVariant.Outline"
+          [loading]="changingPassword()"
+          [disabled]="passwordForm.pristine || changingPassword()"
+        />
+      </div>
+    </form>
+  </div>
+}

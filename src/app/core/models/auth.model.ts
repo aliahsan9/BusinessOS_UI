@@ -39,6 +39,10 @@ export interface AuthUser {
   roles: string[];
   permissions: string[];
   expiresAt: string;
+  firstName?: string;
+  lastName?: string;
+  fullName?: string;
+  avatarUrl?: string | null;
 }
 
 export interface RememberMeCredentials {

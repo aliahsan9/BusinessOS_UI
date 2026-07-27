@@ -22,6 +22,14 @@ export class TokenService {
     this.userSignal.set(user);
   }
 
+  patchUser(partial: Partial<AuthUser>): void {
+    const current = this.userSignal();
+    if (!current) return;
+    const updated: AuthUser = { ...current, ...partial };
+    StorageHelper.set(STORAGE_KEYS.authUser, updated);
+    this.userSignal.set(updated);
+  }
+
   clearSession(): void {
     StorageHelper.clear([STORAGE_KEYS.authToken, STORAGE_KEYS.authUser, STORAGE_KEYS.tenantId]);
     this.tokenSignal.set(null);

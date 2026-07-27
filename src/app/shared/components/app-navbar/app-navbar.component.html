@@ -65,6 +65,13 @@
             (load)="onLogoLoad()"
             (error)="onLogoError()"
           />
+        } @else if (showUserAvatar()) {
+          <img
+            class="app-navbar__avatar"
+            [src]="userAvatarUrl()!"
+            [alt]="userDisplayName()"
+            (error)="onUserAvatarError()"
+          />
         } @else {
           <span class="app-navbar__avatar">{{ userInitial() }}</span>
         }

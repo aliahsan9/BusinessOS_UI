@@ -5,6 +5,10 @@ export const API_ENDPOINTS = {
     forgotPassword: '/auth/forgot-password',
     resetPassword: '/auth/reset-password',
   },
+  account: {
+    me: '/account/me',
+    changePassword: '/account/change-password',
+  },
   dashboard: {
     overview: '/dashboard/overview',
     sales: '/dashboard/sales',

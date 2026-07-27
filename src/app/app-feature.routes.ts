@@ -61,13 +61,10 @@ export function buildFeatureRoutes(): Routes {
     {
       path: pathFromRoute(APP_ROUTE_PATHS.profile),
       loadComponent: () =>
-        import('./shared/pages/feature-page/feature-page.component').then((m) => m.FeaturePageComponent),
+        import('./features/profile/profile-page/profile-page.component').then(
+          (m) => m.ProfilePageComponent,
+        ),
       title: 'Profile | BusinessOS',
-      data: {
-        pageTitle: 'Profile',
-        description: 'View and update your account profile.',
-        icon: 'bi-person',
-      },
     },
   ];
 }
