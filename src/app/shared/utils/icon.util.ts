@@ -25,9 +25,10 @@ const EMOJI_TO_BI: Record<string, string> = {
   '🔴': 'bi-exclamation-circle',
   '✨': 'bi-stars',
   '🧾': 'bi-receipt',
-  '✅': 'bi-check-circle',
-  '🤝': 'bi-handshake',
+  '✅': 'bi-check2-square',
+  '🤝': 'bi-person-plus',
   '📋': 'bi-clipboard-check',
+  '📄': 'bi-file-earmark-text',
 };
 
 const CATEGORY_TO_BI: Record<string, string> = {
@@ -65,4 +66,19 @@ export function resolveBootstrapIcon(
   }
 
   return fallback;
+}
+
+/** Pick a Bootstrap icon for a free-text suggestion chip label. */
+export function suggestionBootstrapIcon(label: string | null | undefined): string {
+  const text = (label ?? '').toLowerCase();
+  if (!text) return 'bi-chat-dots';
+  if (/revenue|sales|trend|analytics|profit/.test(text)) return 'bi-graph-up-arrow';
+  if (/invoice|bill|payment|overdue/.test(text)) return 'bi-receipt';
+  if (/customer|client/.test(text)) return 'bi-people';
+  if (/product|best.?sell|inventory|stock/.test(text)) return 'bi-box-seam';
+  if (/task|todo|focus|today/.test(text)) return 'bi-check2-square';
+  if (/order|purchase/.test(text)) return 'bi-bag-check';
+  if (/tip|advice|increase|recommend/.test(text)) return 'bi-lightbulb';
+  if (/workspace|ai /.test(text)) return 'bi-stars';
+  return 'bi-chat-left-text';
 }

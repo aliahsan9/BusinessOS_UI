@@ -145,27 +145,44 @@
     </div>
   }
 
-  @if (showSuggestions() && suggestions().length > 0) {
-    <div class="ai-chat__suggestions">
-      @for (suggestion of suggestions(); track suggestion.label) {
-        <button type="button" class="ai-chat__suggestion" (click)="useSuggestion(suggestion)">
-          {{ suggestion.label }}
-        </button>
+  @if ((showSuggestions() && suggestions().length > 0) || quickActions().length > 0) {
+    <div class="ai-chat__prompts" aria-label="Suggested next steps">
+      @if (showSuggestions() && suggestions().length > 0) {
+        <div class="ai-chat__prompts-section">
+          <span class="ai-chat__prompts-label">Try asking</span>
+          <div class="ai-chat__suggestions" role="list">
+            @for (suggestion of suggestions(); track suggestion.label) {
+              <button
+                type="button"
+                class="ai-chat__suggestion"
+                role="listitem"
+                (click)="useSuggestion(suggestion)"
+              >
+                <i class="bi" [class]="suggestionIcon(suggestion.label)" aria-hidden="true"></i>
+                <span>{{ suggestion.label }}</span>
+              </button>
+            }
+          </div>
+        </div>
       }
-    </div>
-  }
 
-  @if (quickActions().length > 0) {
-    <div class="ai-chat__quick-actions">
-      @for (action of quickActions(); track action.label) {
-        <button type="button" class="ai-chat__quick-action" (click)="goTo(action.route)">
-          @if (isBootstrapIcon(action.icon)) {
-            <i class="bi" [class]="bootstrapIconClass(action.icon)" aria-hidden="true"></i>
-          } @else if (action.icon) {
-            <span aria-hidden="true">{{ action.icon }}</span>
-          }
-          {{ action.label }}
-        </button>
+      @if (quickActions().length > 0) {
+        <div class="ai-chat__prompts-section">
+          <span class="ai-chat__prompts-label">Shortcuts</span>
+          <div class="ai-chat__quick-actions" role="list">
+            @for (action of quickActions(); track action.label) {
+              <button
+                type="button"
+                class="ai-chat__quick-action"
+                role="listitem"
+                (click)="goTo(action.route)"
+              >
+                <i class="bi" [class]="actionIcon(action.icon)" aria-hidden="true"></i>
+                <span>{{ action.label }}</span>
+              </button>
+            }
+          </div>
+        </div>
       }
     </div>
   }

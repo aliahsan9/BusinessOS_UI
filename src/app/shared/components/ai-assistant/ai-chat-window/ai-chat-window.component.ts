@@ -37,7 +37,7 @@ import { ApiError } from '../../../../core/models/api-error.model';
 import { AiAssistantStateService } from '../../../../state/ai-assistant.state';
 import { ROUTES } from '../../../../core/constants/route.constants';
 import { TenantSettingsStoreService } from '../../../../core/services/tenant-settings-store.service';
-import { bootstrapIconClass, isBootstrapIcon } from '../../../utils/icon.util';
+import { resolveBootstrapIcon, suggestionBootstrapIcon } from '../../../utils/icon.util';
 
 @Component({
   selector: 'app-ai-chat-window',
@@ -89,8 +89,13 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
   readonly loading = signal(false);
   readonly expandedCitations = signal<Record<number, boolean>>({});
 
-  readonly isBootstrapIcon = isBootstrapIcon;
-  readonly bootstrapIconClass = bootstrapIconClass;
+  suggestionIcon(label: string): string {
+    return suggestionBootstrapIcon(label);
+  }
+
+  actionIcon(icon: string | null | undefined): string {
+    return resolveBootstrapIcon(icon, null, 'bi-arrow-up-right');
+  }
 
   readonly voiceState = this.voice.voiceState;
   readonly isListening = this.voice.isListening;
@@ -206,6 +211,9 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
     this.appendMessage('user', message);
     this.loading.set(true);
     this.voice.setProcessing(true);
+    this.suggestions.set([]);
+    this.quickActions.set([]);
+    this.searchResults.set([]);
     this.workflowSteps.set([]);
     this.liveTaskStatus.set(null);
     this.liveToolName.set(null);
