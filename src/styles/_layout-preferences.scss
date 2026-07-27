@@ -16,6 +16,19 @@
   --sidebar-width: var(--sidebar-collapsed-width);
 }
 
+/* Keep main content flush with the icon rail when sidebar is collapsed/mini */
+@media (min-width: 992px) {
+  .dashboard-layout:has(.app-sidebar--mini) .dashboard-layout__main {
+    margin-left: var(--sidebar-mini-width);
+    width: calc(100% - var(--sidebar-mini-width));
+  }
+
+  .dashboard-layout:has(.app-sidebar--collapsed):not(:has(.app-sidebar--mini)) .dashboard-layout__main {
+    margin-left: var(--sidebar-collapsed-width);
+    width: calc(100% - var(--sidebar-collapsed-width));
+  }
+}
+
 [data-navbar-style='compact'] {
   --navbar-height: var(--navbar-compact-height);
 }

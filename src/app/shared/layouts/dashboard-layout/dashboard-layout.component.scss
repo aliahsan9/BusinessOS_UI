@@ -11,6 +11,7 @@
     flex-direction: column;
     width: 100%;
     max-width: 100%;
+    transition: margin-left var(--transition-base), width var(--transition-base);
 
     @media (min-width: 992px) {
       margin-left: var(--sidebar-width);
@@ -23,6 +24,7 @@
     padding: 1rem;
     padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
     max-width: 100%;
+    min-width: 0;
     overflow-x: hidden;
     background:
       radial-gradient(ellipse 80% 50% at 10% -10%, rgba(124, 92, 252, 0.08), transparent 55%),

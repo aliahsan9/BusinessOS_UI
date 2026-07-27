@@ -161,6 +161,22 @@
 [data-sidebar-style='floating'] .dashboard-layout__main {
   @media (min-width: 992px) {
     margin-left: calc(var(--sidebar-width) + 1.5rem);
+    width: calc(100% - var(--sidebar-width) - 1.5rem);
+  }
+}
+
+/* Floating + collapsed/mini: still hug the icon rail */
+@media (min-width: 992px) {
+  [data-sidebar-style='floating'] .dashboard-layout:has(.app-sidebar--mini) .dashboard-layout__main {
+    margin-left: calc(var(--sidebar-mini-width) + 1.5rem);
+    width: calc(100% - var(--sidebar-mini-width) - 1.5rem);
+  }
+
+  [data-sidebar-style='floating']
+    .dashboard-layout:has(.app-sidebar--collapsed):not(:has(.app-sidebar--mini))
+    .dashboard-layout__main {
+    margin-left: calc(var(--sidebar-collapsed-width) + 1.5rem);
+    width: calc(100% - var(--sidebar-collapsed-width) - 1.5rem);
   }
 }
 

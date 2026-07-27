@@ -34,15 +34,23 @@ export class AppSidebarComponent implements OnInit, OnDestroy {
   private isTabletDevice = false;
 
   ngOnInit(): void {
+    // Keep layout width in sync with stored collapse (main uses data-sidebar-style)
+    if (this.collapsed()) {
+      const style = this.themeService.preferences().sidebarStyle;
+      if (style !== 'collapsed' && style !== 'mini') {
+        this.themeService.updatePreferences({ sidebarStyle: 'collapsed' });
+      }
+    }
+
     // Subscribe to breakpoint changes
     this.breakpointSubscription = this.breakpointObserver
       .observe([Breakpoints.Handset, Breakpoints.Tablet])
-      .subscribe(result => {
+      .subscribe(() => {
         // Check if it's a handset (mobile)
         this.isMobileDevice = this.breakpointObserver.isMatched(Breakpoints.Handset);
         // Check if it's a tablet
         this.isTabletDevice = this.breakpointObserver.isMatched(Breakpoints.Tablet);
-        
+
         // Auto-close sidebar on mobile when navigating
         if (this.isMobileDevice && this.mobileOpen()) {
           this.mobileClose.emit();
