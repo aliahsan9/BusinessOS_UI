@@ -278,7 +278,7 @@ export class SettingsHubComponent implements OnInit {
     this.agentService.getVoicePreferences().subscribe({
       next: (prefs) => {
         this.voiceForm.patchValue({
-          language: prefs.language === 'ur' ? 'ur' : 'en',
+          language: 'en',
           autoSpeak: prefs.autoSpeak !== false,
           continuousListening: !!prefs.continuousListening,
           preferredAgentKey: prefs.preferredAgentKey || 'sophia',
@@ -299,7 +299,7 @@ export class SettingsHubComponent implements OnInit {
     const value = this.voiceForm.getRawValue();
     this.agentService
       .saveVoicePreferences({
-        language: value.language,
+        language: 'en',
         autoSpeak: value.autoSpeak,
         continuousListening: value.continuousListening,
         preferredAgentKey: value.preferredAgentKey,

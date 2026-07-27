@@ -1,81 +1,103 @@
-<section class="ask-sophia" aria-label="Ask Sophia">
-  <div class="ask-sophia__hero">
-    <div class="ask-sophia__avatar" aria-hidden="true">
-      <i class="bi bi-stars"></i>
-    </div>
-    <div class="ask-sophia__intro">
-      <h2 id="ask-sophia-heading">Ask Sophia</h2>
-      <p>{{ askSophia()?.greeting || 'Your Senior Business Analyst is ready to help.' }}</p>
-    </div>
-    <button
-      type="button"
-      class="ask-sophia__talk btn"
-      (click)="openSophia()"
-      aria-describedby="ask-sophia-heading"
-    >
-      <i class="bi bi-mic-fill" aria-hidden="true"></i>
-      <span>Talk to Sophia</span>
-    </button>
-  </div>
-
-  @if (askSophia()?.suggestions?.length) {
-    <div class="ask-sophia__chips" role="group" aria-label="Suggested questions">
-      @for (item of askSophia()!.suggestions; track item.label) {
-        <button
-          type="button"
-          class="ask-sophia__chip"
-          [attr.data-category]="item.category || null"
-          (click)="openSophia(item.message)"
-        >
-          <span class="ask-sophia__chip-icon" aria-hidden="true">
-            <i class="bi" [class]="suggestionIcon(item)"></i>
-          </span>
-          <span class="ask-sophia__chip-label">{{ item.label }}</span>
-        </button>
+<div class="copilot">
+  <!-- Insights first: actionable, color-coded -->
+  <section class="copilot__insights" aria-labelledby="copilot-insights-heading">
+    <div class="copilot__insights-head">
+      <h3 id="copilot-insights-heading" class="copilot__insights-title">
+        <i class="bi bi-lightning-charge-fill" aria-hidden="true"></i>
+        Priority alerts
+      </h3>
+      @if (!loading() && insights().length) {
+        <span class="copilot__count">{{ insights().length }}</span>
       }
     </div>
-  }
-</section>
 
-<app-card title="Business insights" subtitle="Live signals Sophia is watching">
-  @if (loading()) {
-    <p class="muted mb-0">
-      <span class="ask-sophia__spinner" aria-hidden="true"></span>
-      Analyzing your business…
-    </p>
-  } @else {
-    @if (copilot()?.summary) {
-      <p class="summary">{{ copilot()?.summary }}</p>
+    @if (loading()) {
+      <p class="copilot__loading">
+        <span class="copilot__spinner" aria-hidden="true"></span>
+        Checking your business…
+      </p>
+    } @else {
+      @if (copilot()?.summary) {
+        <p class="copilot__summary">{{ copilot()?.summary }}</p>
+      }
+
+      @if (insights().length) {
+        <div class="insights" role="list">
+          @for (insight of insights(); track insight.title) {
+            <article class="insight" role="listitem" [attr.data-severity]="insight.severity">
+              <div class="insight__badge" aria-hidden="true">
+                {{ severityLabel(insight.severity) }}
+              </div>
+              <div class="insight__header">
+                <span class="insight__icon" aria-hidden="true">
+                  <i class="bi" [class]="insightIcon(insight.severity)"></i>
+                </span>
+                <strong class="insight__title">{{ insight.title }}</strong>
+              </div>
+              <p class="insight__message">{{ insight.message }}</p>
+              @if (insight.actionRoute) {
+                <a class="insight__action" [routerLink]="insight.actionRoute">
+                  {{ insight.actionLabel ?? 'Take a look' }}
+                  <i class="bi bi-arrow-right" aria-hidden="true"></i>
+                </a>
+              }
+            </article>
+          }
+        </div>
+      } @else {
+        <div class="copilot__all-clear">
+          <i class="bi bi-emoji-smile" aria-hidden="true"></i>
+          <p>Nothing urgent right now. You’re in good shape.</p>
+        </div>
+      }
+
+      @if (copilot()?.focusAreas?.length) {
+        <div class="focus" role="group" aria-label="Quick focus topics">
+          @for (area of copilot()!.focusAreas; track area.label) {
+            <button type="button" class="focus__chip" (click)="onFocus(area.message)">
+              <i class="bi bi-chat-dots" aria-hidden="true"></i>
+              Ask about {{ area.label }}
+            </button>
+          }
+        </div>
+      }
     }
+  </section>
 
-    @if (insights().length) {
-      <div class="insights" role="list">
-        @for (insight of insights(); track insight.title) {
-          <article class="insight" role="listitem" [attr.data-severity]="insight.severity">
-            <div class="insight__header">
-              <span class="insight__icon" aria-hidden="true">
-                <i class="bi" [class]="insightIcon(insight.severity)"></i>
-              </span>
-              <strong class="insight__title">{{ insight.title }}</strong>
-            </div>
-            <p class="insight__message">{{ insight.message }}</p>
-            @if (insight.actionRoute) {
-              <a class="insight__action" [routerLink]="insight.actionRoute">
-                {{ insight.actionLabel ?? 'View details' }}
-                <i class="bi bi-arrow-right" aria-hidden="true"></i>
-              </a>
-            }
-          </article>
-        }
+  <!-- Sophia helper — compact, secondary -->
+  <section class="ask-sophia" aria-label="Ask Sophia for help">
+    <div class="ask-sophia__hero">
+      <div class="ask-sophia__avatar" aria-hidden="true">
+        <i class="bi bi-stars"></i>
       </div>
-    }
+      <div class="ask-sophia__intro">
+        <h3 id="ask-sophia-heading">Need a hand?</h3>
+        <p>{{ askSophia()?.greeting || 'Sophia can explain your numbers or suggest what to do next.' }}</p>
+      </div>
+      <button
+        type="button"
+        class="ask-sophia__talk btn"
+        (click)="openSophia()"
+        aria-describedby="ask-sophia-heading"
+      >
+        <i class="bi bi-mic-fill" aria-hidden="true"></i>
+        <span>Talk to Sophia</span>
+      </button>
+    </div>
 
-    @if (copilot()?.focusAreas?.length) {
-      <div class="focus" role="group" aria-label="Focus areas">
-        @for (area of copilot()!.focusAreas; track area.label) {
-          <button type="button" class="focus__chip" (click)="onFocus(area.message)">
-            <i class="bi bi-crosshair" aria-hidden="true"></i>
-            {{ area.label }}
+    @if (askSophia()?.suggestions?.length) {
+      <div class="ask-sophia__chips" role="group" aria-label="Suggested questions">
+        @for (item of askSophia()!.suggestions; track item.label) {
+          <button
+            type="button"
+            class="ask-sophia__chip"
+            [attr.data-category]="item.category || null"
+            (click)="openSophia(item.message)"
+          >
+            <span class="ask-sophia__chip-icon" aria-hidden="true">
+              <i class="bi" [class]="suggestionIcon(item)"></i>
+            </span>
+            <span class="ask-sophia__chip-label">{{ item.label }}</span>
           </button>
         }
       </div>
@@ -83,7 +105,7 @@
 
     <a [routerLink]="routes.ai.workspace" class="workspace-link">
       <i class="bi bi-layout-sidebar" aria-hidden="true"></i>
-      Open AI Workspace
+      Open full Sophia workspace
     </a>
-  }
-</app-card>
+  </section>
+</div>

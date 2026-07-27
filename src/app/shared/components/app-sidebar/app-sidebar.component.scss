@@ -158,12 +158,12 @@
   }
 
   &__group-label {
-    font-size: 0.65rem;
+    font-size: 0.7rem;
     font-weight: var(--font-weight-semibold);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.02em;
+    text-transform: none;
     color: var(--color-text-muted);
-    padding: 0.5rem 0.75rem 0.25rem;
+    padding: 0.65rem 0.75rem 0.3rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

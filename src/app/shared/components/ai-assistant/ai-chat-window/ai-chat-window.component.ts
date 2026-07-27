@@ -69,13 +69,16 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
   readonly liveTaskStatus = signal<string | null>(null);
   readonly liveToolName = signal<string | null>(null);
 
-  readonly welcomeMessage: AiChatMessage = {
-    role: 'assistant',
-    content:
-      "Hello — I'm Sophia, your Senior Business Analyst. Talk or type anytime. Try: \"Create purchase order for Laptop quantity 5\", \"Create supplier Acme\", \"What should I reorder?\", or \"Inventory summary\".",
-    timestamp: new Date(),
-    agentDisplayName: 'Sophia',
-  };
+  private buildWelcome(_lang: string, name = 'Sophia'): AiChatMessage {
+    return {
+      role: 'assistant',
+      content: `Hi — I'm ${name}, your Senior Business Analyst. Talk or type anytime. Try: "Create order for this customer", "Create supplier Acme", "What should I reorder?", or "Inventory summary".`,
+      timestamp: new Date(),
+      agentDisplayName: name,
+    };
+  }
+
+  readonly welcomeMessage: AiChatMessage = this.buildWelcome('en');
 
   readonly messages = signal<AiChatMessage[]>([{ ...this.welcomeMessage }]);
   readonly suggestions = signal<AiSuggestionDto[]>([]);
@@ -151,6 +154,10 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
 
   private async bootstrap(): Promise<void> {
     await this.voice.loadPreferences();
+    const lang = this.voice.language();
+    const welcome = this.buildWelcome(lang, this.agentName());
+    this.messages.set([{ ...welcome }]);
+
     this.agentService
       .listEmployees()
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -160,6 +167,9 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
           if (sophia) {
             this.agentName.set(sophia.displayName);
             this.agentRole.set(sophia.roleTitle);
+            if (this.messages().length === 1 && this.messages()[0].role === 'assistant') {
+              this.messages.set([{ ...this.buildWelcome(this.voice.language(), sophia.displayName) }]);
+            }
           }
         },
         error: () => undefined,
@@ -206,7 +216,7 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
     this.agentService.stopGeneration();
     this.agentService.clearSession();
     this.voice.stopSpeaking();
-    this.messages.set([{ ...this.welcomeMessage, timestamp: new Date() }]);
+    this.messages.set([{ ...this.buildWelcome(this.voice.language(), this.agentName()), timestamp: new Date() }]);
     this.suggestions.set([]);
     this.quickActions.set([]);
     this.searchResults.set([]);

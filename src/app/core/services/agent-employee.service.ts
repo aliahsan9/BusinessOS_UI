@@ -52,6 +52,35 @@ export class AgentEmployeeService extends BaseApiService {
     return this.get<AskSophiaSuggestions>(API_ENDPOINTS.agents.askSophia);
   }
 
+  /** Neural TTS (MP3) for English spoken replies. */
+  async synthesizeSpeech(text: string, language?: string, speechRate?: number): Promise<Blob> {
+    const token = this.tokenService.getToken();
+    const tenantId = this.tokenService.tenantId();
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      Accept: 'audio/mpeg, application/octet-stream',
+    };
+    if (token) headers[HTTP_HEADERS.authorization] = `Bearer ${token}`;
+    if (tenantId) headers[HTTP_HEADERS.tenantId] = tenantId;
+
+    const response = await fetch(`${environment.apiUrl}${API_ENDPOINTS.agents.tts}`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        text,
+        language: language ?? this.language,
+        speechRate: speechRate ?? 1,
+      }),
+    });
+
+    if (!response.ok) {
+      const detail = await response.text().catch(() => '');
+      throw new Error(detail || `TTS failed (${response.status})`);
+    }
+
+    return response.blob();
+  }
+
   startOnboarding(request: AgentOnboardingStartRequest = {}): Observable<AgentOnboardingResponse> {
     return this.post<AgentOnboardingResponse>(API_ENDPOINTS.agents.onboardingStart, {
       ...request,

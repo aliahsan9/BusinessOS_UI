@@ -1,7 +1,7 @@
 // app-sidebar.component.ts
 import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal, OnInit, OnDestroy } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { NAV_ITEMS, NavItem } from '../../constants/nav.constants';
+import { NAV_GROUP_ORDER, NAV_ITEMS, NavItem } from '../../constants/nav.constants';
 import { TokenService } from '../../../core/services/token.service';
 import { ThemeService } from '../../../core/theme/theme.service';
 import { STORAGE_KEYS } from '../../../core/constants/storage.constants';
@@ -80,19 +80,9 @@ export class AppSidebarComponent implements OnInit, OnDestroy {
   readonly navGroups = computed(() => {
     const items = this.filteredNavItems();
     const groups: { name: string; items: NavItem[] }[] = [];
-
-    // Separate items with groups
-    const groupedItems = items.filter((item) => item.group);
-    const ungroupedItems = items.filter((item) => !item.group);
-
-    // Add ungrouped items first
-    if (ungroupedItems.length > 0) {
-      groups.push({ name: '', items: ungroupedItems });
-    }
-
-    // Group items by group name
     const groupMap = new Map<string, NavItem[]>();
-    groupedItems.forEach((item) => {
+
+    items.forEach((item) => {
       const key = item.group || 'Other';
       if (!groupMap.has(key)) {
         groupMap.set(key, []);
@@ -100,9 +90,17 @@ export class AppSidebarComponent implements OnInit, OnDestroy {
       groupMap.get(key)!.push(item);
     });
 
-    // Add grouped items
-    groupMap.forEach((items, name) => {
-      groups.push({ name, items });
+    for (const name of NAV_GROUP_ORDER) {
+      const groupItems = groupMap.get(name);
+      if (!groupItems?.length) continue;
+      // Home is a single item — no section label needed
+      groups.push({ name: name === 'Home' ? '' : name, items: groupItems });
+      groupMap.delete(name);
+    }
+
+    // Any leftover groups (safety)
+    groupMap.forEach((groupItems, name) => {
+      groups.push({ name: name === 'Other' ? '' : name, items: groupItems });
     });
 
     return groups;

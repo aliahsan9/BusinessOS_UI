@@ -1,18 +1,17 @@
 <main class="dashboard page-container">
-  <!-- Header -->
+  <!-- Friendly welcome header -->
   <header class="dashboard__header">
     <div class="dashboard__header-content">
-      <p class="dashboard__eyebrow">Business overview</p>
-      <h1 class="page-title dashboard__title">
-        <span class="dashboard__title-icon" aria-hidden="true">
-          <i class="bi bi-speedometer2"></i>
-        </span>
-        <span class="dashboard__title-text">Dashboard</span>
-      </h1>
+      <p class="dashboard__greeting">{{ greeting() }}</p>
+      <h1 class="dashboard__title">How is your business doing?</h1>
+      <p class="dashboard__subtitle">
+        A simple snapshot of money, orders, customers, and stock —
+        {{ currentPeriodLabel().toLowerCase() || 'this period' }}.
+      </p>
     </div>
 
     <div class="dashboard__toolbar">
-      <div class="dashboard__period-pills d-none d-md-inline-flex" role="tablist" aria-label="Select dashboard period">
+      <div class="dashboard__period-pills d-none d-md-inline-flex" role="tablist" aria-label="Show numbers for">
         @for (p of periods; track p.value) {
           <button
             type="button"
@@ -30,14 +29,14 @@
       <div class="dashboard__period-select d-md-none">
         <label for="period-select">
           <i class="bi bi-calendar3" aria-hidden="true"></i>
-          Time period
+          Show numbers for
         </label>
         <select
           id="period-select"
           class="form-select form-select-sm"
           [value]="period()"
           (change)="onPeriodChange($event)"
-          aria-label="Select dashboard period"
+          aria-label="Show numbers for"
         >
           @for (p of periods; track p.value) {
             <option [value]="p.value">{{ p.label }}</option>
@@ -50,7 +49,7 @@
         class="btn btn-outline-secondary dashboard__refresh-btn"
         (click)="retry()"
         [disabled]="loading()"
-        aria-label="Refresh dashboard data"
+        aria-label="Refresh numbers"
         title="Refresh"
       >
         <i class="bi bi-arrow-clockwise" [class.dashboard__refresh-icon--spin]="loading()" aria-hidden="true"></i>
@@ -58,23 +57,24 @@
     </div>
   </header>
 
-  <!-- Error state -->
   @if (error()) {
     <app-alert [message]="error()!" variant="danger" [dismissible]="false" />
     <app-empty-state
-      title="Unable to load dashboard"
-      description="There was a problem fetching your data. Check your connection and try again."
-      actionLabel="Retry"
+      title="We couldn’t load your numbers"
+      description="Check your internet connection, then try again."
+      actionLabel="Try again"
       (action)="retry()"
     />
   }
 
-  <!-- Loading state -->
   @else if (loading()) {
+    <div class="dashboard__health-skeleton mb-3">
+      <app-skeleton variant="rect" height="110px" />
+    </div>
     <div class="row g-3 dashboard__stats" aria-live="polite" aria-busy="true">
       @for (i of [1, 2, 3, 4]; track i) {
         <div class="col-6 col-md-3">
-          <app-skeleton variant="rect" height="128px" />
+          <app-skeleton variant="rect" height="140px" />
         </div>
       }
     </div>
@@ -93,18 +93,41 @@
         <app-skeleton variant="rect" height="340px" />
       </div>
     </div>
-    <div class="row g-4 dashboard__widgets">
-      @for (i of [1, 2, 3]; track i) {
-        <div class="col-12 col-md-6 col-xl-4">
-          <app-skeleton variant="rect" height="180px" />
-        </div>
-      }
-    </div>
   }
 
-  <!-- Loaded state -->
   @else {
-    <!-- Quick-jump sub-nav -->
+    <!-- Health status banner — first thing users should understand -->
+    <section
+      class="dashboard__health dashboard__animate-in"
+      [attr.data-status]="businessHealth()"
+      aria-label="Business health"
+    >
+      <div class="dashboard__health-icon" aria-hidden="true">
+        @switch (businessHealth()) {
+          @case ('alert') {
+            <i class="bi bi-exclamation-triangle-fill"></i>
+          }
+          @case ('watch') {
+            <i class="bi bi-eye-fill"></i>
+          }
+          @default {
+            <i class="bi bi-check-circle-fill"></i>
+          }
+        }
+      </div>
+      <div class="dashboard__health-body">
+        <h2 class="dashboard__health-title">{{ healthHeadline() }}</h2>
+        <p class="dashboard__health-hint">{{ healthHint() }}</p>
+      </div>
+      @if (businessHealth() !== 'good') {
+        <button type="button" class="dashboard__health-cta" (click)="scrollToSection('section-attention')">
+          See what to fix
+          <i class="bi bi-arrow-down" aria-hidden="true"></i>
+        </button>
+      }
+    </section>
+
+    <!-- Compact jump nav -->
     <nav class="dashboard__quicknav" aria-label="Jump to section">
       <ul class="dashboard__quicknav-list">
         @for (s of sections; track s.id) {
@@ -118,20 +141,16 @@
       </ul>
     </nav>
 
-    <section class="dashboard__ask-sophia dashboard__animate-in mb-3" aria-label="Ask Sophia">
-      <app-dashboard-copilot />
-    </section>
-
-    <!-- Primary KPI Cards -->
-    <section id="section-overview" class="row g-3 dashboard__stats dashboard__animate-in" aria-label="Key performance indicators">
+    <!-- Big numbers first -->
+    <section id="section-overview" class="row g-3 dashboard__stats dashboard__animate-in" aria-label="Key numbers">
       <div class="col-6 col-md-3">
         <div class="stat-card dashboard__stat dashboard__stat--revenue h-100">
           <div class="dashboard__stat-top">
-            <span class="dashboard__stat-label">Total Revenue</span>
+            <span class="dashboard__stat-label">Money in</span>
             <span class="dashboard__stat-icon" aria-hidden="true"><i class="bi bi-cash-stack"></i></span>
           </div>
           <span class="dashboard__stat-value">{{ overview()?.totalRevenue | appCurrency }}</span>
-          <span class="dashboard__stat-meta">Monthly: {{ sales()?.monthlySales | appCurrency }}</span>
+          <span class="dashboard__stat-meta">This month: {{ sales()?.monthlySales | appCurrency }}</span>
         </div>
       </div>
       <div class="col-6 col-md-3">
@@ -141,7 +160,7 @@
             <span class="dashboard__stat-icon" aria-hidden="true"><i class="bi bi-cart3"></i></span>
           </div>
           <span class="dashboard__stat-value">{{ overview()?.totalOrders | number }}</span>
-          <span class="dashboard__stat-meta">Avg: {{ sales()?.averageOrderValue | appCurrency }}</span>
+          <span class="dashboard__stat-meta">Avg order: {{ sales()?.averageOrderValue | appCurrency }}</span>
         </div>
       </div>
       <div class="col-6 col-md-3">
@@ -161,87 +180,106 @@
             <span class="dashboard__stat-icon" aria-hidden="true"><i class="bi bi-box-seam"></i></span>
           </div>
           <span class="dashboard__stat-value">{{ overview()?.totalProducts | number }}</span>
-          <span class="dashboard__stat-meta">Categories: {{ overview()?.totalCategories | number }}</span>
+          <span class="dashboard__stat-meta">{{ overview()?.totalCategories | number }} categories</span>
         </div>
       </div>
     </section>
 
-    <!-- Secondary KPIs -->
-    <section class="row g-3 dashboard__stats dashboard__stats--secondary dashboard__animate-in" aria-label="Inventory and order health">
+    <!-- Stock & order health chips -->
+    <section class="row g-3 dashboard__stats dashboard__stats--secondary dashboard__animate-in" aria-label="Stock and order health">
       <div class="col-6 col-lg-3">
         <div class="stat-card dashboard__stat dashboard__stat--compact h-100">
-          <span class="dashboard__stat-label">Inventory Value</span>
+          <span class="dashboard__stat-label">Stock value</span>
           <span class="dashboard__stat-value dashboard__stat-value--sm">{{ overview()?.totalInventoryValue | appCurrency }}</span>
         </div>
       </div>
       <div class="col-6 col-lg-3">
-        <div class="stat-card dashboard__stat dashboard__stat--compact h-100">
-          <span class="dashboard__stat-label">Low Stock</span>
+        <div class="stat-card dashboard__stat dashboard__stat--compact h-100" [class.dashboard__stat--pulse-warn]="(overview()?.lowStockProducts ?? 0) > 0">
+          <span class="dashboard__stat-label">Running low</span>
           <span class="dashboard__stat-value dashboard__stat-value--sm dashboard__stat-value--warning">{{ overview()?.lowStockProducts | number }}</span>
         </div>
       </div>
       <div class="col-6 col-lg-3">
-        <div class="stat-card dashboard__stat dashboard__stat--compact h-100">
-          <span class="dashboard__stat-label">Out of Stock</span>
+        <div class="stat-card dashboard__stat dashboard__stat--compact h-100" [class.dashboard__stat--pulse-danger]="(overview()?.outOfStockProducts ?? 0) > 0">
+          <span class="dashboard__stat-label">Sold out</span>
           <span class="dashboard__stat-value dashboard__stat-value--sm dashboard__stat-value--danger">{{ overview()?.outOfStockProducts | number }}</span>
         </div>
       </div>
       <div class="col-6 col-lg-3">
         <div class="stat-card dashboard__stat dashboard__stat--compact h-100">
-          <span class="dashboard__stat-label">Completed Orders</span>
+          <span class="dashboard__stat-label">Completed orders</span>
           <span class="dashboard__stat-value dashboard__stat-value--sm dashboard__stat-value--success">{{ sales()?.completedOrders | number }}</span>
         </div>
       </div>
     </section>
 
-    <!-- Charts -->
-    <section id="section-trends" class="row g-4 dashboard__charts dashboard__animate-in" aria-label="Trends">
-      <div class="col-12 col-lg-6">
-        <app-card title="Revenue Trend" [subtitle]="revenueChart()?.dateRange?.period">
-          @if (revenueChart()) {
-            <app-chart [data]="revenueChart()" />
-          } @else {
-            <app-empty-state title="No revenue data" description="Revenue data will appear once orders are completed." />
-          }
-        </app-card>
+    <!-- Things to check: Sophia insights + stock alerts -->
+    <section id="section-attention" class="dashboard__attention dashboard__animate-in" aria-label="Things to check">
+      <div class="dashboard__section-intro">
+        <h2 class="dashboard__section-title">Things to check</h2>
+        <p class="dashboard__section-desc">Start here if something needs fixing. Sophia watches these for you.</p>
       </div>
-      <div class="col-12 col-lg-6">
-        <app-card title="Orders Trend" [subtitle]="ordersChart()?.dateRange?.period">
-          @if (ordersChart()) {
-            <app-chart [data]="ordersChart()" />
-          } @else {
-            <app-empty-state title="No order data" description="Order trends will appear once you have orders." />
-          }
-        </app-card>
+      <app-dashboard-copilot />
+    </section>
+
+    <!-- Charts -->
+    <section id="section-trends" class="dashboard__animate-in" aria-label="Charts">
+      <div class="dashboard__section-intro">
+        <h2 class="dashboard__section-title">How things are trending</h2>
+        <p class="dashboard__section-desc">Money and orders over time — so you can spot ups and downs.</p>
+      </div>
+      <div class="row g-4 dashboard__charts">
+        <div class="col-12 col-lg-6">
+          <app-card title="Money coming in" [subtitle]="revenueChart()?.dateRange?.period">
+            @if (revenueChart()) {
+              <app-chart [data]="revenueChart()" />
+            } @else {
+              <app-empty-state title="No sales yet" description="This chart fills in after you complete orders." />
+            }
+          </app-card>
+        </div>
+        <div class="col-12 col-lg-6">
+          <app-card title="Orders over time" [subtitle]="ordersChart()?.dateRange?.period">
+            @if (ordersChart()) {
+              <app-chart [data]="ordersChart()" />
+            } @else {
+              <app-empty-state title="No orders yet" description="Order trends appear once customers start buying." />
+            }
+          </app-card>
+        </div>
       </div>
     </section>
 
+    <div id="section-details" class="dashboard__section-intro dashboard__animate-in">
+      <h2 class="dashboard__section-title">More detail</h2>
+      <p class="dashboard__section-desc">Stock, orders, best customers, and best-selling products.</p>
+    </div>
+
     <div class="row g-4 dashboard__grid">
-      <!-- Inventory Status -->
       <div id="section-inventory" class="col-12 col-lg-6 dashboard__animate-in">
-        <app-card title="Inventory Status" subtitle="Stock levels overview">
+        <app-card title="Stock status" subtitle="What you have on the shelves">
           <div class="dashboard__inventory-summary row g-3 row-cols-2 row-cols-sm-3">
             <div class="col dashboard__inventory-item">
-              <span>Total Stock Qty</span>
+              <span>Total units</span>
               <strong>{{ inventory()?.totalStockQuantity | number }}</strong>
             </div>
             <div class="col dashboard__inventory-item">
-              <span>Low Stock Items</span>
+              <span>Running low</span>
               <strong class="text-warning">{{ inventory()?.lowStockCount | number }}</strong>
             </div>
             <div class="col dashboard__inventory-item">
-              <span>Out of Stock</span>
+              <span>Sold out</span>
               <strong class="text-danger">{{ inventory()?.outOfStockCount | number }}</strong>
             </div>
           </div>
 
           @if (inventory()?.reorderRecommendations?.length) {
             <div class="dashboard__reorder-list">
-              <h2 class="dashboard__section-heading">Reorder Recommendations</h2>
+              <h3 class="dashboard__section-heading">Suggested restocks</h3>
               @for (item of inventory()!.reorderRecommendations.slice(0, 5); track item.productId) {
                 <div class="dashboard__reorder-item">
                   <span class="dashboard__reorder-name">{{ item.productName }}</span>
-                  <app-badge [label]="'Qty: ' + item.suggestedReorderQuantity" variant="warning" />
+                  <app-badge [label]="'Order ' + item.suggestedReorderQuantity" variant="warning" />
                 </div>
               }
             </div>
@@ -249,9 +287,8 @@
         </app-card>
       </div>
 
-      <!-- Orders by Status -->
       <div id="section-orders" class="col-12 col-lg-6 dashboard__animate-in">
-        <app-card title="Orders Summary" subtitle="Status breakdown">
+        <app-card title="Order status" subtitle="Where each order stands">
           @if (orders()?.ordersByStatus?.length) {
             <ul class="dashboard__status-list list-unstyled">
               @for (status of orders()!.ordersByStatus; track status.status) {
@@ -264,22 +301,21 @@
             <div class="dashboard__rates">
               <span class="dashboard__rate dashboard__rate--success">
                 <i class="bi bi-check-circle" aria-hidden="true"></i>
-                Success rate <strong>{{ orders()?.successRate | number: '1.0-1' }}%</strong>
+                Completed <strong>{{ orders()?.successRate | number: '1.0-1' }}%</strong>
               </span>
               <span class="dashboard__rate dashboard__rate--danger">
                 <i class="bi bi-x-circle" aria-hidden="true"></i>
-                Cancellation <strong>{{ orders()?.cancellationRate | number: '1.0-1' }}%</strong>
+                Cancelled <strong>{{ orders()?.cancellationRate | number: '1.0-1' }}%</strong>
               </span>
             </div>
           } @else {
-            <app-empty-state title="No orders yet" description="Order statistics will appear here." />
+            <app-empty-state title="No orders yet" description="Order status will show up here." />
           }
         </app-card>
       </div>
 
-      <!-- Top Customers -->
       <div id="section-customers" class="col-12 col-lg-6 dashboard__animate-in">
-        <app-card title="Top Customers" subtitle="By total spending">
+        <app-card title="Top customers" subtitle="Who spends the most">
           @if (sortedTopCustomers(); as topCustomers) {
             @if (topCustomers.length) {
               <div class="table-responsive-wrapper table-responsive">
@@ -308,7 +344,7 @@
                       </th>
                       <th scope="col" class="text-end">
                         <button type="button" class="dashboard__sort-btn dashboard__sort-btn--end" (click)="toggleCustomerSort('totalSpending')">
-                          Spending
+                          Spent
                           <i class="bi dashboard__sort-icon"
                              [class.bi-arrow-down]="customerSortState().field === 'totalSpending' && customerSortState().direction === 'desc'"
                              [class.bi-arrow-up]="customerSortState().field === 'totalSpending' && customerSortState().direction === 'asc'"
@@ -326,22 +362,21 @@
                           <br /><small class="text-muted">{{ customer.email }}</small>
                         </td>
                         <td data-label="Orders">{{ customer.totalOrders | number }}</td>
-                        <td data-label="Spending" class="text-end">{{ customer.totalSpending | appCurrency }}</td>
+                        <td data-label="Spent" class="text-end">{{ customer.totalSpending | appCurrency }}</td>
                       </tr>
                     }
                   </tbody>
                 </table>
               </div>
             } @else {
-              <app-empty-state title="No customer data" />
+              <app-empty-state title="No customers yet" />
             }
           }
         </app-card>
       </div>
 
-      <!-- Top Products -->
       <div id="section-products" class="col-12 col-lg-6 dashboard__animate-in">
-        <app-card title="Best Selling Products" subtitle="Top performers">
+        <app-card title="Best sellers" subtitle="Products customers buy most">
           @if (sortedBestSellingProducts(); as bestSellingProducts) {
             @if (bestSellingProducts.length) {
               <div class="table-responsive-wrapper table-responsive">
@@ -395,17 +430,16 @@
                 </table>
               </div>
             } @else {
-              <app-empty-state title="No product data" />
+              <app-empty-state title="No product sales yet" />
             }
           }
         </app-card>
       </div>
     </div>
 
-    <!-- Widgets -->
-    <section class="row g-4 dashboard__widgets dashboard__animate-in" aria-label="Notifications, logins and invoices">
+    <section class="row g-4 dashboard__widgets dashboard__animate-in" aria-label="Inbox, logins and invoices">
       <div class="col-12 col-md-6 col-xl-4">
-        <app-card title="Unread Notifications" subtitle="Requires your attention" class="h-100">
+        <app-card title="Unread messages" subtitle="Waiting for you" class="h-100">
           <div class="dashboard__widget-stat">
             <span class="dashboard__widget-icon-wrap" aria-hidden="true">
               <i class="bi bi-bell-fill"></i>
@@ -420,7 +454,7 @@
       </div>
 
       <div class="col-12 col-md-6 col-xl-4">
-        <app-card title="Recent Logins" subtitle="Latest sign-ins" class="h-100">
+        <app-card title="Recent sign-ins" subtitle="Who logged in lately" class="h-100">
           @if (widgetsLoading()) {
             <div aria-live="polite" aria-busy="true">
               @for (i of [1, 2, 3]; track i) {
@@ -428,7 +462,7 @@
               }
             </div>
           } @else if (recentLogins().length === 0) {
-            <app-empty-state title="No login activity" />
+            <app-empty-state title="No recent sign-ins" />
           } @else {
             <ul class="dashboard__activity-list list-unstyled">
               @for (login of recentLogins(); track login.id) {
@@ -448,7 +482,7 @@
       </div>
 
       <div class="col-12 col-md-6 col-xl-4">
-        <app-card title="Latest Invoices" subtitle="Recently created invoices" class="h-100">
+        <app-card title="Latest invoices" subtitle="Recently created bills" class="h-100">
           @if (widgetsLoading()) {
             <div aria-live="polite" aria-busy="true">
               @for (i of [1, 2, 3]; track i) {
@@ -477,8 +511,7 @@
       </div>
     </section>
 
-    <!-- Recent Activity -->
-    <app-card id="section-activity" title="Recent Activity" subtitle="Latest actions across your business" class="dashboard__animate-in">
+    <app-card id="section-activity" title="What happened recently" subtitle="Latest actions across your business" class="dashboard__animate-in">
       @if (activityLoading()) {
         <div class="loading-stack" aria-live="polite" aria-busy="true">
           @for (i of [1, 2, 3]; track i) {
@@ -486,7 +519,7 @@
           }
         </div>
       } @else if (recentActivities().length === 0) {
-        <app-empty-state title="No recent activity" description="Business actions will appear here." />
+        <app-empty-state title="Nothing recent" description="New actions will show up here." />
       } @else {
         <ul class="dashboard__activity-list list-unstyled">
           @for (activity of recentActivities(); track activity.id) {
@@ -502,7 +535,7 @@
       }
       <div class="dashboard__activity-footer">
         <a class="btn btn-sm btn-outline-primary" [routerLink]="routes.activity.list">
-          View All
+          See all activity
           <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
         </a>
       </div>

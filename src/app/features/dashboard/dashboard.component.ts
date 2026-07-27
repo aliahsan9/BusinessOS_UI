@@ -62,22 +62,19 @@ export class DashboardComponent implements OnInit {
   readonly routes = ROUTES;
   readonly periods: ReadonlyArray<{ label: string; value: DashboardPeriod }> = [
     { label: 'Today', value: DashboardPeriod.Today },
-    { label: 'Week', value: DashboardPeriod.Week },
-    { label: 'Month', value: DashboardPeriod.Month },
-    { label: 'Year', value: DashboardPeriod.Year },
-    { label: 'All', value: DashboardPeriod.All },
+    { label: 'This week', value: DashboardPeriod.Week },
+    { label: 'This month', value: DashboardPeriod.Month },
+    { label: 'This year', value: DashboardPeriod.Year },
+    { label: 'All time', value: DashboardPeriod.All },
   ];
-  readonly breadcrumbs = [{ label: 'Dashboard', route: '/dashboard' }, { label: 'Overview' }];
+  readonly breadcrumbs = [{ label: 'Home', route: '/dashboard' }, { label: 'Overview' }];
 
-  /** Quick-jump sections rendered as an in-page nav once the dashboard has loaded. */
+  /** Simple jump links — fewer options so non-technical users are not overwhelmed. */
   readonly sections: ReadonlyArray<{ id: string; label: string; icon: string }> = [
-    { id: 'section-overview', label: 'Overview', icon: 'bi-grid-1x2' },
-    { id: 'section-trends', label: 'Trends', icon: 'bi-graph-up' },
-    { id: 'section-inventory', label: 'Inventory', icon: 'bi-box-seam' },
-    { id: 'section-orders', label: 'Orders', icon: 'bi-bag-check' },
-    { id: 'section-customers', label: 'Customers', icon: 'bi-people' },
-    { id: 'section-products', label: 'Products', icon: 'bi-star' },
-    { id: 'section-activity', label: 'Activity', icon: 'bi-clock-history' },
+    { id: 'section-overview', label: 'Numbers', icon: 'bi-grid-1x2' },
+    { id: 'section-attention', label: 'To do', icon: 'bi-exclamation-circle' },
+    { id: 'section-trends', label: 'Charts', icon: 'bi-graph-up' },
+    { id: 'section-details', label: 'Details', icon: 'bi-list-ul' },
   ];
 
   // --- State passthroughs -----------------------------------------------------
@@ -98,6 +95,51 @@ export class DashboardComponent implements OnInit {
   readonly currentPeriodLabel = computed(
     () => this.periods.find((p) => p.value === this.period())?.label ?? '',
   );
+
+  /** Friendly time-of-day greeting for non-technical users. */
+  readonly greeting = computed(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  });
+
+  /**
+   * Traffic-light health of the business based on stock pressure.
+   * alert = out of stock, watch = low stock, good = otherwise.
+   */
+  readonly businessHealth = computed((): 'good' | 'watch' | 'alert' => {
+    const o = this.overview();
+    if (!o) return 'good';
+    if ((o.outOfStockProducts ?? 0) > 0) return 'alert';
+    if ((o.lowStockProducts ?? 0) > 0) return 'watch';
+    return 'good';
+  });
+
+  readonly healthHeadline = computed(() => {
+    switch (this.businessHealth()) {
+      case 'alert':
+        return 'Some products need your attention';
+      case 'watch':
+        return 'Looking okay — a few items are running low';
+      default:
+        return 'Your business looks healthy';
+    }
+  });
+
+  readonly healthHint = computed(() => {
+    const o = this.overview();
+    if (!o) return 'Numbers below update as you sell and restock.';
+    const out = o.outOfStockProducts ?? 0;
+    const low = o.lowStockProducts ?? 0;
+    if (out > 0) {
+      return `${out} product${out === 1 ? '' : 's'} sold out. Restock soon so you don’t lose sales.`;
+    }
+    if (low > 0) {
+      return `${low} product${low === 1 ? '' : 's'} running low on stock.`;
+    }
+    return `Showing results for ${this.currentPeriodLabel().toLowerCase()}.`;
+  });
 
   // --- Table sorting (client-side, view-only — underlying data is untouched) --
   private readonly customerSort = signal<{ field: CustomerSortField; direction: SortDirection }>({

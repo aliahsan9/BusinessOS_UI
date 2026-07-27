@@ -141,21 +141,9 @@
             </form>
           </app-card>
 
-          <app-card title="Sophia Voice" subtitle="Voice language and spoken replies for your AI employee.">
+          <app-card title="Sophia Voice" subtitle="Spoken replies and microphone options for your AI employee.">
             <form [formGroup]="voiceForm" (ngSubmit)="saveVoicePreferences()">
-              <fieldset class="voice-lang">
-                <legend>Voice Language</legend>
-                <label class="toggle-item">
-                  <input type="radio" formControlName="language" value="en" />
-                  English
-                </label>
-                <label class="toggle-item">
-                  <input type="radio" formControlName="language" value="ur" />
-                  Urdu
-                </label>
-              </fieldset>
-
-              <div class="toggle-list mt-3">
+              <div class="toggle-list">
                 <label class="toggle-item">
                   <input type="checkbox" formControlName="autoSpeak" />
                   Auto-speak Sophia's replies

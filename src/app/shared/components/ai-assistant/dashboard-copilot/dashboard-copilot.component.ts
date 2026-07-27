@@ -14,12 +14,11 @@ import { AskSophiaSuggestion, AskSophiaSuggestions } from '../../../../core/mode
 import { AiDashboardCopilot, AiProactiveInsight } from '../../../../core/models/ai.model';
 import { ROUTES } from '../../../../core/constants/route.constants';
 import { resolveBootstrapIcon } from '../../../utils/icon.util';
-import { AppCardComponent } from '../../app-card/app-card.component';
 
 @Component({
   selector: 'app-dashboard-copilot',
   standalone: true,
-  imports: [RouterLink, AppCardComponent],
+  imports: [RouterLink],
   templateUrl: './dashboard-copilot.component.html',
   styleUrl: './dashboard-copilot.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -61,6 +60,13 @@ export class DashboardCopilotComponent implements OnInit {
     if (level === 'high') return 'bi-exclamation-circle-fill';
     if (level === 'medium') return 'bi-exclamation-triangle';
     return 'bi-lightbulb';
+  }
+
+  severityLabel(severity: string | null | undefined): string {
+    const level = severity?.toLowerCase();
+    if (level === 'high') return 'Urgent';
+    if (level === 'medium') return 'Worth checking';
+    return 'FYI';
   }
 
   onFocus(message: string): void {

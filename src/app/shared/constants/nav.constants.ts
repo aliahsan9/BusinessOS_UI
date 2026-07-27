@@ -33,14 +33,32 @@ export const APP_ROUTE_PATHS = {
 
 export { ROUTES };
 
+export type NavGroupName =
+  | 'Home'
+  | 'Buying'
+  | 'Selling'
+  | 'Insights'
+  | 'Finance'
+  | 'Administration';
+
 export interface NavItem {
   label: string;
   icon: string;
   route: string;
   description: string;
   permissions?: string[];
-  group?: 'Finance' | 'Administration';
+  group?: NavGroupName;
 }
+
+/** Display order for sidebar groups (friendly, non-technical labels). */
+export const NAV_GROUP_ORDER: readonly NavGroupName[] = [
+  'Home',
+  'Buying',
+  'Selling',
+  'Insights',
+  'Finance',
+  'Administration',
+] as const;
 
 /** Compact quick links shown in the top navbar (sidebar holds full navigation). */
 export const TOP_NAV_ITEMS: NavItem[] = [
@@ -69,94 +87,107 @@ export const TOP_NAV_ITEMS: NavItem[] = [
 
 export const NAV_ITEMS: NavItem[] = [
   {
-    label: 'Dashboard',
-    icon: 'bi-pie-chart',
+    label: 'Home',
+    icon: 'bi-house-door',
     route: ROUTES.dashboard,
-    description: 'Overview of sales, orders, inventory, and key metrics.',
+    description: 'See how your business is doing at a glance.',
+    group: 'Home',
   },
   {
     label: 'Products',
     icon: 'bi-box',
     route: ROUTES.products.base,
-    description: 'Manage product catalog and pricing.',
+    description: 'Your product catalog and prices.',
     permissions: ['Product.View'],
+    group: 'Buying',
   },
   {
-    label: 'Inventory',
+    label: 'Stock',
     icon: 'bi-box-seam',
     route: ROUTES.inventory.base,
-    description: 'Track stock levels and inventory movements.',
+    description: 'See what you have in stock.',
     permissions: ['Inventory.View'],
+    group: 'Buying',
   },
   {
     label: 'Suppliers',
     icon: 'bi-truck',
     route: ROUTES.suppliers.base,
-    description: 'Manage supplier contacts and purchase relationships.',
+    description: 'People you buy from.',
     permissions: ['Supplier.View'],
+    group: 'Buying',
   },
   {
     label: 'Purchase Orders',
     icon: 'bi-clipboard-check',
     route: ROUTES.purchaseOrders.base,
-    description: 'Create and track purchase orders from suppliers.',
+    description: 'Orders you place with suppliers.',
     permissions: ['PurchaseOrder.View'],
+    group: 'Buying',
   },
   {
     label: 'Customers',
     icon: 'bi-person-badge',
     route: ROUTES.customers.base,
-    description: 'Manage customer records and relationships.',
+    description: 'People who buy from you.',
     permissions: ['Customer.View'],
+    group: 'Selling',
   },
   {
     label: 'Orders',
     icon: 'bi-cart3',
     route: ROUTES.orders.base,
-    description: 'View and manage customer orders.',
+    description: 'Customer orders to fulfill.',
     permissions: ['Order.View'],
+    group: 'Selling',
   },
   {
-    label: 'Quotations',
+    label: 'Quotes',
     icon: 'bi-file-earmark-text',
     route: ROUTES.quotations.base,
-    description: 'Create and track customer quotations.',
+    description: 'Price quotes for customers.',
     permissions: ['Quotation.View'],
+    group: 'Selling',
   },
   {
     label: 'Invoices',
     icon: 'bi-receipt',
     route: ROUTES.invoices.base,
-    description: 'Review billing and invoice history.',
+    description: 'Bills you send to customers.',
     permissions: ['Invoice.View'],
+    group: 'Selling',
   },
   {
     label: 'Payments',
     icon: 'bi-credit-card',
     route: ROUTES.payments.base,
-    description: 'Record and track customer payments.',
+    description: 'Money received from customers.',
     permissions: ['Payment.View'],
+    group: 'Selling',
   },
   {
-    label: 'Sales Dashboard',
+    label: 'Sales Overview',
     icon: 'bi-graph-up',
     route: ROUTES.sales.dashboard,
-    description: 'Sales KPIs, revenue trends, and top products.',
+    description: 'Sales numbers and top products.',
     permissions: ['Order.View'],
+    group: 'Insights',
   },
   {
     label: 'Reports',
     icon: 'bi-bar-chart',
     route: ROUTES.reports,
-    description: 'Analyze business performance and trends.',
+    description: 'Simple reports on how you are doing.',
     permissions: ['Report.View'],
+    group: 'Insights',
   },
   {
-    label: 'Business Analytics',
+    label: 'Deep Analytics',
     icon: 'bi-graph-up-arrow',
     route: ROUTES.analytics.base,
-    description: 'Advanced analytics across customers, projects, revenue, and expenses.',
+    description: 'Deeper charts across your business.',
     permissions: ['Analytics.View'],
+    group: 'Insights',
   },
   {
     label: 'Financial Dashboard',

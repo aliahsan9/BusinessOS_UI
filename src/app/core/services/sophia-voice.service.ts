@@ -21,7 +21,7 @@ type SpeechRecognitionEventLike = {
 };
 
 /**
- * Browser speech recognition + synthesis for Sophia voice-first UX.
+ * Browser STT + TTS for Sophia (English).
  */
 @Injectable({ providedIn: 'root' })
 export class SophiaVoiceService implements OnDestroy {
@@ -29,8 +29,11 @@ export class SophiaVoiceService implements OnDestroy {
 
   private recognition: SpeechRecognitionLike | null = null;
   private utterance: SpeechSynthesisUtterance | null = null;
+  private audioEl: HTMLAudioElement | null = null;
+  private audioObjectUrl: string | null = null;
   private prefs: VoicePreference | null = null;
   private pushToTalkActive = false;
+  private speakGeneration = 0;
 
   readonly voiceState = signal<VoiceUiState>('idle');
   readonly isListening = computed(() => this.voiceState() === 'listening');
@@ -50,6 +53,7 @@ export class SophiaVoiceService implements OnDestroy {
 
   constructor() {
     this.micSupported.set(this.createRecognition() != null);
+    this.warmVoices();
   }
 
   ngOnDestroy(): void {
@@ -77,12 +81,12 @@ export class SophiaVoiceService implements OnDestroy {
 
   applyPreferences(prefs: VoicePreference): void {
     this.prefs = prefs;
-    this.language.set(prefs.language === 'ur' ? 'ur' : 'en');
+    this.language.set('en');
     this.autoSpeak.set(prefs.autoSpeak !== false);
     this.continuousListening.set(!!prefs.continuousListening);
     this.agentService.setPreferences({
       agentKey: prefs.preferredAgentKey || 'sophia',
-      language: prefs.language === 'ur' ? 'ur' : 'en',
+      language: 'en',
     });
   }
 
@@ -112,7 +116,7 @@ export class SophiaVoiceService implements OnDestroy {
 
     this.recognition = recognition;
     this.pushToTalkActive = !!options?.pushToTalk;
-    recognition.lang = this.language() === 'ur' ? 'ur-PK' : 'en-US';
+    recognition.lang = 'en-US';
     recognition.continuous = this.continuousListening() && !this.pushToTalkActive;
     recognition.interimResults = true;
     recognition.maxAlternatives = 1;
@@ -197,38 +201,25 @@ export class SophiaVoiceService implements OnDestroy {
   }
 
   speak(text: string): void {
-    if (!text.trim() || this.isMuted() || !this.ttsSupported() || !this.autoSpeak()) return;
+    if (!text.trim() || this.isMuted() || !this.autoSpeak()) return;
     this.stopSpeaking();
     this.stopListening();
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = this.language() === 'ur' ? 'ur-PK' : 'en-US';
-    utterance.rate = this.prefs?.speechRate ?? 1;
-    utterance.pitch = this.prefs?.pitch ?? 1;
-    const voice = this.pickFemaleVoice(utterance.lang);
-    if (voice) utterance.voice = voice;
+    const spoken = this.cleanForSpeech(text);
+    if (!spoken) return;
 
-    utterance.onstart = () => this.voiceState.set('speaking');
-    utterance.onend = () => {
-      this.utterance = null;
-      if (this.voiceState() === 'speaking') this.voiceState.set('idle');
-    };
-    utterance.onerror = () => {
-      this.utterance = null;
-      if (this.voiceState() === 'speaking') this.voiceState.set('idle');
-    };
-
-    this.utterance = utterance;
     this.lastSpokenText.set(text);
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
+    const generation = ++this.speakGeneration;
+    this.speakBrowser(spoken, generation);
   }
 
   stopSpeaking(): void {
+    this.speakGeneration++;
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel();
     }
     this.utterance = null;
+    this.disposeAudio();
     if (this.voiceState() === 'speaking') this.voiceState.set('idle');
   }
 
@@ -248,6 +239,73 @@ export class SophiaVoiceService implements OnDestroy {
     this.onFinalTranscript = null;
   }
 
+  private speakBrowser(text: string, generation: number): void {
+    if (!this.ttsSupported()) {
+      this.voiceState.set('idle');
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US';
+    utterance.rate = this.prefs?.speechRate ?? 1;
+    utterance.pitch = this.prefs?.pitch ?? 1;
+    const voice = this.pickBestVoice();
+    if (voice) {
+      utterance.voice = voice;
+      utterance.lang = voice.lang || utterance.lang;
+    }
+
+    utterance.onstart = () => {
+      if (generation === this.speakGeneration) this.voiceState.set('speaking');
+    };
+    utterance.onend = () => {
+      this.utterance = null;
+      if (generation === this.speakGeneration && this.voiceState() === 'speaking') {
+        this.voiceState.set('idle');
+      }
+    };
+    utterance.onerror = () => {
+      this.utterance = null;
+      if (generation === this.speakGeneration && this.voiceState() === 'speaking') {
+        this.voiceState.set('idle');
+      }
+    };
+
+    this.utterance = utterance;
+    window.speechSynthesis.cancel();
+    // Chrome sometimes needs a tick after cancel.
+    setTimeout(() => {
+      if (generation !== this.speakGeneration) return;
+      window.speechSynthesis.speak(utterance);
+    }, 20);
+  }
+
+  private disposeAudio(): void {
+    if (this.audioEl) {
+      try {
+        this.audioEl.pause();
+        this.audioEl.src = '';
+      } catch {
+        /* ignore */
+      }
+      this.audioEl = null;
+    }
+    if (this.audioObjectUrl) {
+      URL.revokeObjectURL(this.audioObjectUrl);
+      this.audioObjectUrl = null;
+    }
+  }
+
+  private cleanForSpeech(text: string): string {
+    return text
+      .replace(/\*\*/g, '')
+      .replace(/`+/g, '')
+      .replace(/^#+\s*/gm, '')
+      .replace(/\n{2,}/g, '. ')
+      .replace(/\n/g, ' ')
+      .trim();
+  }
+
   private createRecognition(): SpeechRecognitionLike | null {
     if (typeof window === 'undefined') return null;
     const SpeechRecognitionCtor =
@@ -257,22 +315,44 @@ export class SophiaVoiceService implements OnDestroy {
     return SpeechRecognitionCtor ? new SpeechRecognitionCtor() : null;
   }
 
-  private pickFemaleVoice(lang: string): SpeechSynthesisVoice | null {
+  private warmVoices(): void {
+    if (!this.ttsSupported()) return;
+    window.speechSynthesis.onvoiceschanged = () => {
+      window.speechSynthesis.getVoices();
+    };
+    // Nudge Chrome to populate the voice list.
+    window.speechSynthesis.getVoices();
+  }
+
+  private pickBestVoice(): SpeechSynthesisVoice | null {
     if (!this.ttsSupported()) return null;
     const voices = window.speechSynthesis.getVoices();
     if (!voices.length) return null;
 
-    const langPrefix = lang.slice(0, 2).toLowerCase();
-    const femaleHints = ['female', 'zira', 'susan', 'samantha', 'karen', 'moira', 'fiona', 'tessa', 'veena', 'google uk english female'];
+    const femaleHints = [
+      'female',
+      'zira',
+      'susan',
+      'samantha',
+      'karen',
+      'moira',
+      'fiona',
+      'tessa',
+      'veena',
+      'google uk english female',
+      'aria',
+      'jenny',
+      'natasha',
+    ];
 
-    const langVoices = voices.filter((v) => v.lang.toLowerCase().startsWith(langPrefix));
-    const preferred =
+    const langVoices = voices.filter((v) => v.lang.toLowerCase().startsWith('en'));
+    return (
       langVoices.find((v) => femaleHints.some((h) => v.name.toLowerCase().includes(h))) ||
       langVoices.find((v) => /female|woman/i.test(v.name)) ||
       langVoices[0] ||
       voices.find((v) => femaleHints.some((h) => v.name.toLowerCase().includes(h))) ||
-      voices[0];
-
-    return preferred ?? null;
+      voices[0] ||
+      null
+    );
   }
 }
