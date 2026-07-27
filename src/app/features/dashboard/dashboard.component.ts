@@ -10,7 +10,6 @@ import { ActivityDto } from '../../core/models/activity.model';
 import { InvoiceSummaryDto } from '../../core/models/invoice.model';
 import { ROUTES } from '../../core/constants/route.constants';
 import { DashboardPeriod } from '../../core/enums';
-import { AppBreadcrumbComponent } from '../../shared/components/app-breadcrumb/app-breadcrumb.component';
 import { AppCardComponent } from '../../shared/components/app-card/app-card.component';
 import { AppChartComponent } from '../../shared/components/app-chart/app-chart.component';
 import { AppBadgeComponent } from '../../shared/components/app-badge/app-badge.component';
@@ -23,6 +22,17 @@ type StatusVariant = 'primary' | 'success' | 'danger' | 'warning' | 'info' | 'ne
 type SortDirection = 'asc' | 'desc';
 type CustomerSortField = 'fullName' | 'totalOrders' | 'totalSpending';
 type ProductSortField = 'productName' | 'totalQuantitySold' | 'totalRevenue';
+type AttentionSeverity = 'danger' | 'warning' | 'info';
+
+export interface AttentionItem {
+  id: string;
+  severity: AttentionSeverity;
+  title: string;
+  detail: string;
+  actionLabel: string;
+  route: string;
+  icon: string;
+}
 
 @Component({
   selector: 'app-dashboard',
@@ -32,7 +42,6 @@ type ProductSortField = 'productName' | 'totalQuantitySold' | 'totalRevenue';
     DatePipe,
     AppCurrencyPipe,
     DecimalPipe,
-    // AppBreadcrumbComponent,
     AppCardComponent,
     AppChartComponent,
     AppBadgeComponent,
@@ -51,14 +60,12 @@ export class DashboardComponent implements OnInit {
   private readonly invoiceService = inject(InvoiceService);
   private readonly notificationState = inject(NotificationStateService);
 
-  // --- Widget data -----------------------------------------------------
   readonly recentActivities = signal<ActivityDto[]>([]);
-  readonly recentLogins = signal<ActivityDto[]>([]);
   readonly latestInvoices = signal<InvoiceSummaryDto[]>([]);
   readonly activityLoading = signal(false);
   readonly widgetsLoading = signal(false);
+  readonly showInsights = signal(false);
 
-  // --- Static config -----------------------------------------------------
   readonly routes = ROUTES;
   readonly periods: ReadonlyArray<{ label: string; value: DashboardPeriod }> = [
     { label: 'Today', value: DashboardPeriod.Today },
@@ -67,50 +74,26 @@ export class DashboardComponent implements OnInit {
     { label: 'This year', value: DashboardPeriod.Year },
     { label: 'All time', value: DashboardPeriod.All },
   ];
-  readonly breadcrumbs = [{ label: 'Home', route: '/dashboard' }, { label: 'Overview' }];
 
-  /** Simple jump links — plain language so anyone can find their way. */
-  readonly sections: ReadonlyArray<{ id: string; label: string; icon: string }> = [
-    { id: 'section-overview', label: 'At a glance', icon: 'bi-grid-1x2' },
-    { id: 'section-attention', label: 'To do', icon: 'bi-exclamation-circle' },
-    { id: 'section-trends', label: 'Trends', icon: 'bi-graph-up' },
-    { id: 'section-details', label: 'More info', icon: 'bi-list-ul' },
-  ];
+  /** Primary work — one clear job per button. */
+  readonly primaryAction = {
+    label: 'New sale',
+    hint: 'Create a customer order',
+    icon: 'bi-cart-plus',
+    route: ROUTES.orders.create,
+  };
 
-  /** Common next steps — shortcuts for people who are not power users. */
-  readonly quickActions: ReadonlyArray<{
+  readonly workActions: ReadonlyArray<{
     label: string;
-    hint: string;
     icon: string;
     route: string;
   }> = [
-    {
-      label: 'New sale',
-      hint: 'Create a customer order',
-      icon: 'bi-cart-plus',
-      route: ROUTES.orders.create,
-    },
-    {
-      label: 'Add product',
-      hint: 'Put something new on the shelf',
-      icon: 'bi-box',
-      route: ROUTES.products.create,
-    },
-    {
-      label: 'Check stock',
-      hint: 'See what is running low',
-      icon: 'bi-box-seam',
-      route: ROUTES.inventory.stockLevels,
-    },
-    {
-      label: 'Add customer',
-      hint: 'Save a buyer’s details',
-      icon: 'bi-person-plus',
-      route: ROUTES.customers.create,
-    },
+    { label: 'Add product', icon: 'bi-box', route: ROUTES.products.create },
+    { label: 'Add customer', icon: 'bi-person-plus', route: ROUTES.customers.create },
+    { label: 'Check stock', icon: 'bi-box-seam', route: ROUTES.inventory.stockLevels },
+    { label: 'Record payment', icon: 'bi-cash-coin', route: ROUTES.payments.create },
   ];
 
-  // --- State passthroughs -----------------------------------------------------
   readonly unreadCount = this.notificationState.unreadCount;
   readonly overview = this.dashboardState.overview;
   readonly sales = this.dashboardState.sales;
@@ -124,12 +107,10 @@ export class DashboardComponent implements OnInit {
   readonly error = this.dashboardState.error;
   readonly period = this.dashboardState.period;
 
-  // --- Derived UI state (view-only, no new business logic) -----------------
   readonly currentPeriodLabel = computed(
     () => this.periods.find((p) => p.value === this.period())?.label ?? '',
   );
 
-  /** Friendly time-of-day greeting for non-technical users. */
   readonly greeting = computed(() => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Good morning';
@@ -137,44 +118,87 @@ export class DashboardComponent implements OnInit {
     return 'Good evening';
   });
 
-  /**
-   * Traffic-light health of the business based on stock pressure.
-   * alert = out of stock, watch = low stock, good = otherwise.
-   */
-  readonly businessHealth = computed((): 'good' | 'watch' | 'alert' => {
+  /** Actionable work queue — only items the user can act on. */
+  readonly attentionItems = computed((): AttentionItem[] => {
+    const items: AttentionItem[] = [];
     const o = this.overview();
-    if (!o) return 'good';
-    if ((o.outOfStockProducts ?? 0) > 0) return 'alert';
-    if ((o.lowStockProducts ?? 0) > 0) return 'watch';
-    return 'good';
-  });
+    const out = o?.outOfStockProducts ?? 0;
+    const low = o?.lowStockProducts ?? 0;
+    const unread = this.unreadCount();
+    const pending = this.orders()?.ordersByStatus?.find(
+      (s) => s.status.toLowerCase() === 'pending',
+    )?.count ?? 0;
+    const processing = this.orders()?.ordersByStatus?.find(
+      (s) => ['processing', 'confirmed'].includes(s.status.toLowerCase()),
+    )?.count ?? 0;
 
-  readonly healthHeadline = computed(() => {
-    switch (this.businessHealth()) {
-      case 'alert':
-        return 'Some products need your attention';
-      case 'watch':
-        return 'Looking okay — a few items are running low';
-      default:
-        return 'Your business looks healthy';
-    }
-  });
-
-  readonly healthHint = computed(() => {
-    const o = this.overview();
-    if (!o) return 'The numbers below update as you sell and restock.';
-    const out = o.outOfStockProducts ?? 0;
-    const low = o.lowStockProducts ?? 0;
     if (out > 0) {
-      return `${out} product${out === 1 ? '' : 's'} sold out. Restock soon so you don’t lose sales.`;
+      items.push({
+        id: 'out-of-stock',
+        severity: 'danger',
+        title: `${out} sold out`,
+        detail: 'Customers can’t buy these until you restock.',
+        actionLabel: 'Restock',
+        route: ROUTES.inventory.stockLevels,
+        icon: 'bi-x-circle',
+      });
     }
     if (low > 0) {
-      return `${low} product${low === 1 ? '' : 's'} running low on stock.`;
+      items.push({
+        id: 'low-stock',
+        severity: 'warning',
+        title: `${low} running low`,
+        detail: 'Reorder before they sell out.',
+        actionLabel: 'Check stock',
+        route: ROUTES.inventory.stockLevels,
+        icon: 'bi-exclamation-triangle',
+      });
     }
-    return `Showing results for ${this.currentPeriodLabel().toLowerCase()}. Everything looks on track.`;
+    if (pending > 0) {
+      items.push({
+        id: 'pending-orders',
+        severity: 'warning',
+        title: `${pending} waiting orders`,
+        detail: 'Confirm or process these so customers aren’t left hanging.',
+        actionLabel: 'Open orders',
+        route: ROUTES.orders.list,
+        icon: 'bi-hourglass-split',
+      });
+    }
+    if (processing > 0 && pending === 0) {
+      items.push({
+        id: 'open-orders',
+        severity: 'info',
+        title: `${processing} orders in progress`,
+        detail: 'Finish these to keep fulfillment moving.',
+        actionLabel: 'View orders',
+        route: ROUTES.orders.list,
+        icon: 'bi-arrow-repeat',
+      });
+    }
+    if (unread > 0) {
+      items.push({
+        id: 'unread',
+        severity: 'info',
+        title: `${unread} unread message${unread === 1 ? '' : 's'}`,
+        detail: 'Something may need a reply.',
+        actionLabel: 'Open inbox',
+        route: ROUTES.notifications.list,
+        icon: 'bi-bell',
+      });
+    }
+
+    return items;
   });
 
-  // --- Table sorting (client-side, view-only — underlying data is untouched) --
+  readonly hasAttention = computed(() => this.attentionItems().length > 0);
+
+  readonly pendingOrderCount = computed(() => {
+    return (
+      this.orders()?.ordersByStatus?.find((s) => s.status.toLowerCase() === 'pending')?.count ?? 0
+    );
+  });
+
   private readonly customerSort = signal<{ field: CustomerSortField; direction: SortDirection }>({
     field: 'totalSpending',
     direction: 'desc',
@@ -211,13 +235,6 @@ export class DashboardComponent implements OnInit {
     this.widgetsLoading.set(true);
     void this.notificationState.refresh(5);
 
-    this.activityService.getAll({ page: 1, pageSize: 5, action: 'Login' }).subscribe({
-      next: (result) => {
-        this.recentLogins.set(result.items);
-      },
-      error: () => this.recentLogins.set([]),
-    });
-
     this.invoiceService.getAll({ page: 1, pageSize: 5 }).subscribe({
       next: (result) => {
         this.latestInvoices.set(result.items);
@@ -232,7 +249,7 @@ export class DashboardComponent implements OnInit {
 
   loadRecentActivity(): void {
     this.activityLoading.set(true);
-    this.activityService.getRecent(10).subscribe({
+    this.activityService.getRecent(8).subscribe({
       next: (items) => {
         this.recentActivities.set(items);
         this.activityLoading.set(false);
@@ -249,13 +266,16 @@ export class DashboardComponent implements OnInit {
     this.dashboardState.setPeriod(value);
   }
 
-  /** Thin wrapper so the desktop pill switcher can set the period directly. */
   setPeriod(value: DashboardPeriod): void {
     this.dashboardState.setPeriod(value);
   }
 
   retry(): void {
     this.dashboardState.loadDashboard(this.period());
+  }
+
+  toggleInsights(): void {
+    this.showInsights.update((v) => !v);
   }
 
   getStatusVariant(status: string): StatusVariant {
@@ -275,18 +295,6 @@ export class DashboardComponent implements OnInit {
 
   toggleProductSort(field: ProductSortField): void {
     this.productSort.update((current) => this.nextSortState(current, field));
-  }
-
-  /** Smooth-scrolls to a section, respecting the user's motion preference. */
-  scrollToSection(id: string): void {
-    const el = document.getElementById(id);
-    if (!el) return;
-    const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    el.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' });
-  }
-
-  trackByIndex(index: number): number {
-    return index;
   }
 
   private nextSortState<TField extends string>(
