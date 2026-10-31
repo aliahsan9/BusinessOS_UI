@@ -1,3 +1,7 @@
+:host {
+  display: contents;
+}
+
 .ai-widget {
   position: fixed;
   bottom: max(1rem, env(safe-area-inset-bottom, 0px));

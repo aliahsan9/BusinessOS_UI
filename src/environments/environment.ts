@@ -1,6 +1,6 @@
 export const environment = {
   production: false,
-  apiUrl: '/api',
+  apiUrl: '/api/v1',
   appName: 'BusinessOS',
   tokenRefreshBufferMs: 60_000,
   defaultPageSize: 20,

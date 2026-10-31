@@ -29,6 +29,7 @@
               routerLinkActive="app-sidebar__link--active"
               class="app-sidebar__link"
               [attr.aria-label]="item.label"
+              [attr.title]="hideLabels() ? item.label : null"
               [attr.aria-current]="isActiveRoute(item.route) ? 'page' : null"
               (click)="onNavClick()"
             >

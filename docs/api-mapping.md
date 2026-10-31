@@ -1,7 +1,7 @@
 # BusinessOS API Mapping
 
 > Complete mapping of backend Minimal API endpoints to frontend pages, DTOs, validations, and permissions.  
-> Base URL: `{environment.apiUrl}/api` (default `/api`)
+> Base URL: `environment.apiUrl` (default `/api/v1`)
 
 ---
 
@@ -562,7 +562,7 @@ Dashboard endpoints serve as the **Reports module backend** until dedicated repo
 
 ## 8. Users & RBAC
 
-### Roles — `/api/roles`
+### Roles — `/api/v1/roles`
 
 | Method | Route | Purpose | Permission | Frontend page |
 |--------|-------|---------|------------|---------------|
@@ -580,7 +580,7 @@ Dashboard endpoints serve as the **Reports module backend** until dedicated repo
 
 ---
 
-### Permissions — `/api/permissions`
+### Permissions — `/api/v1/permissions`
 
 | Method | Route | Permission | Frontend page |
 |--------|-------|------------|---------------|
@@ -591,7 +591,7 @@ Dashboard endpoints serve as the **Reports module backend** until dedicated repo
 
 ---
 
-### Users — `/api/users` (partial)
+### Users — `/api/v1/users` (partial)
 
 | Method | Route | Purpose | Permission | Frontend page |
 |--------|-------|---------|------------|---------------|

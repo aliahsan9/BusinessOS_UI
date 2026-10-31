@@ -30,9 +30,9 @@ describe('authInterceptor', () => {
       expiresAt: new Date(Date.now() + 3600000).toISOString(),
     });
 
-    httpClient.get('/api/dashboard/overview').subscribe();
+    httpClient.get('/api/v1/dashboard/overview').subscribe();
 
-    const req = httpMock.expectOne('/api/dashboard/overview');
+    const req = httpMock.expectOne('/api/v1/dashboard/overview');
     expect(req.request.headers.get('Authorization')).toBe('Bearer test-token');
     expect(req.request.headers.get('X-Tenant-ID')).toBe('t1');
     req.flush({});

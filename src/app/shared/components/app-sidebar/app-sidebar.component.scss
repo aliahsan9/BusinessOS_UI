@@ -1,10 +1,14 @@
 // app-sidebar.component.scss
+:host {
+  display: contents;
+}
+
 .app-sidebar {
   position: fixed;
   top: 0;
   left: 0;
   z-index: 1040;
-  width: var(--sidebar-width);
+  width: var(--sidebar-expanded-width, 220px);
   height: 100vh;
   height: 100dvh;
   background: var(--color-sidebar-bg);
@@ -17,6 +21,7 @@
 
   &--collapsed {
     width: var(--sidebar-collapsed-width);
+    max-width: var(--sidebar-collapsed-width);
 
     .app-sidebar__brand {
       justify-content: center;
@@ -48,6 +53,7 @@
 
   &--mini {
     width: var(--sidebar-mini-width);
+    max-width: var(--sidebar-mini-width);
 
     .app-sidebar__brand {
       justify-content: center;
@@ -322,37 +328,42 @@
     background: var(--overlay-backdrop-color);
     z-index: 1035;
 
-    @media (min-width: 768px) {
+    @media (min-width: 992px) {
       display: none;
     }
   }
 
-  @media (max-width: 767.98px) {
-    transform: translateX(-100%);
-    width: 280px !important;
+  /* Phones and tablets: off-canvas drawer, opened from the navbar */
+  @media (max-width: 991.98px) {
+    transform: translateX(-105%);
+    width: min(18.5rem, 86vw) !important;
     box-shadow: 4px 0 24px rgba(0, 0, 0, 0.18);
 
-    &--mobile-open {
-      transform: translateX(0);
-    }
-    .app-sidebar__toggle {
-      display: flex;
-    }
-  }
-
-  @media (min-width: 768px) and (max-width: 991.98px) {
-    transform: translateX(-100%);
-    width: var(--sidebar-width) !important;
-
+    &--mobile-open,
     &--tablet-open {
       transform: translateX(0);
     }
+
     .app-sidebar__toggle {
       display: flex;
     }
   }
 
+  /* Desktop: sit in the row so the center column shrinks instead of overflowing */
   @media (min-width: 992px) {
+    position: sticky;
+    top: 0;
+    left: auto;
+    align-self: flex-start;
+    flex: 0 0 auto;
+    min-width: 0;
+    max-width: var(--sidebar-expanded-width, 220px);
+    transform: none;
+    height: 100vh;
+    height: 100dvh;
+    max-height: 100dvh;
+    z-index: 1020;
+
     .app-sidebar__toggle {
       display: flex;
     }

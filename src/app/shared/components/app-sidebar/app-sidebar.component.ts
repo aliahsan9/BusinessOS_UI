@@ -6,7 +6,7 @@ import { TokenService } from '../../../core/services/token.service';
 import { ThemeService } from '../../../core/theme/theme.service';
 import { STORAGE_KEYS } from '../../../core/constants/storage.constants';
 import { StorageHelper } from '../../../core/helpers/storage.helper';
-import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
+import { BreakpointObserver } from '@angular/cdk/layout';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -29,12 +29,21 @@ export class AppSidebarComponent implements OnInit, OnDestroy {
 
   readonly mobileClose = output<void>();
 
+  /** Drawer mode: phones and tablets. The sidebar overlays instead of pushing content. */
+  private readonly overlay = signal(false);
+  /**
+   * Laptops and smaller desktops stay on the icon rail so the center column
+   * keeps its width. The user can still expand it for the session.
+   */
+  private readonly autoContract = signal(false);
+  private readonly expandOverride = signal(false);
+
   private breakpointSubscription?: Subscription;
-  private isMobileDevice = false;
-  private isTabletDevice = false;
+
+  private readonly overlayQuery = '(max-width: 991.98px)';
+  private readonly contractQuery = '(min-width: 992px) and (max-width: 1599.98px)';
 
   ngOnInit(): void {
-    // Keep layout width in sync with stored collapse (main uses data-sidebar-style)
     if (this.collapsed()) {
       const style = this.themeService.preferences().sidebarStyle;
       if (style !== 'collapsed' && style !== 'mini') {
@@ -42,17 +51,17 @@ export class AppSidebarComponent implements OnInit, OnDestroy {
       }
     }
 
-    // Subscribe to breakpoint changes
     this.breakpointSubscription = this.breakpointObserver
-      .observe([Breakpoints.Handset, Breakpoints.Tablet])
+      .observe([this.overlayQuery, this.contractQuery])
       .subscribe(() => {
-        // Check if it's a handset (mobile)
-        this.isMobileDevice = this.breakpointObserver.isMatched(Breakpoints.Handset);
-        // Check if it's a tablet
-        this.isTabletDevice = this.breakpointObserver.isMatched(Breakpoints.Tablet);
-
-        // Auto-close sidebar on mobile when navigating
-        if (this.isMobileDevice && this.mobileOpen()) {
+        const overlay = this.breakpointObserver.isMatched(this.overlayQuery);
+        const contract = this.breakpointObserver.isMatched(this.contractQuery);
+        this.overlay.set(overlay);
+        this.autoContract.set(contract);
+        if (!contract) {
+          this.expandOverride.set(false);
+        }
+        if (!overlay && this.mobileOpen()) {
           this.mobileClose.emit();
         }
       });
@@ -63,13 +72,16 @@ export class AppSidebarComponent implements OnInit, OnDestroy {
   }
 
   readonly isCollapsedView = computed(() => {
+    if (this.overlay()) return false;
     const style = this.themeService.preferences().sidebarStyle;
-    return this.collapsed() || style === 'collapsed' || style === 'mini';
+    if (style === 'mini') return true;
+    if (this.autoContract()) return !this.expandOverride();
+    return this.collapsed() || style === 'collapsed';
   });
 
   readonly isMiniView = computed(() => {
-    const style = this.themeService.preferences().sidebarStyle;
-    return style === 'mini';
+    if (this.overlay()) return false;
+    return this.themeService.preferences().sidebarStyle === 'mini';
   });
 
   readonly hideLabels = computed(() => {
@@ -121,6 +133,11 @@ export class AppSidebarComponent implements OnInit, OnDestroy {
   }
 
   toggleCollapse(): void {
+    if (this.autoContract() && this.themeService.preferences().sidebarStyle !== 'mini') {
+      this.expandOverride.update((open) => !open);
+      return;
+    }
+
     this.collapsed.update((v) => !v);
     StorageHelper.set(STORAGE_KEYS.sidebarCollapsed, this.collapsed());
     this.themeService.updatePreferences({
@@ -133,12 +150,8 @@ export class AppSidebarComponent implements OnInit, OnDestroy {
   }
 
   onNavClick(): void {
-    // Close on mobile
-    if (this.isMobileDevice) {
+    if (this.overlay()) {
       this.mobileClose.emit();
-    }
-    // Close on tablet
-    if (this.isTabletDevice) {
       this.tabletOpen.set(false);
     }
   }

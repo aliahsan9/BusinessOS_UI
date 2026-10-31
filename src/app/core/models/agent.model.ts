@@ -1,4 +1,4 @@
-/** DTOs aligned with BusinessOS /api/agents endpoints. */
+/** DTOs aligned with BusinessOS `/api/v1/agents` endpoints. */
 
 export type VoiceUiState = 'idle' | 'listening' | 'processing' | 'speaking' | 'working';
 

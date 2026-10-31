@@ -21,7 +21,7 @@ import {
 } from '../models/agent.model';
 
 /**
- * Client for Sophia and other AI employees (/api/agents).
+ * Client for Sophia and other AI employees (`/api/v1/agents`).
  */
 @Injectable({ providedIn: 'root' })
 export class AgentEmployeeService extends BaseApiService {
