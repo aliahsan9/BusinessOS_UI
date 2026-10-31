@@ -1,0 +1,159 @@
+.pricing-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  align-items: end;
+}
+
+.pricing-country {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  color: #0b1f3a;
+  font-size: 0.875rem;
+}
+
+.pricing-country select,
+.pricing-toggle button,
+.plan-action {
+  border: 1px solid #d5deea;
+  background: #fff;
+  color: #0b1f3a;
+  border-radius: 0.5rem;
+}
+
+.pricing-country select {
+  min-width: 16rem;
+  padding: 0.55rem 0.75rem;
+}
+
+.pricing-toggle {
+  display: inline-flex;
+  padding: 0.2rem;
+  background: #e8eef6;
+  border-radius: 0.6rem;
+}
+
+.pricing-toggle button {
+  border: 0;
+  background: transparent;
+  padding: 0.45rem 0.9rem;
+  border-radius: 0.45rem;
+}
+
+.pricing-toggle button.active {
+  background: #0b1f3a;
+  color: #fff;
+}
+
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.plan-card {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  color: #0b1f3a;
+  border: 1px solid #d5deea;
+  border-radius: 1rem;
+  padding: 1.25rem;
+  min-height: 100%;
+}
+
+.plan-card--recommended {
+  border-color: #0b1f3a;
+  box-shadow: 0 12px 30px rgba(11, 31, 58, 0.08);
+}
+
+.plan-card h2 {
+  margin: 0.35rem 0 0.25rem;
+  font-size: 1.35rem;
+}
+
+.plan-card header p,
+.plan-note,
+.plan-save,
+.plan-contact {
+  color: #4d6078;
+  font-size: 0.875rem;
+}
+
+.plan-badge {
+  display: inline-block;
+  margin-right: 0.35rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: #0b1f3a;
+  color: #fff;
+  font-size: 0.75rem;
+}
+
+.plan-badge--current {
+  background: #e8eef6;
+  color: #0b1f3a;
+}
+
+.plan-price {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  margin: 1rem 0 0.25rem;
+}
+
+.plan-price strong {
+  font-size: 2rem;
+  letter-spacing: -0.03em;
+}
+
+.plan-price__from {
+  display: block;
+  width: 100%;
+  font-size: 0.8rem;
+  color: #4d6078;
+}
+
+.plan-card ul {
+  padding-left: 1.1rem;
+  margin: 1rem 0;
+  flex: 1;
+}
+
+.plan-card li + li {
+  margin-top: 0.35rem;
+}
+
+.plan-action {
+  display: inline-flex;
+  justify-content: center;
+  width: 100%;
+  padding: 0.7rem 1rem;
+  background: #0b1f3a;
+  color: #fff;
+  text-decoration: none;
+}
+
+.plan-action:disabled {
+  opacity: 0.55;
+}
+
+.plan-contact {
+  display: inline-block;
+  margin-top: 0.75rem;
+}
+
+@media (max-width: 1100px) {
+  .pricing-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .pricing-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,60 +1,95 @@
 <app-page-header
   title="Pricing"
-  subtitle="Choose the plan that fits your business. All paid plans include a 14-day free trial."
+  subtitle="Four plans, priced by the server. Paid plans include a 14-day trial."
 />
 
-<div class="text-center mb-4">
-  <div class="btn-group" role="group">
-    <button type="button" class="btn" [class.btn-primary]="!annual()" [class.btn-outline-primary]="annual()" (click)="annual.set(false)">
-      Monthly
-    </button>
-    <button type="button" class="btn" [class.btn-primary]="annual()" [class.btn-outline-primary]="!annual()" (click)="annual.set(true)">
-      Annual <span class="badge bg-success ms-1">Save up to 17%</span>
-    </button>
+<div class="pricing-toolbar">
+  <label class="pricing-country">
+    <span>Billing country</span>
+    <select [value]="country()" (change)="onCountry($any($event.target).value)">
+      @for (item of countries; track item.country) {
+        <option [value]="item.country">{{ item.label }}</option>
+      }
+    </select>
+  </label>
+
+  <div class="pricing-toggle" role="group" aria-label="Billing interval">
+    <button type="button" [class.active]="!annual()" (click)="annual.set(false)">Monthly</button>
+    <button type="button" [class.active]="annual()" (click)="annual.set(true)">Annual</button>
   </div>
 </div>
 
+@if (notice()) {
+  <app-alert variant="success" [message]="notice()!" />
+}
+@if (preview()) {
+  <app-alert variant="info" [message]="preview()!" />
+}
+
 @if (loading()) {
   <app-skeleton />
-} @else if (error()) {
+} @else if (error() && plans().length === 0) {
   <app-alert variant="danger" [message]="error()!" />
 } @else {
-  <div class="row g-4">
+  @if (error()) {
+    <app-alert variant="danger" [message]="error()!" />
+  }
+  <div class="pricing-grid">
     @for (plan of plans(); track plan.id) {
-      <div class="col-md-6 col-xl-3">
-        <app-card [title]="plan.name">
-          <p class="text-muted small">{{ plan.description }}</p>
-          <div class="display-6 fw-bold mb-1">
-            {{ price(plan) | appCurrency }}
-            <small class="fs-6 text-muted fw-normal">/{{ annual() ? 'yr' : 'mo' }}</small>
-          </div>
-          @if (annual() && plan.annualSavingsPercent > 0) {
-            <p class="text-success small">Save {{ plan.annualSavingsPercent }}% vs monthly</p>
+      <article class="plan-card" [class.plan-card--recommended]="plan.isRecommended" [class.plan-card--current]="isCurrentPlan(plan)">
+        <header>
+          @if (plan.isRecommended) {
+            <span class="plan-badge">Recommended</span>
           }
+          @if (isCurrentPlan(plan)) {
+            <span class="plan-badge plan-badge--current">Current plan</span>
+          }
+          <h2>{{ plan.name }}</h2>
+          <p>{{ plan.description }}</p>
+        </header>
 
-          <ul class="list-unstyled small mb-4">
-            @for (feature of plan.features; track feature) {
-              <li class="mb-1"><i class="bi bi-check-lg text-success me-1" aria-hidden="true"></i>{{ feature }}</li>
-            }
-          </ul>
+        <div class="plan-price">
+          @if (plan.isCustomPricing) {
+            <span class="plan-price__from">Starting at</span>
+          }
+          <strong>{{ money(price(plan), plan.currency) }}</strong>
+          <span>/ {{ annual() ? 'year' : 'month' }}</span>
+        </div>
+        @if (annual() && plan.annualSavingsPercent > 0) {
+          <p class="plan-save">Save {{ plan.annualSavingsPercent }}% compared with monthly billing</p>
+        }
+        @if (plan.priceNote) {
+          <p class="plan-note">{{ plan.priceNote }}</p>
+        }
+        @if (plan.trialDays > 0) {
+          <p class="plan-note">{{ plan.trialDays }}-day free trial on first subscription</p>
+        }
 
+        <ul>
+          @for (feature of plan.features; track feature) {
+            <li>{{ feature }}</li>
+          }
+        </ul>
+
+        <footer>
           @if (canManage) {
-            <app-button
-              [label]="isCurrentPlan(plan) ? 'Current Plan' : 'Get Started'"
-              [variant]="isCurrentPlan(plan) ? ButtonVariant.Secondary : ButtonVariant.Primary"
-              [disabled]="isCurrentPlan(plan) || actionLoading() === plan.id"
-              [loading]="actionLoading() === plan.id"
+            <button
               type="button"
-              [fullWidth]="true"
-              (clicked)="selectPlan(plan)"
-            />
+              class="plan-action"
+              [disabled]="isCurrentPlan(plan) || actionLoading() === plan.id"
+              (click)="selectPlan(plan)">
+              {{ actionLoading() === plan.id ? 'Working...' : actionLabel(plan) }}
+            </button>
+            @if (plan.isCustomPricing) {
+              <a class="plan-contact" href="mailto:sales@businessos.app">Contact sales for a custom contract</a>
+            }
           } @else if (isAuthenticated()) {
-            <p class="text-muted small mb-0">Contact your admin to change plans.</p>
+            <p class="plan-note">Ask an administrator to change the plan.</p>
           } @else {
-            <a [routerLink]="ROUTES.auth.register"><app-button label="Start Free Trial" [variant]="ButtonVariant.Primary" type="button" [fullWidth]="true" /></a>
+            <a class="plan-action" [routerLink]="ROUTES.auth.register">Create an account</a>
           }
-        </app-card>
-      </div>
+        </footer>
+      </article>
     }
   </div>
 }

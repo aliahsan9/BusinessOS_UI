@@ -8,23 +8,47 @@ import {
   BillingInvoiceDto,
   BillingTransactionDto,
   BillingUsageDto,
+  ChangePlanRequest,
   CheckoutRequest,
   CheckoutSessionDto,
   CurrentPlanDto,
   DowngradeValidationDto,
   PaymentProviderDto,
+  PlanChangeResultDto,
   SubscriptionPlanDto,
   UpgradePlanRequest,
 } from '../models/billing.model';
 
 @Injectable({ providedIn: 'root' })
 export class BillingService extends BaseApiService {
-  getPlans(): Observable<SubscriptionPlanDto[]> {
-    return this.get<SubscriptionPlanDto[]>('/billing/plans');
+  getPlans(currency?: string, country?: string): Observable<SubscriptionPlanDto[]> {
+    return this.get<SubscriptionPlanDto[]>('/billing/plans', {
+      ...(currency ? { currency } : {}),
+      ...(country ? { country } : {}),
+    });
   }
 
   getCurrentPlan(): Observable<CurrentPlanDto> {
-    return this.get<CurrentPlanDto>('/billing/current-plan');
+    return this.get<CurrentPlanDto>('/billing/subscription');
+  }
+
+  changePlan(request: ChangePlanRequest): Observable<PlanChangeResultDto> {
+    return this.post<PlanChangeResultDto>('/billing/change-plan', request);
+  }
+
+  reactivate(): Observable<CurrentPlanDto> {
+    return this.post<CurrentPlanDto>('/billing/reactivate', {});
+  }
+
+  confirmCheckout(sessionId: string): Observable<CurrentPlanDto> {
+    return this.post<CurrentPlanDto>('/billing/checkout/confirm', { sessionId });
+  }
+
+  downloadInvoice(id: string): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/billing/invoices/${id}/download`, {
+      responseType: 'blob',
+      withCredentials: true,
+    });
   }
 
   getUsage(): Observable<BillingUsageDto> {
@@ -68,6 +92,8 @@ export class BillingService extends BaseApiService {
       planId: request.planId,
       billingInterval: request.billingInterval,
       provider: request.provider,
+      country: request.country,
+      currency: request.currency,
     });
     return this.post<CheckoutSessionDto>('/billing/checkout', request, {
       [HTTP_HEADERS.idempotencyKey]: key,

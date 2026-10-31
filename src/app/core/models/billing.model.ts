@@ -8,6 +8,7 @@ export interface SubscriptionPlanDto {
   annualSavingsPercent: number;
   maxUsers: number;
   maxCustomers: number;
+  maxProducts: number;
   maxProjects: number;
   maxTasks: number;
   maxStorageMb: number;
@@ -17,6 +18,20 @@ export interface SubscriptionPlanDto {
   hasPdfReports: boolean;
   hasAdvancedReports: boolean;
   hasPrioritySupport: boolean;
+  hasApiAccess: boolean;
+  hasMultiBranch: boolean;
+  inventoryAccess: string;
+  salesAccess: string;
+  trialDays: number;
+  isCustomPricing: boolean;
+  isRecommended: boolean;
+  currency: string;
+  settlementCurrency: string;
+  baseCurrency: string;
+  baseMonthlyPrice: number;
+  baseAnnualPrice: number;
+  currencyScale: number;
+  priceNote?: string;
   features: string[];
   sortOrder: number;
 }
@@ -41,10 +56,16 @@ export interface CurrentPlanDto {
   currentPeriodEnd?: string;
   renewalDate?: string;
   cancelAtPeriodEnd: boolean;
+  scheduledCancellationDate?: string;
   isTrialActive: boolean;
   trialDaysRemaining: number;
   currentPrice: number;
   currency: string;
+  settlementCurrency: string;
+  billingCountry?: string;
+  autoRenew: boolean;
+  paymentMethodSummary?: string;
+  currencyScale: number;
   featureFlags: PlanFeatureFlagsDto;
 }
 
@@ -53,6 +74,8 @@ export interface BillingUsageDto {
   maxUsers: number;
   customerCount: number;
   maxCustomers: number;
+  productCount: number;
+  maxProducts: number;
   projectCount: number;
   maxProjects: number;
   taskCount: number;
@@ -61,6 +84,10 @@ export interface BillingUsageDto {
   maxStorageMb: number;
   aiRequestsUsed: number;
   maxAiRequests: number;
+  aiRequestsRemaining: number;
+  usersAreCustom: boolean;
+  aiRequestsAreCustom: boolean;
+  resetDate?: string;
   lastCalculatedAt: string;
 }
 
@@ -88,6 +115,7 @@ export interface BillingTransactionDto {
   currency: string;
   status: string;
   provider: string;
+  paymentMethod?: string;
   description?: string;
   createdAt: string;
   completedAt?: string;
@@ -102,8 +130,36 @@ export interface BillingDashboardDto {
 
 export interface CheckoutSessionDto {
   sessionId: string;
+  planId: string;
+  billingInterval: string;
   checkoutUrl?: string;
   provider: string;
+  amount: number;
+  currency: string;
+  requiresServerConfirmation: boolean;
+  priceNote?: string;
+}
+
+export interface PlanChangePreviewDto {
+  planId: string;
+  planName: string;
+  billingInterval: string;
+  amountDue: number;
+  currency: string;
+  settlementCurrency: string;
+  isDowngrade: boolean;
+  requiresCheckout: boolean;
+  isTrial: boolean;
+  prorationNote: string;
+  priceNote?: string;
+}
+
+export interface PlanChangeResultDto {
+  applied: boolean;
+  checkoutRequired: boolean;
+  preview: PlanChangePreviewDto;
+  checkout?: CheckoutSessionDto;
+  subscription?: CurrentPlanDto;
 }
 
 export interface DowngradeValidationDto {
@@ -130,6 +186,65 @@ export interface CheckoutRequest {
   provider?: string;
   successUrl?: string;
   cancelUrl?: string;
+  country?: string;
+  currency?: string;
+}
+
+export interface ChangePlanRequest {
+  planId: string;
+  billingInterval?: string;
+  provider?: string;
+  country?: string;
+  currency?: string;
+  confirm: boolean;
+  startTrial?: boolean;
+  successUrl?: string;
+  cancelUrl?: string;
+}
+
+export const BILLING_COUNTRIES: ReadonlyArray<{ country: string; currency: string; label: string }> = [
+  { country: 'US', currency: 'USD', label: 'United States (USD)' },
+  { country: 'AE', currency: 'AED', label: 'United Arab Emirates (AED)' },
+  { country: 'SA', currency: 'SAR', label: 'Saudi Arabia (SAR)' },
+  { country: 'QA', currency: 'QAR', label: 'Qatar (QAR)' },
+  { country: 'KW', currency: 'KWD', label: 'Kuwait (KWD)' },
+  { country: 'BH', currency: 'BHD', label: 'Bahrain (BHD)' },
+  { country: 'OM', currency: 'OMR', label: 'Oman (OMR)' },
+  { country: 'GB', currency: 'GBP', label: 'United Kingdom (GBP)' },
+  { country: 'EU', currency: 'EUR', label: 'Euro area (EUR)' },
+  { country: 'CA', currency: 'CAD', label: 'Canada (CAD)' },
+  { country: 'AU', currency: 'AUD', label: 'Australia (AUD)' },
+  { country: 'SG', currency: 'SGD', label: 'Singapore (SGD)' },
+  { country: 'PK', currency: 'PKR', label: 'Pakistan (PKR)' },
+];
+
+const THREE_DECIMAL = new Set(['KWD', 'BHD', 'OMR']);
+
+export function formatIsoCurrency(amount: number | null | undefined, currency: string | null | undefined): string {
+  if (amount === null || amount === undefined || Number.isNaN(amount)) return '—';
+  const code = (currency || 'USD').toUpperCase();
+  const digits = THREE_DECIMAL.has(code) ? 3 : code === 'JPY' || code === 'KRW' ? 0 : 2;
+  return new Intl.NumberFormat('en', {
+    style: 'currency',
+    currency: code,
+    currencyDisplay: 'symbol',
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  }).format(amount);
+}
+
+export function limitLabel(value: number, custom = false): string {
+  if (custom && value === -1) return 'Custom';
+  return formatLimit(value);
+}
+
+export function usageTone(current: number, max: number): 'ok' | 'warn' | 'high' | 'full' {
+  if (max === -1 || max <= 0) return 'ok';
+  const percent = (current / max) * 100;
+  if (percent >= 100) return 'full';
+  if (percent >= 90) return 'high';
+  if (percent >= 80) return 'warn';
+  return 'ok';
 }
 
 export function formatLimit(value: number): string {

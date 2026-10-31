@@ -6,6 +6,10 @@ export interface ApiError {
   instance?: string;
   traceId?: string;
   errorCode?: string;
+  resource?: string;
+  currentUsage?: number;
+  maximum?: number;
+  upgradeSuggestion?: string;
   errors?: Record<string, string[]>;
 }
 

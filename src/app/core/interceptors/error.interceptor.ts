@@ -25,7 +25,12 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
       const isPostLoginSync =
         req.url.includes('/settings') || req.url.includes('/onboarding/status');
 
-      if (error.status === 401 && !isAuthEndpoint && !isPostLoginSync) {
+      if (apiError.errorCode === 'PLAN_LIMIT_EXCEEDED') {
+        notificationService.error(
+          'Plan limit reached',
+          apiError.detail ?? 'Upgrade your subscription to continue.',
+        );
+      } else if (error.status === 401 && !isAuthEndpoint && !isPostLoginSync) {
         authService.logout(false);
         notificationService.error('Session expired', 'Please sign in again.');
       } else if (error.status === 403) {

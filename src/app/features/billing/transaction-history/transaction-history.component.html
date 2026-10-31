@@ -15,19 +15,21 @@
             <th>Amount</th>
             <th>Status</th>
             <th>Provider</th>
+            <th>Method</th>
             <th>Date</th>
           </tr>
         </thead>
         <tbody>
           @if (transactions().length === 0) {
-            <tr><td colspan="5" class="text-muted text-center py-4">No transactions yet.</td></tr>
+            <tr><td colspan="6" class="text-muted text-center py-4">No transactions yet.</td></tr>
           }
           @for (tx of transactions(); track tx.id) {
             <tr>
               <td><code class="small">{{ tx.transactionId }}</code></td>
-              <td>{{ tx.amount | appCurrency:tx.currency }}</td>
+              <td>{{ money(tx.amount, tx.currency) }}</td>
               <td><span class="badge bg-secondary-subtle">{{ tx.status }}</span></td>
               <td>{{ tx.provider }}</td>
+              <td>{{ tx.paymentMethod || '—' }}</td>
               <td>{{ tx.completedAt ?? tx.createdAt | date:'medium' }}</td>
             </tr>
           }

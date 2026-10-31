@@ -1,14 +1,13 @@
 import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { BillingService } from '../../../core/services/billing.service';
-import { BillingTransactionDto } from '../../../core/models/billing.model';
+import { BillingTransactionDto, formatIsoCurrency } from '../../../core/models/billing.model';
 import { ROUTES } from '../../../core/constants/route.constants';
 import { AppBreadcrumbComponent } from '../../../shared/components/app-breadcrumb/app-breadcrumb.component';
 import { AppPageHeaderComponent } from '../../../shared/components/app-page-header/app-page-header.component';
 import { AppCardComponent } from '../../../shared/components/app-card/app-card.component';
 import { AppSkeletonComponent } from '../../../shared/components/app-skeleton/app-skeleton.component';
 import { AppAlertComponent } from '../../../shared/components/app-alert/app-alert.component';
-import { AppCurrencyPipe } from '../../../shared/pipes/app-currency.pipe';
 
 @Component({
   selector: 'app-transaction-history',
@@ -20,13 +19,13 @@ import { AppCurrencyPipe } from '../../../shared/pipes/app-currency.pipe';
     AppCardComponent,
     AppSkeletonComponent,
     AppAlertComponent,
-    AppCurrencyPipe,
   ],
   templateUrl: './transaction-history.component.html',
   styleUrl: './transaction-history.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TransactionHistoryComponent implements OnInit {
+  readonly money = formatIsoCurrency;
   private readonly billingService = inject(BillingService);
 
   readonly loading = signal(true);
