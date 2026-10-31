@@ -15,14 +15,15 @@ import {
 } from '../models/ai.model';
 import { AiContextService } from './ai-context.service';
 import { TokenService } from './token.service';
+import { AiConversationSessionStore } from './ai-conversation-session.store';
 import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class AiChatService extends BaseApiService {
   private readonly aiContext = inject(AiContextService);
   private readonly tokenService = inject(TokenService);
+  private readonly sessionStore = inject(AiConversationSessionStore);
 
-  private sessionId: string | null = null;
   private streamAbort: AbortController | null = null;
 
   chat(message: string, options?: { regenerate?: boolean }): Observable<AiChatResponse> {
@@ -85,8 +86,12 @@ export class AiChatService extends BaseApiService {
     return this.post<AiChatResponse>(API_ENDPOINTS.ai.chat, request);
   }
 
-  listConversations(limit = 20): Observable<AiConversationSession[]> {
-    return this.get<AiConversationSession[]>(API_ENDPOINTS.ai.conversations, { limit });
+  createConversation(): Observable<AiConversationSession> {
+    return this.post<AiConversationSession>(API_ENDPOINTS.ai.conversations, {});
+  }
+
+  listConversations(limit = 20, skip = 0): Observable<AiConversationSession[]> {
+    return this.get<AiConversationSession[]>(API_ENDPOINTS.ai.conversations, { skip, limit });
   }
 
   getConversation(sessionId: string): Observable<AiConversationMessage[]> {
@@ -110,15 +115,15 @@ export class AiChatService extends BaseApiService {
   }
 
   setSessionId(sessionId: string | null): void {
-    this.sessionId = sessionId;
+    this.sessionStore.set(sessionId);
   }
 
   getSessionId(): string | null {
-    return this.sessionId;
+    return this.sessionStore.get();
   }
 
   clearSession(): void {
-    this.sessionId = null;
+    this.sessionStore.clear();
   }
 
   /** Cancel an in-flight SSE generation request. */
@@ -129,17 +134,19 @@ export class AiChatService extends BaseApiService {
 
   buildCopilotRequest(message: string, stream = false, searchQuery?: string): AiCopilotChatRequest {
     const base = this.aiContext.buildChatRequest(message, searchQuery ?? null);
+    const sessionId = this.getSessionId();
     return {
       ...base,
-      sessionId: this.sessionId,
-      conversationId: this.sessionId,
+      sessionId,
+      conversationId: sessionId,
+      clientRequestId: crypto.randomUUID(),
       stream,
     };
   }
 
   /** Prefer sessionId, fall back to conversationId from backend payloads. */
   resolveSessionId(response: Pick<AiChatResponse, 'sessionId' | 'conversationId'>): string | null {
-    return response.sessionId ?? response.conversationId ?? this.sessionId;
+    return response.sessionId ?? response.conversationId ?? this.getSessionId();
   }
 
   normalizeResponse(response: AiChatResponse): AiChatResponse {

@@ -35,6 +35,8 @@ export interface AgentChatRequest {
   invoiceId?: string | null;
   projectId?: string | null;
   sessionId?: string | null;
+  conversationId?: string | null;
+  clientRequestId?: string | null;
   workflowId?: string | null;
   preferEmployeeTone?: boolean;
   stream?: boolean;
@@ -44,6 +46,7 @@ export interface AgentChatResponse {
   reply: string;
   spokenReply?: string | null;
   sessionId?: string | null;
+  conversationId?: string | null;
   agentKey: string;
   agentDisplayName: string;
   intent?: string | number | null;

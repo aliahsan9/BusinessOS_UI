@@ -22,13 +22,13 @@
 
       <button type="button" class="new-chat-btn d-none d-lg-flex" (click)="newChat()">
         <i class="bi bi-plus-lg"></i>
-        New chat
+        New conversation
       </button>
 
-      <app-card title="Conversations">
+      <app-card title="Sophia Workspace">
         <div class="d-flex align-items-center gap-2 mb-2 text-secondary">
           <i class="bi bi-clock-history"></i>
-          <span class="small">Recent sessions</span>
+          <span class="small">Recent conversations</span>
         </div>
 
         <div class="session-list">
@@ -102,8 +102,8 @@
           <i class="bi bi-cpu"></i>
         </div>
         <div class="ai-workspace__header-text">
-          <h1>AI Copilot Workspace</h1>
-          <p>ChatGPT-style answers grounded in your live BusinessOS data — sales, products, trends, and more.</p>
+          <h1>Sophia Workspace</h1>
+          <p>Context-aware answers grounded in your live BusinessOS data — sales, products, trends, and more.</p>
         </div>
 
         @if (voiceOutputSupported()) {

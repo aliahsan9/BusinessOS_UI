@@ -17,6 +17,7 @@ type SpeechRecognitionLike = {
 };
 
 type SpeechRecognitionEventLike = {
+  resultIndex?: number;
   results: ArrayLike<ArrayLike<{ transcript: string; confidence: number }> & { isFinal?: boolean }>;
 };
 
@@ -36,6 +37,8 @@ export class SophiaVoiceService implements OnDestroy {
   private speakGeneration = 0;
 
   readonly voiceState = signal<VoiceUiState>('idle');
+  /** Stays on from the click that starts the mic until the click that stops it. */
+  readonly micEngaged = signal(false);
   readonly isListening = computed(() => this.voiceState() === 'listening');
   readonly isSpeaking = computed(() => this.voiceState() === 'speaking');
   readonly isMuted = signal(false);
@@ -92,10 +95,14 @@ export class SophiaVoiceService implements OnDestroy {
 
   setProcessing(active: boolean): void {
     if (active) {
-      this.stopSpeaking();
+      this.stopSpeaking(false);
+      this.pauseRecognition();
       this.voiceState.set('processing');
-    } else if (this.voiceState() === 'processing') {
-      this.voiceState.set('idle');
+    } else {
+      if (this.voiceState() === 'processing' || this.voiceState() === 'working') {
+        this.voiceState.set('idle');
+      }
+      if (this.voiceState() !== 'speaking') this.resumeIfEngaged();
     }
   }
 
@@ -106,25 +113,33 @@ export class SophiaVoiceService implements OnDestroy {
   startListening(options?: { pushToTalk?: boolean }): void {
     this.errorMessage.set(null);
     if (!this.micSupported()) {
+      this.micEngaged.set(false);
       this.errorMessage.set('Speech recognition is not supported in this browser.');
       return;
     }
 
-    this.stopSpeaking();
+    this.stopSpeaking(false);
     const recognition = this.createRecognition();
-    if (!recognition) return;
+    if (!recognition) {
+      this.micEngaged.set(false);
+      return;
+    }
+
+    if (this.recognition) return;
 
     this.recognition = recognition;
     this.pushToTalkActive = !!options?.pushToTalk;
+    const stayOn = this.micEngaged() && !this.pushToTalkActive;
     recognition.lang = 'en-US';
-    recognition.continuous = this.continuousListening() && !this.pushToTalkActive;
+    recognition.continuous = stayOn || (this.continuousListening() && !this.pushToTalkActive);
     recognition.interimResults = true;
     recognition.maxAlternatives = 1;
 
     recognition.onresult = (event) => {
       let interim = '';
       let finalText = '';
-      for (let i = 0; i < event.results.length; i++) {
+      const start = event.resultIndex ?? 0;
+      for (let i = start; i < event.results.length; i++) {
         const result = event.results[i];
         const transcript = result[0]?.transcript ?? '';
         if ((result as { isFinal?: boolean }).isFinal) {
@@ -144,8 +159,9 @@ export class SophiaVoiceService implements OnDestroy {
     };
 
     recognition.onerror = (event) => {
-      if (event.error === 'aborted' || event.error === 'no-speech') {
-        this.voiceState.set('idle');
+      if (event.error === 'aborted') return;
+      if (event.error === 'no-speech') {
+        if (!this.micEngaged()) this.voiceState.set('idle');
         return;
       }
       this.errorMessage.set(
@@ -153,67 +169,79 @@ export class SophiaVoiceService implements OnDestroy {
           ? 'Microphone permission denied. Allow mic access to talk to Sophia.'
           : `Speech error: ${event.error}`,
       );
+      this.micEngaged.set(false);
       this.voiceState.set('idle');
     };
 
     recognition.onend = () => {
-      if (this.voiceState() === 'listening' && this.continuousListening() && !this.pushToTalkActive) {
-        try {
-          recognition.start();
+      if (this.recognition !== recognition) return;
+      this.recognition = null;
+      if (!this.micEngaged()) {
+        if (this.voiceState() === 'listening') this.voiceState.set('idle');
+        return;
+      }
+      if (this.voiceState() === 'speaking' || this.voiceState() === 'processing' || this.voiceState() === 'working') {
+        return;
+      }
+      // Chrome ends a session on silence and will not restart the same instance.
+      window.setTimeout(() => {
+        if (!this.micEngaged() || this.recognition) return;
+        if (this.voiceState() === 'speaking' || this.voiceState() === 'processing' || this.voiceState() === 'working') {
           return;
-        } catch {
-          /* fall through */
         }
-      }
-      if (this.voiceState() === 'listening') {
-        this.voiceState.set('idle');
-      }
+        this.startListening();
+      }, 200);
     };
 
     try {
       recognition.start();
       this.voiceState.set('listening');
     } catch {
+      this.micEngaged.set(false);
+      this.recognition = null;
       this.errorMessage.set('Could not start the microphone.');
       this.voiceState.set('idle');
     }
   }
 
   stopListening(): void {
+    this.micEngaged.set(false);
     this.pushToTalkActive = false;
-    try {
-      this.recognition?.stop();
-    } catch {
-      /* ignore */
-    }
-    this.recognition = null;
+    this.haltRecognition();
+    this.transcriptInterim.set('');
     if (this.voiceState() === 'listening') {
       this.voiceState.set('idle');
     }
   }
 
   toggleListening(): void {
-    if (this.isListening()) {
+    if (this.micEngaged()) {
       this.stopListening();
-    } else {
-      this.startListening();
+      return;
     }
+    this.micEngaged.set(true);
+    this.startListening();
   }
 
   speak(text: string): void {
     if (!text.trim() || this.isMuted() || !this.autoSpeak()) return;
-    this.stopSpeaking();
-    this.stopListening();
+    this.stopSpeaking(false);
+    this.pauseRecognition();
+    this.voiceState.set('speaking');
 
     const spoken = this.cleanForSpeech(text);
-    if (!spoken) return;
+    if (!spoken) {
+      this.voiceState.set('idle');
+      this.resumeIfEngaged();
+      return;
+    }
 
     this.lastSpokenText.set(text);
     const generation = ++this.speakGeneration;
     this.speakBrowser(spoken, generation);
   }
 
-  stopSpeaking(): void {
+  stopSpeaking(resumeMic = true): void {
     this.speakGeneration++;
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel();
@@ -221,6 +249,7 @@ export class SophiaVoiceService implements OnDestroy {
     this.utterance = null;
     this.disposeAudio();
     if (this.voiceState() === 'speaking') this.voiceState.set('idle');
+    if (resumeMic) this.resumeIfEngaged();
   }
 
   replay(): void {
@@ -242,6 +271,7 @@ export class SophiaVoiceService implements OnDestroy {
   private speakBrowser(text: string, generation: number): void {
     if (!this.ttsSupported()) {
       this.voiceState.set('idle');
+      this.resumeIfEngaged();
       return;
     }
 
@@ -262,12 +292,14 @@ export class SophiaVoiceService implements OnDestroy {
       this.utterance = null;
       if (generation === this.speakGeneration && this.voiceState() === 'speaking') {
         this.voiceState.set('idle');
+        this.resumeIfEngaged();
       }
     };
     utterance.onerror = () => {
       this.utterance = null;
       if (generation === this.speakGeneration && this.voiceState() === 'speaking') {
         this.voiceState.set('idle');
+        this.resumeIfEngaged();
       }
     };
 
@@ -304,6 +336,27 @@ export class SophiaVoiceService implements OnDestroy {
       .replace(/\n{2,}/g, '. ')
       .replace(/\n/g, ' ')
       .trim();
+  }
+
+  /** Drop the recognizer without turning the mic toggle off. */
+  private pauseRecognition(): void {
+    this.haltRecognition();
+    this.transcriptInterim.set('');
+  }
+
+  private haltRecognition(): void {
+    const recognition = this.recognition;
+    this.recognition = null;
+    try {
+      recognition?.stop();
+    } catch {
+      /* ignore */
+    }
+  }
+
+  private resumeIfEngaged(): void {
+    if (!this.micEngaged() || this.recognition || this.voiceState() === 'speaking') return;
+    this.startListening();
   }
 
   private createRecognition(): SpeechRecognitionLike | null {

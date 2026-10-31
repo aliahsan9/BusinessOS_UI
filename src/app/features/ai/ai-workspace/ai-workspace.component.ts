@@ -194,6 +194,7 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
     this.refreshSessions();
     this.setupSpeechRecognition();
     this.voiceOutputSupported.set(typeof window !== 'undefined' && 'speechSynthesis' in window);
+    this.restoreHintedSession();
   }
 
   ngOnDestroy(): void {
@@ -276,6 +277,37 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
     });
 
     this.send(lastUser.content, false, { regenerate: true });
+  }
+
+  private restoreHintedSession(): void {
+    const hinted = this.aiChat.getSessionId();
+    if (!hinted) {
+      return;
+    }
+
+    this.aiChat.getConversation(hinted).subscribe({
+      next: (items) => {
+        this.activeSessionId.set(hinted);
+        const msgs: AiWorkspaceMessage[] = [];
+        for (const item of items) {
+          msgs.push({ role: 'user', content: item.prompt, timestamp: new Date(item.createdAt) });
+          msgs.push({
+            role: 'assistant',
+            content: item.response,
+            displayContent: item.response,
+            timestamp: new Date(item.createdAt),
+            citations: item.citations,
+            toolsUsed: item.toolsUsed,
+          });
+        }
+        this.messages.set(msgs);
+        this.scrollToBottom();
+      },
+      error: () => {
+        this.aiChat.clearSession();
+        this.activeSessionId.set(null);
+      },
+    });
   }
 
   loadSession(sessionId: string): void {

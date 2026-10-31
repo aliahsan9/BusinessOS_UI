@@ -4,6 +4,7 @@ import { BaseApiService } from './base-api.service';
 import { API_ENDPOINTS, HTTP_HEADERS } from '../constants/api.constants';
 import { AiContextService } from './ai-context.service';
 import { TokenService } from './token.service';
+import { AiConversationSessionStore } from './ai-conversation-session.store';
 import { environment } from '../../../environments/environment';
 import { AiStreamError } from '../models/ai.model';
 import {
@@ -26,8 +27,8 @@ import {
 export class AgentEmployeeService extends BaseApiService {
   private readonly aiContext = inject(AiContextService);
   private readonly tokenService = inject(TokenService);
+  private readonly sessionStore = inject(AiConversationSessionStore);
 
-  private sessionId: string | null = null;
   private streamAbort: AbortController | null = null;
   private preferredAgentKey = 'sophia';
   private language = 'en';
@@ -84,14 +85,14 @@ export class AgentEmployeeService extends BaseApiService {
   startOnboarding(request: AgentOnboardingStartRequest = {}): Observable<AgentOnboardingResponse> {
     return this.post<AgentOnboardingResponse>(API_ENDPOINTS.agents.onboardingStart, {
       ...request,
-      sessionId: request.sessionId ?? this.sessionId,
+      sessionId: request.sessionId ?? this.getSessionId(),
     });
   }
 
   continueOnboarding(request: AgentOnboardingContinueRequest): Observable<AgentOnboardingResponse> {
     return this.post<AgentOnboardingResponse>(API_ENDPOINTS.agents.onboardingContinue, {
       ...request,
-      sessionId: request.sessionId ?? this.sessionId,
+      sessionId: request.sessionId ?? this.getSessionId(),
     });
   }
 
@@ -101,15 +102,15 @@ export class AgentEmployeeService extends BaseApiService {
   }
 
   setSessionId(sessionId: string | null): void {
-    this.sessionId = sessionId;
+    this.sessionStore.set(sessionId);
   }
 
   getSessionId(): string | null {
-    return this.sessionId;
+    return this.sessionStore.get();
   }
 
   clearSession(): void {
-    this.sessionId = null;
+    this.sessionStore.clear();
   }
 
   stopGeneration(): void {
@@ -222,9 +223,12 @@ export class AgentEmployeeService extends BaseApiService {
   }
 
   normalizeResponse(response: AgentChatResponse): AgentChatResponse {
-    if (response.sessionId) this.sessionId = response.sessionId;
+    const sessionId = response.sessionId ?? response.conversationId;
+    if (sessionId) this.setSessionId(sessionId);
     return {
       ...response,
+      sessionId,
+      conversationId: sessionId,
       reply: response.reply ?? '',
       spokenReply: response.spokenReply ?? response.reply ?? '',
       suggestions: response.suggestions ?? [],
@@ -249,7 +253,9 @@ export class AgentEmployeeService extends BaseApiService {
       orderId: base.orderId,
       invoiceId: base.invoiceId,
       projectId: base.projectId,
-      sessionId: this.sessionId,
+      sessionId: this.getSessionId(),
+      conversationId: this.getSessionId(),
+      clientRequestId: crypto.randomUUID(),
       agentKey: this.preferredAgentKey,
       language: this.language,
       preferEmployeeTone: true,

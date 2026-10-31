@@ -24,6 +24,7 @@ export interface AiCopilotChatRequest extends AiChatRequest {
   stream?: boolean;
   /** When true, asks the backend to regenerate the last assistant reply. */
   regenerate?: boolean;
+  clientRequestId?: string | null;
 }
 
 export interface AiRetrievedSources {
@@ -136,6 +137,7 @@ export interface AiConversationSession {
   title: string;
   lastActivityAt: string;
   messageCount: number;
+  summary?: string | null;
   /** Optional preview of the last turn for sidebar summaries. */
   lastMessagePreview?: string | null;
 }

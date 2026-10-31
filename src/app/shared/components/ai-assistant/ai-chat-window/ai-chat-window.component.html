@@ -142,6 +142,16 @@
         </div>
       </div>
     }
+
+    @if (showStarterPrompts() || showActionSuggestions()) {
+      <div class="ai-chat__starters" aria-label="Suggested questions">
+        @for (suggestion of suggestions(); track suggestion.label) {
+          <button type="button" class="ai-chat__starter" (click)="useSuggestion(suggestion)">
+            {{ suggestion.label }}
+          </button>
+        }
+      </div>
+    }
   </div>
 
   @if (searchResults().length > 0) {
@@ -158,48 +168,6 @@
     </div>
   }
 
-  @if ((showSuggestions() && suggestions().length > 0) || quickActions().length > 0) {
-    <div class="ai-chat__prompts" aria-label="Suggested next steps">
-      @if (showSuggestions() && suggestions().length > 0) {
-        <div class="ai-chat__prompts-section">
-          <span class="ai-chat__prompts-label">Try asking</span>
-          <div class="ai-chat__suggestions" role="list">
-            @for (suggestion of suggestions(); track suggestion.label) {
-              <button
-                type="button"
-                class="ai-chat__suggestion"
-                role="listitem"
-                (click)="useSuggestion(suggestion)"
-              >
-                <i class="bi" [class]="suggestionIcon(suggestion.label)" aria-hidden="true"></i>
-                <span>{{ suggestion.label }}</span>
-              </button>
-            }
-          </div>
-        </div>
-      }
-
-      @if (quickActions().length > 0) {
-        <div class="ai-chat__prompts-section">
-          <span class="ai-chat__prompts-label">Shortcuts</span>
-          <div class="ai-chat__quick-actions" role="list">
-            @for (action of quickActions(); track action.label) {
-              <button
-                type="button"
-                class="ai-chat__quick-action"
-                role="listitem"
-                (click)="goTo(action.route)"
-              >
-                <i class="bi" [class]="actionIcon(action.icon)" aria-hidden="true"></i>
-                <span>{{ action.label }}</span>
-              </button>
-            }
-          </div>
-        </div>
-      }
-    </div>
-  }
-
   @if (interimTranscript()) {
     <div class="ai-chat__interim" aria-live="polite">{{ interimTranscript() }}</div>
   }
@@ -209,12 +177,16 @@
       <span></span><span></span><span></span><span></span><span></span>
     </div>
     <span class="ai-chat__voice-hint">
-      @if (isListening()) {
-        Listening — speak naturally
+      @if (voiceError()) {
+        {{ voiceError() }}
+      } @else if (isListening()) {
+        Listening — tap the mic again to stop
+      } @else if (micEngaged()) {
+        Mic is on — tap again to stop
       } @else if (isSpeaking()) {
         Sophia is speaking
       } @else {
-        Hold mic to talk · or type below
+        Tap the mic to talk · tap again to stop
       }
     </span>
   </div>
@@ -224,17 +196,14 @@
       <button
         type="button"
         class="ai-chat__mic"
-        [class.ai-chat__mic--active]="isListening()"
+        [class.ai-chat__mic--active]="micEngaged()"
         [disabled]="!micSupported() || !chatEnabled()"
         (click)="toggleMic()"
-        (pointerdown)="onMicPointerDown($event)"
-        (pointerup)="onMicPointerUp()"
-        (pointerleave)="onMicPointerUp()"
-        [attr.aria-pressed]="isListening()"
-        [attr.aria-label]="isListening() ? 'Stop listening' : 'Talk to Sophia'"
-        title="{{ micSupported() ? 'Talk to Sophia' : 'Microphone not supported' }}"
+        [attr.aria-pressed]="micEngaged()"
+        [attr.aria-label]="micEngaged() ? 'Stop listening' : 'Talk to Sophia'"
+        title="{{ micSupported() ? (micEngaged() ? 'Stop listening' : 'Tap to talk. Tap again to stop.') : 'Microphone not supported' }}"
       >
-        <i class="bi" [class.bi-mic-fill]="!isListening()" [class.bi-mic-mute-fill]="isListening()"></i>
+        <i class="bi bi-mic-fill"></i>
       </button>
 
       <button

@@ -17,6 +17,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { AgentEmployeeService } from '../../../../core/services/agent-employee.service';
+import { AiChatService } from '../../../../core/services/ai-chat.service';
 import { SophiaVoiceService } from '../../../../core/services/sophia-voice.service';
 import { AiContextService } from '../../../../core/services/ai-context.service';
 import { AiRetrievalService } from '../../../../core/services/ai-retrieval.service';
@@ -26,7 +27,6 @@ import { NotificationService } from '../../../../core/services/notification.serv
 import {
   AiChatMessage,
   AiCitation,
-  AiQuickActionDto,
   AiSearchResultDto,
   AiSourceDocument,
   AiStreamError,
@@ -37,7 +37,6 @@ import { ApiError } from '../../../../core/models/api-error.model';
 import { AiAssistantStateService } from '../../../../state/ai-assistant.state';
 import { ROUTES } from '../../../../core/constants/route.constants';
 import { TenantSettingsStoreService } from '../../../../core/services/tenant-settings-store.service';
-import { resolveBootstrapIcon, suggestionBootstrapIcon } from '../../../utils/icon.util';
 
 @Component({
   selector: 'app-ai-chat-window',
@@ -49,6 +48,7 @@ import { resolveBootstrapIcon, suggestionBootstrapIcon } from '../../../utils/ic
 })
 export class AiChatWindowComponent implements OnInit, OnDestroy {
   private readonly agentService = inject(AgentEmployeeService);
+  private readonly aiChat = inject(AiChatService);
   private readonly voice = inject(SophiaVoiceService);
   private readonly aiContextService = inject(AiContextService);
   private readonly aiRetrievalService = inject(AiRetrievalService);
@@ -82,23 +82,18 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
 
   readonly messages = signal<AiChatMessage[]>([{ ...this.welcomeMessage }]);
   readonly suggestions = signal<AiSuggestionDto[]>([]);
-  readonly quickActions = signal<AiQuickActionDto[]>([]);
+  /** Starter prompts for an empty thread. Follow-up chips from a reply are not shown in the chat. */
+  private readonly starterSuggestions = signal<AiSuggestionDto[]>([]);
   readonly searchResults = signal<AiSearchResultDto[]>([]);
   readonly inputText = signal('');
   readonly searchText = signal('');
   readonly loading = signal(false);
   readonly expandedCitations = signal<Record<number, boolean>>({});
 
-  suggestionIcon(label: string): string {
-    return suggestionBootstrapIcon(label);
-  }
-
-  actionIcon(icon: string | null | undefined): string {
-    return resolveBootstrapIcon(icon, null, 'bi-arrow-up-right');
-  }
-
   readonly voiceState = this.voice.voiceState;
   readonly isListening = this.voice.isListening;
+  readonly micEngaged = this.voice.micEngaged;
+  readonly voiceError = this.voice.errorMessage;
   readonly isSpeaking = this.voice.isSpeaking;
   readonly isMuted = this.voice.isMuted;
   readonly micSupported = this.voice.micSupported;
@@ -107,6 +102,20 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
 
   readonly showSuggestions = computed(
     () => this.tenantSettingsStore.settings()?.aiShowSuggestions ?? true,
+  );
+  /** Recommendation chips only belong on an empty thread, before the first question. */
+  readonly showStarterPrompts = computed(
+    () =>
+      this.showSuggestions() &&
+      this.suggestions().length > 0 &&
+      !this.messages().some((message) => message.role === 'user'),
+  );
+  /** Confirm / cancel chips while Sophia is collecting details for an action. */
+  readonly showActionSuggestions = computed(
+    () =>
+      this.showSuggestions() &&
+      this.suggestions().length > 0 &&
+      this.messages().some((message) => message.role === 'user'),
   );
   readonly chatEnabled = this.aiAssistantState.chatEnabled;
   readonly settingsRoute = ROUTES.settings.hub;
@@ -185,11 +194,47 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (data) => {
-          if (this.showSuggestions() && data.suggestions?.length) {
-            this.suggestions.set(
-              data.suggestions.map((s) => ({ label: s.label, message: s.message })),
-            );
+          const starters = (data.suggestions ?? []).map((s) => ({ label: s.label, message: s.message }));
+          this.starterSuggestions.set(starters);
+          if (this.showSuggestions() && !this.messages().some((message) => message.role === 'user')) {
+            this.suggestions.set(starters);
           }
+        },
+        error: () => undefined,
+      });
+
+    this.restorePersistedConversation();
+  }
+
+  /** Reloads the server-side thread so a refresh keeps the pending order draft's conversation. */
+  private restorePersistedConversation(): void {
+    const sessionId = this.agentService.getSessionId();
+    if (!sessionId) return;
+
+    this.aiChat
+      .getConversation(sessionId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (items) => {
+          if (!items?.length || this.messages().some((message) => message.role === 'user')) return;
+          const restored: AiChatMessage[] = [];
+          for (const item of items) {
+            restored.push({
+              role: 'user',
+              content: item.prompt,
+              timestamp: new Date(item.createdAt),
+            });
+            restored.push({
+              role: 'assistant',
+              content: item.response,
+              timestamp: new Date(item.createdAt),
+              toolsUsed: item.toolsUsed,
+              citations: item.citations ?? [],
+            });
+          }
+          this.messages.set(restored);
+          this.suggestions.set([]);
+          this.scrollToBottom();
         },
         error: () => undefined,
       });
@@ -212,7 +257,6 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
     this.loading.set(true);
     this.voice.setProcessing(true);
     this.suggestions.set([]);
-    this.quickActions.set([]);
     this.searchResults.set([]);
     this.workflowSteps.set([]);
     this.liveTaskStatus.set(null);
@@ -225,8 +269,7 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
     this.agentService.clearSession();
     this.voice.stopSpeaking();
     this.messages.set([{ ...this.buildWelcome(this.voice.language(), this.agentName()), timestamp: new Date() }]);
-    this.suggestions.set([]);
-    this.quickActions.set([]);
+    this.suggestions.set(this.showSuggestions() ? this.starterSuggestions() : []);
     this.searchResults.set([]);
     this.workflowSteps.set([]);
     this.liveTaskStatus.set(null);
@@ -259,16 +302,6 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
 
   toggleMic(): void {
     this.voice.toggleListening();
-  }
-
-  onMicPointerDown(event: Event): void {
-    event.preventDefault();
-    if (!this.micSupported() || this.loading()) return;
-    this.voice.startListening({ pushToTalk: true });
-  }
-
-  onMicPointerUp(): void {
-    if (this.isListening()) this.voice.stopListening();
   }
 
   toggleMute(): void {
@@ -462,13 +495,8 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
       return copy;
     });
 
-    if (response.suggestions?.length) {
-      this.suggestions.set(response.suggestions);
-    } else if (this.showSuggestions()) {
-      this.suggestions.set([]);
-    }
-    this.quickActions.set(response.quickActions ?? []);
     this.searchResults.set(response.searchResults ?? []);
+    this.suggestions.set(response.suggestions ?? []);
 
     const speakText = (response.spokenReply || response.reply || '').trim();
     if (speakText) this.voice.speak(speakText);
