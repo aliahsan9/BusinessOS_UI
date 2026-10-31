@@ -8,7 +8,7 @@ import {
   input,
   viewChild,
 } from '@angular/core';
-import { Chart, ChartConfiguration, Plugin, registerables } from 'chart.js';
+import { Chart, ChartConfiguration, Plugin, TooltipItem, registerables } from 'chart.js';
 import { ChartDataResponse } from '../../../core/models/dashboard.model';
 import { ThemeService } from '../../../core/theme/theme.service';
 
@@ -111,6 +111,15 @@ export class AppChartComponent implements OnDestroy {
             displayColors: true,
             mode: isDoughnut ? 'nearest' : 'index',
             intersect: isDoughnut,
+            callbacks: {
+              label: (item: TooltipItem<'line'>) => {
+                const total = this.data()?.periodTotal;
+                if (total != null) {
+                  return `${item.dataset.label ?? 'Revenue'}: ${total.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+                }
+                return `${item.dataset.label ?? 'Value'}: ${item.formattedValue}`;
+              },
+            },
           },
         },
         scales: isDoughnut
@@ -234,8 +243,9 @@ export class AppChartComponent implements OnDestroy {
             gradient.addColorStop(1, this.withAlpha(color.border, 0));
             return gradient;
           },
-          pointRadius: 4,
-          pointHoverRadius: 7,
+          pointRadius: 0,
+          pointHoverRadius: 6,
+          pointHitRadius: 12,
           pointBackgroundColor: color.border,
           pointBorderColor: colors.surface,
           pointBorderWidth: 2,

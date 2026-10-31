@@ -63,5 +63,10 @@
     &__list {
       justify-content: center;
     }
+
+    &__btn {
+      min-width: 2.75rem;
+      height: 2.75rem;
+    }
   }
 }

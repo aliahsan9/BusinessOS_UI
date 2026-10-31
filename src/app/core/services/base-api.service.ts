@@ -18,8 +18,8 @@ export class BaseApiService {
     return this.request<T>('GET', endpoint, undefined, normalizedParams);
   }
 
-  protected post<T>(endpoint: string, body: unknown): Observable<T> {
-    return this.request<T>('POST', endpoint, body);
+  protected post<T>(endpoint: string, body: unknown, headers?: Record<string, string>): Observable<T> {
+    return this.request<T>('POST', endpoint, body, undefined, headers);
   }
 
   protected put<T>(endpoint: string, body: unknown): Observable<T> {
@@ -39,6 +39,7 @@ export class BaseApiService {
     endpoint: string,
     body?: unknown,
     params?: PaginationParams | Record<string, unknown>,
+    headers?: Record<string, string>,
   ): Observable<T> {
     const url = `${this.baseUrl}${endpoint}`;
     const httpParams = params ? PaginationHelper.toHttpParams(params) : undefined;
@@ -47,19 +48,19 @@ export class BaseApiService {
 
     switch (method) {
       case 'GET':
-        request$ = this.http.get<T>(url, { params: httpParams });
+        request$ = this.http.get<T>(url, { params: httpParams, withCredentials: true });
         break;
       case 'POST':
-        request$ = this.http.post<T>(url, body);
+        request$ = this.http.post<T>(url, body, { params: httpParams, withCredentials: true, headers });
         break;
       case 'PUT':
-        request$ = this.http.put<T>(url, body);
+        request$ = this.http.put<T>(url, body, { withCredentials: true });
         break;
       case 'PATCH':
-        request$ = this.http.patch<T>(url, body);
+        request$ = this.http.patch<T>(url, body, { withCredentials: true });
         break;
       case 'DELETE':
-        request$ = this.http.delete<T>(url);
+        request$ = this.http.delete<T>(url, { withCredentials: true });
         break;
       default:
         return throwError(() => new Error(`Unsupported HTTP method: ${method}`));
@@ -79,7 +80,18 @@ export class BaseApiService {
     );
   }
 
-  protected parseError(error: HttpErrorResponse): ApiError {
+  protected parseError(error: HttpErrorResponse | ApiError): ApiError {
+    if (!(error instanceof HttpErrorResponse)) {
+      return {
+        status: error.status,
+        title: error.title || 'An unexpected error occurred',
+        detail: error.detail,
+        traceId: error.traceId,
+        errorCode: error.errorCode,
+        errors: error.errors,
+      };
+    }
+
     if (error.status === 0) {
       return {
         status: 0,

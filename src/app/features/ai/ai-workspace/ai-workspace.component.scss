@@ -508,7 +508,7 @@
   }
 }
 
-.bubble__rich {
+:host ::ng-deep .bubble__rich {
   display: block;
   white-space: normal;
 
@@ -520,25 +520,38 @@
     }
   }
 
-  ul {
+  .reply-list {
     margin: 0.25rem 0 0.65rem;
     padding-left: 1.15rem;
   }
 
   li {
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.35rem;
   }
 
-  strong {
-    font-weight: 650;
-    color: var(--color-text);
+  .reply-card {
+    margin-bottom: 0.7rem;
   }
 
-  code {
-    font-size: 0.86em;
-    padding: 0.1rem 0.3rem;
-    border-radius: 4px;
-    background: color-mix(in srgb, var(--color-border) 65%, transparent);
+  .reply-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .reply-field {
+    display: grid;
+    grid-template-columns: minmax(7rem, 28%) 1fr;
+    column-gap: 0.6rem;
+    line-height: 1.4;
+  }
+
+  .reply-field__k {
+    color: var(--color-text-muted);
+  }
+
+  .reply-field__v {
+    font-weight: 600;
   }
 }
 
@@ -627,7 +640,14 @@
   vertical-align: 1px;
 }
 
-// "Listen" / "Stop" control under assistant bubbles that support playback.
+.listen-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-self: flex-start;
+}
+
+// "Listen" / "Pause" / "Stop" controls under assistant bubbles that support playback.
 .listen-btn {
   display: inline-flex;
   align-items: center;
@@ -805,10 +825,12 @@
     display: flex;
     align-items: flex-end;
     gap: 0.6rem;
+    min-width: 0;
   }
 
   &__input-wrap {
-    flex: 1;
+    flex: 1 1 auto;
+    min-width: 0;
     display: flex;
     align-items: flex-end;
     gap: 0.5rem;
@@ -824,7 +846,9 @@
     }
 
     textarea {
-      flex: 1;
+      flex: 1 1 auto;
+      min-width: 0;
+      width: 100%;
       resize: none;
       border: none;
       background: transparent;

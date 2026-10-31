@@ -7,20 +7,32 @@
       }
     </label>
   }
-  <input
-    class="app-input__control form-control"
-    [id]="id()"
-    [type]="type()"
-    [placeholder]="placeholder()"
-    [value]="value()"
-    [disabled]="isDisabled() || disabled()"
-    [required]="required()"
-    [attr.autocomplete]="autocomplete()"
-    [attr.aria-invalid]="!!error()"
-    [attr.aria-describedby]="error() ? id() + '-error' : hint() ? id() + '-hint' : null"
-    (input)="onInput($event)"
-    (blur)="onBlur()"
-  />
+  <div class="app-input__field" [class.app-input__field--password]="type() === 'password'">
+    <input
+      class="app-input__control form-control"
+      [id]="id()"
+      [type]="resolvedType()"
+      [placeholder]="placeholder()"
+      [value]="value()"
+      [disabled]="isDisabled() || disabled()"
+      [required]="required()"
+      [attr.autocomplete]="autocomplete()"
+      [attr.aria-invalid]="!!error()"
+      [attr.aria-describedby]="error() ? id() + '-error' : hint() ? id() + '-hint' : null"
+      (input)="onInput($event)"
+      (blur)="onBlur()"
+    />
+    @if (type() === 'password') {
+      <button
+        type="button"
+        class="app-input__toggle"
+        (click)="togglePassword()"
+        [attr.aria-label]="passwordVisible() ? 'Hide password' : 'Show password'"
+      >
+        <i class="bi" [class.bi-eye]="!passwordVisible()" [class.bi-eye-slash]="passwordVisible()"></i>
+      </button>
+    }
+  </div>
   @if (hint() && !error()) {
     <small [id]="id() + '-hint'" class="app-input__hint">{{ hint() }}</small>
   }

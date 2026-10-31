@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { BaseApiService } from './base-api.service';
+import { HTTP_HEADERS } from '../constants/api.constants';
+import { idempotencyKeyFor } from '../helpers/idempotency-key';
 import {
   BillingDashboardDto,
   BillingInvoiceDto,
@@ -62,7 +64,14 @@ export class BillingService extends BaseApiService {
   }
 
   checkout(request: CheckoutRequest): Observable<CheckoutSessionDto> {
-    return this.post<CheckoutSessionDto>('/billing/checkout', request);
+    const key = idempotencyKeyFor('billing.checkout', {
+      planId: request.planId,
+      billingInterval: request.billingInterval,
+      provider: request.provider,
+    });
+    return this.post<CheckoutSessionDto>('/billing/checkout', request, {
+      [HTTP_HEADERS.idempotencyKey]: key,
+    });
   }
 
   createPortal(returnUrl: string): Observable<{ portalUrl: string }> {

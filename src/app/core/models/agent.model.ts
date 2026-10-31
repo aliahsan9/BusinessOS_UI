@@ -1,6 +1,6 @@
 /** DTOs aligned with BusinessOS `/api/v1/agents` endpoints. */
 
-export type VoiceUiState = 'idle' | 'listening' | 'processing' | 'speaking' | 'working';
+export type VoiceUiState = 'idle' | 'listening' | 'processing' | 'speaking' | 'paused' | 'working';
 
 export interface AgentEmployee {
   key: string;
@@ -93,6 +93,40 @@ export interface SaveVoicePreferenceRequest {
   autoSpeak?: boolean;
   preferredAgentKey?: string | null;
 }
+
+export interface TtsVoiceOption {
+  id: string;
+  label: string;
+  description?: string | null;
+}
+
+export interface TtsVoiceCatalog {
+  provider: string;
+  defaultVoice: string;
+  voices: TtsVoiceOption[];
+}
+
+export interface SynthesizedSpeech {
+  blob: Blob;
+  provider: string | null;
+  voice: string | null;
+  fromCache: boolean;
+}
+
+/** Used only when the voice catalog cannot be loaded. Ids match the OpenAI provider. */
+export const FALLBACK_TTS_VOICES: TtsVoiceOption[] = [
+  { id: 'alloy', label: 'Alloy', description: 'Neutral' },
+  { id: 'ash', label: 'Ash', description: 'Clear' },
+  { id: 'ballad', label: 'Ballad', description: 'Warm' },
+  { id: 'coral', label: 'Coral', description: 'Friendly' },
+  { id: 'echo', label: 'Echo', description: 'Steady' },
+  { id: 'fable', label: 'Fable', description: 'Expressive' },
+  { id: 'nova', label: 'Nova', description: 'Bright' },
+  { id: 'onyx', label: 'Onyx', description: 'Deep' },
+  { id: 'sage', label: 'Sage', description: 'Calm' },
+  { id: 'shimmer', label: 'Shimmer', description: 'Light' },
+  { id: 'verse', label: 'Verse', description: 'Narrative' },
+];
 
 export interface AskSophiaSuggestion {
   label: string;

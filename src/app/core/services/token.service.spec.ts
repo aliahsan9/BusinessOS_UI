@@ -31,6 +31,7 @@ describe('TokenService', () => {
     service.setSession('token-123', mockUser);
     expect(service.getToken()).toBe('token-123');
     expect(service.getUser()?.email).toBe('test@example.com');
+    expect(localStorage.getItem(STORAGE_KEYS.authToken)).toBeNull();
     service.clearSession();
     expect(service.getToken()).toBeNull();
   });

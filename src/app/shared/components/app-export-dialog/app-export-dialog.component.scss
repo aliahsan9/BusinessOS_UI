@@ -11,7 +11,9 @@
 
 .export-dialog {
   width: 100%;
-  max-width: 480px;
+  max-width: min(480px, 100%);
+  max-height: min(90dvh, 100%);
+  overflow: auto;
   padding: var(--space-6);
   border-radius: var(--radius-lg);
   background: var(--color-surface);

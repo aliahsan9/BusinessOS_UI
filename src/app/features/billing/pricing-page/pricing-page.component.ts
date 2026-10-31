@@ -114,7 +114,9 @@ export class PricingPageComponent implements OnInit {
         }
       },
       error: () => {
-        this.error.set('Unable to start checkout.');
+        this.error.set(
+          'Checkout did not finish. It may still have been started. Retry the same plan instead of choosing a different payment.',
+        );
         this.actionLoading.set(null);
       },
     });

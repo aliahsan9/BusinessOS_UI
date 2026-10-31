@@ -1,5 +1,19 @@
 // app-sidebar.component.ts
-import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal, OnInit, OnDestroy } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  HostListener,
+  OnDestroy,
+  OnInit,
+  computed,
+  effect,
+  inject,
+  input,
+  output,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { NAV_GROUP_ORDER, NAV_ITEMS, NavItem, ROUTES } from '../../constants/nav.constants';
 import { TokenService } from '../../../core/services/token.service';
@@ -29,8 +43,10 @@ export class AppSidebarComponent implements OnInit, OnDestroy {
 
   readonly mobileClose = output<void>();
 
+  private readonly closeButton = viewChild<ElementRef<HTMLButtonElement>>('closeButton');
+
   /** Drawer mode: phones and tablets. The sidebar overlays instead of pushing content. */
-  private readonly overlay = signal(false);
+  readonly drawerMode = signal(false);
   /**
    * Laptops and smaller desktops stay on the icon rail so the center column
    * keeps its width. The user can still expand it for the session.
@@ -42,6 +58,13 @@ export class AppSidebarComponent implements OnInit, OnDestroy {
 
   private readonly overlayQuery = '(max-width: 991.98px)';
   private readonly contractQuery = '(min-width: 992px) and (max-width: 1599.98px)';
+
+  constructor() {
+    effect(() => {
+      if (!this.mobileOpen() || !this.drawerMode()) return;
+      setTimeout(() => this.closeButton()?.nativeElement.focus(), 0);
+    });
+  }
 
   ngOnInit(): void {
     if (this.collapsed()) {
@@ -56,7 +79,7 @@ export class AppSidebarComponent implements OnInit, OnDestroy {
       .subscribe(() => {
         const overlay = this.breakpointObserver.isMatched(this.overlayQuery);
         const contract = this.breakpointObserver.isMatched(this.contractQuery);
-        this.overlay.set(overlay);
+        this.drawerMode.set(overlay);
         this.autoContract.set(contract);
         if (!contract) {
           this.expandOverride.set(false);
@@ -72,7 +95,7 @@ export class AppSidebarComponent implements OnInit, OnDestroy {
   }
 
   readonly isCollapsedView = computed(() => {
-    if (this.overlay()) return false;
+    if (this.drawerMode()) return false;
     const style = this.themeService.preferences().sidebarStyle;
     if (style === 'mini') return true;
     if (this.autoContract()) return !this.expandOverride();
@@ -80,7 +103,7 @@ export class AppSidebarComponent implements OnInit, OnDestroy {
   });
 
   readonly isMiniView = computed(() => {
-    if (this.overlay()) return false;
+    if (this.drawerMode()) return false;
     return this.themeService.preferences().sidebarStyle === 'mini';
   });
 
@@ -150,9 +173,21 @@ export class AppSidebarComponent implements OnInit, OnDestroy {
   }
 
   onNavClick(): void {
-    if (this.overlay()) {
+    if (this.drawerMode()) {
       this.mobileClose.emit();
       this.tabletOpen.set(false);
+    }
+  }
+
+  closeDrawer(): void {
+    this.mobileClose.emit();
+    this.tabletOpen.set(false);
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.drawerMode() && this.mobileOpen()) {
+      this.closeDrawer();
     }
   }
 }

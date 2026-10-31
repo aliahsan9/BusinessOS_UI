@@ -5,8 +5,8 @@ import { StorageHelper } from '../helpers/storage.helper';
 
 @Injectable({ providedIn: 'root' })
 export class TokenService {
-  private readonly tokenSignal = signal<string | null>(this.loadToken());
-  private readonly userSignal = signal<AuthUser | null>(this.loadUser());
+  private readonly tokenSignal = signal<string | null>(null);
+  private readonly userSignal = signal<AuthUser | null>(null);
 
   readonly token = this.tokenSignal.asReadonly();
   readonly user = this.userSignal.asReadonly();
@@ -16,8 +16,7 @@ export class TokenService {
   readonly tenantId = computed(() => this.userSignal()?.tenantId ?? null);
 
   setSession(token: string, user: AuthUser): void {
-    StorageHelper.setString(STORAGE_KEYS.authToken, token);
-    StorageHelper.set(STORAGE_KEYS.authUser, user);
+    StorageHelper.clear([STORAGE_KEYS.authToken, STORAGE_KEYS.authUser]);
     this.tokenSignal.set(token);
     this.userSignal.set(user);
   }
@@ -26,7 +25,6 @@ export class TokenService {
     const current = this.userSignal();
     if (!current) return;
     const updated: AuthUser = { ...current, ...partial };
-    StorageHelper.set(STORAGE_KEYS.authUser, updated);
     this.userSignal.set(updated);
   }
 
@@ -78,11 +76,4 @@ export class TokenService {
     return new Date(user.expiresAt).getTime() - Date.now() <= bufferMs;
   }
 
-  private loadToken(): string | null {
-    return StorageHelper.getString(STORAGE_KEYS.authToken);
-  }
-
-  private loadUser(): AuthUser | null {
-    return StorageHelper.get<AuthUser>(STORAGE_KEYS.authUser);
-  }
 }

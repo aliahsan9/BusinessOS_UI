@@ -32,6 +32,33 @@ export interface ResetPasswordRequest {
   confirmPassword: string;
 }
 
+export interface GoogleSignInResponse {
+  status: 'authenticated' | 'registration_required';
+  auth?: AuthResponse | null;
+  continuationToken?: string | null;
+  email?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  message?: string | null;
+}
+
+export interface CompleteGoogleRegistrationRequest {
+  continuationToken: string;
+  businessName: string;
+  firstName: string;
+  lastName: string;
+}
+
+export interface GoogleRegistrationPending {
+  continuationToken: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+}
+
+export const PASSWORD_RESET_PUBLIC_MESSAGE =
+  "If an account exists for this email address, we'll send instructions to reset your password.";
+
 export interface AuthUser {
   userId: string;
   email: string;

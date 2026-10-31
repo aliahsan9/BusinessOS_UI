@@ -89,12 +89,22 @@
         Use demo account
       </button>
     }
-
-    <div class="auth-card__divider"><span>or</span></div>
-
-    <p class="auth-card__switch">
-      Don&rsquo;t have an account?
-      <a routerLink="/auth/register">Create account</a>
-    </p>
   </form>
+
+  <div class="auth-card__divider"><span>or</span></div>
+
+  <app-google-sign-in-button
+    [disabled]="loading() || googleBusy()"
+    [loading]="googleBusy()"
+    (credential)="onGoogleCredential($event)"
+  />
+
+  @if (googlePending(); as pending) {
+    <app-google-registration [pending]="pending" (completed)="onGoogleWorkspaceCreated()" />
+  }
+
+  <p class="auth-card__switch">
+    Don&rsquo;t have an account?
+    <a routerLink="/auth/register">Create account</a>
+  </p>
 </div>

@@ -206,15 +206,31 @@
               </div>
 
               @if (msg.role === 'assistant' && !msg.isStreaming && voiceOutputSupported() && msg.content) {
-                <button
-                  type="button"
-                  class="listen-btn"
-                  [class.listen-btn--active]="speakingIndex() === $index"
-                  (click)="speakingIndex() === $index ? stopSpeaking() : speakMessage($index, msg.content)"
-                >
-                  <i class="bi" [class.bi-stop-circle]="speakingIndex() === $index" [class.bi-play-circle]="speakingIndex() !== $index"></i>
-                  {{ speakingIndex() === $index ? 'Stop' : 'Listen' }}
-                </button>
+                <div class="listen-actions">
+                  @if (isActiveUtterance($index) && voiceSpeaking()) {
+                    <button type="button" class="listen-btn listen-btn--active" (click)="pauseSpeaking()">
+                      <i class="bi bi-pause-circle"></i> Pause
+                    </button>
+                    <button type="button" class="listen-btn" (click)="stopSpeaking()">
+                      <i class="bi bi-stop-circle"></i> Stop
+                    </button>
+                  } @else if (isActiveUtterance($index) && voicePaused()) {
+                    <button type="button" class="listen-btn listen-btn--active" (click)="resumeSpeaking()">
+                      <i class="bi bi-play-circle"></i> Play
+                    </button>
+                    <button type="button" class="listen-btn" (click)="stopSpeaking()">
+                      <i class="bi bi-stop-circle"></i> Stop
+                    </button>
+                  } @else if (isActiveUtterance($index)) {
+                    <button type="button" class="listen-btn" (click)="stopSpeaking()">
+                      <i class="bi bi-stop-circle"></i> Stop
+                    </button>
+                  } @else {
+                    <button type="button" class="listen-btn" (click)="speakMessage($index, msg.content)">
+                      <i class="bi bi-play-circle"></i> Listen
+                    </button>
+                  }
+                </div>
               }
 
               @if (msg.toolsUsed?.length) {
@@ -258,10 +274,10 @@
       </div>
 
       <footer class="composer">
-        @if (voiceError()) {
+        @if (voiceError() || playbackError()) {
           <div class="voice-error" role="alert">
             <i class="bi bi-exclamation-triangle-fill"></i>
-            {{ voiceError() }}
+            {{ voiceError() || playbackError() }}
           </div>
         }
 

@@ -6,4 +6,7 @@ export const environment = {
   defaultPageSize: 20,
   maxPageSize: 100,
   devCredentials: undefined as { email: string; password: string } | undefined,
+  browserSpeechFallback: false,
+  /** Public Google OAuth client ID. Not a secret. Must match the API Google:ClientId. */
+  googleClientId: '',
 };

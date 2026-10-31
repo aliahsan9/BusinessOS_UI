@@ -14,6 +14,7 @@ import { AppButtonComponent } from '../../../shared/components/app-button/app-bu
 import { AppCardComponent } from '../../../shared/components/app-card/app-card.component';
 import { AppSkeletonComponent } from '../../../shared/components/app-skeleton/app-skeleton.component';
 import { getFieldError } from '../../../shared/validators/form.validators';
+import { ApiError } from '../../../core/models/api-error.model';
 
 @Component({
   selector: 'app-payment-form',
@@ -122,7 +123,20 @@ export class PaymentFormComponent implements OnInit {
     return getFieldError(this.form.get(field), field);
   }
 
+  private describePaymentError(err: ApiError, fallback: string): string {
+    if (err.status === 0 || err.status === 408 || err.status === 504) {
+      return 'The payment request did not finish. It may still have been recorded. Refresh the payment list before starting a new payment.';
+    }
+
+    if (err.status === 409) {
+      return err.detail || err.title || 'This payment changed or this request was already used. Refresh and try again.';
+    }
+
+    return err.detail || fallback;
+  }
+
   submit(): void {
+    if (this.saving()) return;
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -145,8 +159,8 @@ export class PaymentFormComponent implements OnInit {
           this.notification.success('Payment updated.');
           this.router.navigate([ROUTES.payments.base, this.paymentId()]);
         },
-        error: () => {
-          this.notification.error('Failed to update payment.');
+        error: (err: ApiError) => {
+          this.notification.error(this.describePaymentError(err, 'Failed to update payment.'));
           this.saving.set(false);
         },
       });
@@ -156,8 +170,8 @@ export class PaymentFormComponent implements OnInit {
           this.notification.success('Payment recorded.');
           this.router.navigate([ROUTES.payments.base, res.id]);
         },
-        error: () => {
-          this.notification.error('Failed to record payment.');
+        error: (err: ApiError) => {
+          this.notification.error(this.describePaymentError(err, 'Failed to record payment.'));
           this.saving.set(false);
         },
       });

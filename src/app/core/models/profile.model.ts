@@ -25,3 +25,12 @@ export interface ChangePasswordRequest {
   currentPassword: string;
   newPassword: string;
 }
+
+export interface ExternalLoginsDto {
+  hasPassword: boolean;
+  googleLinked: boolean;
+}
+
+export interface SetPasswordRequest {
+  newPassword: string;
+}

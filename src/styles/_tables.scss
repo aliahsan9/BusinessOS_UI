@@ -2,6 +2,8 @@
 
 .bos-table-wrapper {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
   @include scrollbar-thin;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
@@ -10,6 +12,18 @@
 
 .bos-table {
   @include table-base;
+  width: max-content;
+  min-width: 100%;
+
+  th,
+  td {
+    white-space: nowrap;
+  }
+
+  td a,
+  td button {
+    white-space: nowrap;
+  }
 
   &--striped tbody tr:nth-child(even) {
     background: var(--color-gray-50);

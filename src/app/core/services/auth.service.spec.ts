@@ -41,7 +41,9 @@ describe('AuthService', () => {
     const req = httpMock.expectOne(`${environment.apiUrl}/auth/login`);
     expect(req.request.method).toBe('POST');
     req.flush(mockResponse);
+    httpMock.match((request) => request.url.includes('/settings')).forEach((request) => request.flush({}));
 
     expect(service.isAuthenticated()).toBeTrue();
+    expect(localStorage.getItem('businessos.auth.token')).toBeNull();
   });
 });

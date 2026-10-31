@@ -19,9 +19,4 @@ describe('DashboardComponent', () => {
   it('should create', () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
-
-  it('should map order status variants', () => {
-    expect(fixture.componentInstance.getStatusVariant('Completed')).toBe('success');
-    expect(fixture.componentInstance.getStatusVariant('Pending')).toBe('warning');
-  });
 });

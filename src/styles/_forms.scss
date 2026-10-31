@@ -69,6 +69,13 @@
   }
 }
 
+@media (max-width: 575.98px) {
+  .bos-form__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
 // Bootstrap form overrides using design tokens
 .form-control,
 .form-select {

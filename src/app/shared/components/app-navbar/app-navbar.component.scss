@@ -232,7 +232,7 @@
     position: absolute;
     top: calc(100% + 0.55rem);
     right: 0;
-    width: 250px;
+    width: min(250px, calc(100vw - 1.25rem));
     background: var(--color-surface);
     border: 1px solid var(--navbar-border);
     border-radius: 14px;

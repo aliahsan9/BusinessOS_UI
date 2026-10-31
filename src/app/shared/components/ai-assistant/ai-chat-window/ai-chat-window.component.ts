@@ -14,6 +14,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { AgentEmployeeService } from '../../../../core/services/agent-employee.service';
@@ -37,6 +38,7 @@ import { ApiError } from '../../../../core/models/api-error.model';
 import { AiAssistantStateService } from '../../../../state/ai-assistant.state';
 import { ROUTES } from '../../../../core/constants/route.constants';
 import { TenantSettingsStoreService } from '../../../../core/services/tenant-settings-store.service';
+import { formatAssistantReplyHtml } from '../../../../core/utils/assistant-reply-format';
 
 @Component({
   selector: 'app-ai-chat-window',
@@ -57,6 +59,7 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
   private readonly aiAssistantState = inject(AiAssistantStateService);
   private readonly tenantSettingsStore = inject(TenantSettingsStoreService);
   private readonly notification = inject(NotificationService);
+  private readonly sanitizer = inject(DomSanitizer);
   private readonly destroyRef = inject(DestroyRef);
   private readonly messagesContainer = viewChild<ElementRef<HTMLDivElement>>('messagesContainer');
 
@@ -95,6 +98,10 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
   readonly micEngaged = this.voice.micEngaged;
   readonly voiceError = this.voice.errorMessage;
   readonly isSpeaking = this.voice.isSpeaking;
+  readonly isPaused = this.voice.isPaused;
+  readonly voices = this.voice.voices;
+  readonly selectedVoice = this.voice.selectedVoice;
+  readonly playbackNotice = this.voice.playbackNotice;
   readonly isMuted = this.voice.isMuted;
   readonly micSupported = this.voice.micSupported;
   readonly language = this.voice.language;
@@ -137,6 +144,8 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
         return 'Thinking…';
       case 'speaking':
         return 'Speaking…';
+      case 'paused':
+        return 'Paused';
       case 'working':
         return this.liveToolName() ? `Calling ${this.liveToolName()}…` : 'Working…';
       default:
@@ -240,6 +249,12 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
       });
   }
 
+  onComposerKeydown(event: KeyboardEvent): void {
+    if (event.key !== 'Enter' || event.shiftKey || event.isComposing) return;
+    event.preventDefault();
+    this.sendMessage();
+  }
+
   sendMessage(text?: string): void {
     const message = (text ?? this.inputText()).trim();
     if (!message || this.loading()) return;
@@ -308,12 +323,24 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
     this.voice.toggleMute();
   }
 
+  pauseSpeaking(): void {
+    this.voice.pause();
+  }
+
+  resumeSpeaking(): void {
+    this.voice.resume();
+  }
+
   stopSpeaking(): void {
     this.voice.stopSpeaking();
   }
 
   replay(): void {
     this.voice.replay();
+  }
+
+  onVoiceChange(voiceName: string): void {
+    void this.voice.selectVoice(voiceName);
   }
 
   toggleCitations(messageIndex: number): void {
@@ -523,9 +550,9 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
     this.sendMessage(`Search for: ${query}`);
   }
 
-  sourcesSummary(msg: AiChatMessage): string | null {
-    if (!msg.sources || !this.aiRetrievalService.hasRetrievedData(msg.sources)) return null;
-    return this.aiRetrievalService.formatSourcesSummary(msg.sources);
+  /** Assistant replies are shown as clean rows, without raw markdown asterisks. */
+  formatReplyHtml(text: string | undefined | null): SafeHtml {
+    return this.sanitizer.bypassSecurityTrustHtml(formatAssistantReplyHtml(text));
   }
 
   useSuggestion(suggestion: AiSuggestionDto): void {

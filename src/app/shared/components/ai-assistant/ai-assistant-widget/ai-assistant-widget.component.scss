@@ -6,7 +6,7 @@
   position: fixed;
   bottom: max(1rem, env(safe-area-inset-bottom, 0px));
   right: max(1rem, env(safe-area-inset-right, 0px));
-  z-index: 1060;
+  z-index: 1032;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -22,7 +22,7 @@
   &__backdrop {
     position: fixed;
     inset: 0;
-    z-index: 1055;
+    z-index: 1031;
     background: transparent;
     pointer-events: auto;
 
@@ -176,25 +176,42 @@
     }
   }
 
-  // Mobile / small tablet: nearly full-screen chat sheet
+  // Phones: launcher stays in the corner; an open chat fills the viewport.
   &--mobile {
     bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
     right: max(0.75rem, env(safe-area-inset-right, 0px));
-    left: max(0.75rem, env(safe-area-inset-left, 0px));
-    align-items: stretch;
+    left: auto;
+    align-items: flex-end;
     max-width: none;
+    width: auto;
+  }
+
+  &--open#{&}--mobile {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    height: 100dvh;
+    max-width: none;
+    margin: 0;
+    gap: 0;
+    align-items: stretch;
+    pointer-events: auto;
 
     .ai-widget__window,
     .ai-widget__window--mobile {
       width: 100%;
       max-width: none;
+      height: 100%;
       max-height: none;
-      height: min(calc(100dvh - 5.5rem), 720px);
-      border-radius: 16px 16px 12px 12px;
+      min-height: 0;
+      flex: 1 1 auto;
+      border-radius: 0;
+      box-shadow: none;
     }
 
     .ai-widget__fab {
-      align-self: flex-end;
+      display: none;
     }
   }
 }
@@ -261,12 +278,9 @@
 }
 
 @media (max-width: 575.98px) {
-  .ai-widget--mobile {
-    .ai-widget__window,
-    .ai-widget__window--mobile {
-      height: calc(100dvh - 5rem - env(safe-area-inset-bottom, 0px));
-      border-radius: 14px 14px 10px 10px;
-    }
+  .ai-widget:not(.ai-widget--open) {
+    bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+    right: max(0.75rem, env(safe-area-inset-right, 0px));
   }
 }
 

@@ -91,9 +91,89 @@
   border: 0 !important;
 }
 
+.detail-list dd,
+.detail-list p,
+.bos-form__hint,
+.bos-form__error,
+.field-error,
+.invalid-feedback {
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+img,
+video {
+  max-width: 100%;
+}
+
 @media (max-width: 575.98px) {
   .card-grid {
     grid-template-columns: 1fr;
+  }
+
+  body .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  body .toolbar__actions,
+  body .toolbar__filters {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  body .toolbar .filter-input,
+  body .toolbar__filters input,
+  body .toolbar__filters select,
+  body .toolbar__filters .form-select,
+  body .toolbar__filters .form-control {
+    max-width: none;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .entity-form__actions,
+  .order-form__actions,
+  .product-form__actions,
+  .quotation-form__actions,
+  .purchase-order-form__actions,
+  .supplier-form__actions,
+  .payment-form__actions,
+  .expense-form__actions,
+  .category-form__actions,
+  .user-form__actions,
+  .role-form__actions,
+  .bos-form__actions,
+  .form-actions,
+  .workflow-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .entity-form__actions .app-btn,
+  .order-form__actions .app-btn,
+  .product-form__actions .app-btn,
+  .quotation-form__actions .app-btn,
+  .purchase-order-form__actions .app-btn,
+  .supplier-form__actions .app-btn,
+  .payment-form__actions .app-btn,
+  .expense-form__actions .app-btn,
+  .category-form__actions .app-btn,
+  .user-form__actions .app-btn,
+  .role-form__actions .app-btn,
+  .bos-form__actions .app-btn,
+  .form-actions .app-btn,
+  .workflow-actions .app-btn,
+  .entity-form__actions > a,
+  .order-form__actions > a,
+  .product-form__actions > a,
+  .quotation-form__actions > a,
+  .purchase-order-form__actions > a,
+  .supplier-form__actions > a,
+  .category-form__actions > a,
+  .user-form__actions > a,
+  .role-form__actions > a {
+    width: 100%;
   }
 
   .toast-container {

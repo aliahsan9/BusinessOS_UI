@@ -19,6 +19,10 @@ import {
 import { AuthService } from '../../../core/services/auth.service';
 import { OnboardingService } from '../../../core/services/onboarding.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { GoogleRegistrationPending } from '../../../core/models/auth.model';
+import { navigateAfterSignIn } from '../auth-navigation';
+import { GoogleSignInButtonComponent } from '../google-sign-in-button/google-sign-in-button.component';
+import { GoogleRegistrationComponent } from '../google-registration/google-registration.component';
 
 import { AppAlertComponent } from '../../../shared/components/app-alert/app-alert.component';
 
@@ -33,6 +37,8 @@ import { environment } from '../../../../environments/environment';
     ReactiveFormsModule,
     RouterLink,
     AppAlertComponent,
+    GoogleSignInButtonComponent,
+    GoogleRegistrationComponent,
   ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
@@ -48,6 +54,8 @@ export class LoginComponent {
 
   readonly errorMessage = signal<string | null>(null);
   readonly showPassword = signal(false);
+  readonly googlePending = signal<GoogleRegistrationPending | null>(null);
+  readonly googleBusy = signal(false);
 
   readonly devCredentials = environment.devCredentials;
 
@@ -81,6 +89,10 @@ export class LoginComponent {
 
   onSubmit(): void {
 
+    if (this.loading() || this.googleBusy()) {
+      return;
+    }
+
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -95,20 +107,7 @@ export class LoginComponent {
       { email, password },
       rememberMe
     ).subscribe({
-      next: () => {
-        this.onboardingService.getStatus().subscribe({
-          next: status => {
-            void this.router.navigate([
-              status.shouldShowWizard
-                ? '/onboarding'
-                : '/dashboard'
-            ]);
-          },
-          error: () => {
-            void this.router.navigate(['/dashboard']);
-          }
-        });
-      },
+      next: () => navigateAfterSignIn(this.router, this.onboardingService),
       error: (error: ApiError) => {
 
         const message =
@@ -126,5 +125,43 @@ export class LoginComponent {
         );
       }
     });
+  }
+
+  onGoogleCredential(idToken: string): void {
+    if (this.googleBusy() || this.loading()) {
+      return;
+    }
+
+    this.errorMessage.set(null);
+    this.googlePending.set(null);
+    this.googleBusy.set(true);
+    this.authService.signInWithGoogle(idToken).subscribe({
+      next: (response) => {
+        this.googleBusy.set(false);
+        if (response.status === 'authenticated') {
+          navigateAfterSignIn(this.router, this.onboardingService);
+          return;
+        }
+
+        if (response.status === 'registration_required' && response.continuationToken) {
+          this.googlePending.set({
+            continuationToken: response.continuationToken,
+            email: response.email ?? '',
+            firstName: response.firstName ?? '',
+            lastName: response.lastName ?? '',
+          });
+        }
+      },
+      error: (error: ApiError) => {
+        this.googleBusy.set(false);
+        const message = error.detail ?? error.title ?? 'Google sign-in could not be completed.';
+        this.errorMessage.set(message);
+        this.notificationService.error('Google sign-in failed', message);
+      },
+    });
+  }
+
+  onGoogleWorkspaceCreated(): void {
+    navigateAfterSignIn(this.router, this.onboardingService);
   }
 }

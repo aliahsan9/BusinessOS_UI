@@ -8,6 +8,7 @@ import { AppButtonComponent } from '../../../shared/components/app-button/app-bu
 import { AppAlertComponent } from '../../../shared/components/app-alert/app-alert.component';
 import { getFieldError } from '../../../shared/validators/form.validators';
 import { ApiError } from '../../../core/models/api-error.model';
+import { PASSWORD_RESET_PUBLIC_MESSAGE } from '../../../core/models/auth.model';
 
 @Component({
   selector: 'app-forgot-password',
@@ -25,6 +26,7 @@ export class ForgotPasswordComponent {
   readonly submitted = signal(false);
   readonly loading = signal(false);
   readonly errorMessage = signal<string | null>(null);
+  readonly successMessage = signal(PASSWORD_RESET_PUBLIC_MESSAGE);
 
   readonly form = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
@@ -33,6 +35,10 @@ export class ForgotPasswordComponent {
   getFieldError = getFieldError;
 
   onSubmit(): void {
+    if (this.loading()) {
+      return;
+    }
+
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -41,16 +47,26 @@ export class ForgotPasswordComponent {
     this.loading.set(true);
     this.errorMessage.set(null);
 
-    this.authService.forgotPassword({ email: this.form.controls.email.value }).subscribe({
-      next: () => {
+    this.authService.forgotPassword({ email: this.form.controls.email.value.trim() }).subscribe({
+      next: (response) => {
         this.loading.set(false);
+        this.successMessage.set(response.message || PASSWORD_RESET_PUBLIC_MESSAGE);
         this.submitted.set(true);
-        this.notificationService.info('If an account exists, reset instructions will be sent.');
+        this.notificationService.info(PASSWORD_RESET_PUBLIC_MESSAGE);
       },
       error: (error: ApiError) => {
         this.loading.set(false);
-        this.errorMessage.set(error.detail ?? 'Unable to process request');
+        this.errorMessage.set(
+          error.status === 400
+            ? error.detail ?? 'Enter a valid email address.'
+            : "We couldn't send the email right now. Please try again.",
+        );
       },
     });
+  }
+
+  sendAnother(): void {
+    this.submitted.set(false);
+    this.errorMessage.set(null);
   }
 }

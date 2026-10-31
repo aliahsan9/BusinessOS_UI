@@ -1,10 +1,16 @@
 <!-- app-sidebar.component.html -->
 <aside
+  id="app-sidebar"
   class="app-sidebar"
   [class.app-sidebar--collapsed]="isCollapsedView()"
   [class.app-sidebar--mobile-open]="mobileOpen()"
   [class.app-sidebar--tablet-open]="tabletOpen()"
   [class.app-sidebar--mini]="isMiniView()"
+  [class.app-sidebar--drawer]="drawerMode()"
+  [attr.aria-hidden]="drawerMode() && !mobileOpen() ? true : null"
+  [attr.inert]="drawerMode() && !mobileOpen() ? '' : null"
+  [attr.role]="drawerMode() && mobileOpen() ? 'dialog' : null"
+  [attr.aria-modal]="drawerMode() && mobileOpen() ? true : null"
   aria-label="Main navigation"
 >
   <div class="app-sidebar__brand">
@@ -13,6 +19,17 @@
     </div>
     @if (!hideLabels()) {
       <span class="app-sidebar__name">BusinessOS</span>
+    }
+    @if (drawerMode()) {
+      <button
+        #closeButton
+        type="button"
+        class="app-sidebar__close"
+        aria-label="Close navigation"
+        (click)="closeDrawer()"
+      >
+        <i class="bi bi-x-lg" aria-hidden="true"></i>
+      </button>
     }
   </div>
 
@@ -58,21 +75,28 @@
       </div>
     }
 
-    <button
-      type="button"
-      class="app-sidebar__toggle"
-      (click)="toggleCollapse()"
-      [attr.aria-label]="isCollapsedView() ? 'Expand sidebar' : 'Collapse sidebar'"
-      title="Toggle sidebar"
-    >
-      <i class="bi" [class]="isCollapsedView() ? 'bi-chevron-right' : 'bi-chevron-left'"></i>
-      @if (!hideLabels()) {
-        <span>Collapse</span>
-      }
-    </button>
+    @if (!drawerMode()) {
+      <button
+        type="button"
+        class="app-sidebar__toggle"
+        (click)="toggleCollapse()"
+        [attr.aria-label]="isCollapsedView() ? 'Expand sidebar' : 'Collapse sidebar'"
+        title="Toggle sidebar"
+      >
+        <i class="bi" [class]="isCollapsedView() ? 'bi-chevron-right' : 'bi-chevron-left'"></i>
+        @if (!hideLabels()) {
+          <span>Collapse</span>
+        }
+      </button>
+    }
   </div>
 </aside>
 
-@if (mobileOpen()) {
-  <div class="app-sidebar__backdrop" (click)="mobileClose.emit()" aria-hidden="true"></div>
+@if (drawerMode() && mobileOpen()) {
+  <button
+    type="button"
+    class="app-sidebar__backdrop"
+    aria-label="Close navigation"
+    (click)="closeDrawer()"
+  ></button>
 }

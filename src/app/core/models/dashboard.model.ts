@@ -132,6 +132,8 @@ export interface ChartDataResponse {
   labels: string[];
   datasets: ChartDataset[];
   dateRange: DateRange;
+  /** Real period total. Set when the series is a display curve rather than raw buckets. */
+  periodTotal?: number | null;
 }
 
 export interface DashboardQueryParams {

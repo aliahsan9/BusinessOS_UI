@@ -1,13 +1,16 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  ElementRef,
   HostListener,
   OnInit,
   computed,
   effect,
   inject,
+  input,
   output,
   signal,
+  viewChild,
 } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 
@@ -38,8 +41,11 @@ export class AppNavbarComponent implements OnInit {
   private readonly themeService = inject(ThemeService);
   private readonly router = inject(Router);
 
+  readonly menuOpen = input(false);
   readonly menuToggle = output<void>();
   readonly isMobileMenuOpen = signal(false);
+  private readonly menuButton = viewChild<ElementRef<HTMLButtonElement>>('menuButton');
+  private menuWasOpen = false;
   readonly searchQuery = signal('');
   readonly isCompactNav = signal(false);
 
@@ -120,6 +126,14 @@ export class AppNavbarComponent implements OnInit {
       this.userAvatarUrl();
       this.userAvatarBroken.set(false);
     });
+
+    effect(() => {
+      const open = this.menuOpen();
+      if (this.menuWasOpen && !open) {
+        setTimeout(() => this.menuButton()?.nativeElement.focus(), 0);
+      }
+      this.menuWasOpen = open;
+    });
   }
 
   ngOnInit(): void {
@@ -170,12 +184,10 @@ export class AppNavbarComponent implements OnInit {
 
   openMobileMenu(): void {
     this.isMobileMenuOpen.set(true);
-    document.body.style.overflow = 'hidden';
   }
 
   closeMobileMenu(): void {
     this.isMobileMenuOpen.set(false);
-    document.body.style.overflow = '';
   }
 
   toggleMobileMenu(): void {

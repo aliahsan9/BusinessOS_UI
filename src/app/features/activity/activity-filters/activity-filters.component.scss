@@ -8,14 +8,15 @@
 
 .activity-filters__search {
   flex: 1 1 16rem;
-  min-width: 12rem;
+  min-width: min(100%, 12rem);
 }
 
 .activity-filters__field {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  min-width: 10rem;
+  min-width: min(100%, 10rem);
+  max-width: 100%;
 
   label {
     font-size: 0.75rem;

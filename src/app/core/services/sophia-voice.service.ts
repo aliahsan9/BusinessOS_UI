@@ -1,7 +1,13 @@
 import { Injectable, OnDestroy, inject, signal, computed } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { AgentEmployeeService } from './agent-employee.service';
-import { VoicePreference, VoiceUiState } from '../models/agent.model';
+import { environment } from '../../../environments/environment';
+import {
+  FALLBACK_TTS_VOICES,
+  TtsVoiceOption,
+  VoicePreference,
+  VoiceUiState,
+} from '../models/agent.model';
 
 type SpeechRecognitionLike = {
   lang: string;
@@ -32,15 +38,28 @@ export class SophiaVoiceService implements OnDestroy {
   private utterance: SpeechSynthesisUtterance | null = null;
   private audioEl: HTMLAudioElement | null = null;
   private audioObjectUrl: string | null = null;
+  private ttsAbort: AbortController | null = null;
+  private disposingAudio = false;
+  private holdPlayback = false;
   private prefs: VoicePreference | null = null;
   private pushToTalkActive = false;
   private speakGeneration = 0;
+  private catalogDefaultVoice = 'coral';
 
   readonly voiceState = signal<VoiceUiState>('idle');
+  /** True from the moment a reply is queued until playback finishes or is stopped. */
+  readonly utteranceActive = signal(false);
+  /** Increments each time a new utterance starts, so other screens can tell playback apart. */
+  readonly playbackId = signal(0);
+  readonly voices = signal<TtsVoiceOption[]>(FALLBACK_TTS_VOICES);
+  readonly selectedVoice = signal('coral');
+  readonly voiceProvider = signal('openai');
+  readonly playbackNotice = signal<string | null>(null);
   /** Stays on from the click that starts the mic until the click that stops it. */
   readonly micEngaged = signal(false);
   readonly isListening = computed(() => this.voiceState() === 'listening');
   readonly isSpeaking = computed(() => this.voiceState() === 'speaking');
+  readonly isPaused = computed(() => this.voiceState() === 'paused');
   readonly isMuted = signal(false);
   readonly transcriptInterim = signal('');
   readonly lastSpokenText = signal('');
@@ -64,33 +83,80 @@ export class SophiaVoiceService implements OnDestroy {
   }
 
   async loadPreferences(): Promise<VoicePreference | null> {
-    try {
-      const prefs = await firstValueFrom(this.agentService.getVoicePreferences());
-      this.applyPreferences(prefs);
-      return prefs;
-    } catch {
-      this.applyPreferences({
-        language: 'en',
-        voiceName: 'default',
-        speechRate: 1,
-        pitch: 1,
-        continuousListening: false,
-        autoSpeak: true,
-        preferredAgentKey: 'sophia',
-      });
-      return null;
+    const [prefsResult, catalogResult] = await Promise.allSettled([
+      firstValueFrom(this.agentService.getVoicePreferences()),
+      firstValueFrom(this.agentService.listTtsVoices()),
+    ]);
+
+    if (catalogResult.status === 'fulfilled' && catalogResult.value.voices?.length) {
+      this.voices.set(catalogResult.value.voices);
+      this.voiceProvider.set(catalogResult.value.provider || 'openai');
+      this.catalogDefaultVoice = catalogResult.value.defaultVoice || 'coral';
     }
+
+    if (prefsResult.status === 'fulfilled') {
+      this.applyPreferences(prefsResult.value);
+      return prefsResult.value;
+    }
+
+    this.applyPreferences({
+      language: 'en',
+      voiceName: 'default',
+      speechRate: 1,
+      pitch: 1,
+      continuousListening: false,
+      autoSpeak: true,
+      preferredAgentKey: 'sophia',
+    });
+    return null;
   }
 
   applyPreferences(prefs: VoicePreference): void {
-    this.prefs = prefs;
+    this.prefs = { ...prefs };
     this.language.set('en');
     this.autoSpeak.set(prefs.autoSpeak !== false);
     this.continuousListening.set(!!prefs.continuousListening);
+    this.selectedVoice.set(this.resolveVoiceId(prefs.voiceName));
     this.agentService.setPreferences({
       agentKey: prefs.preferredAgentKey || 'sophia',
       language: 'en',
     });
+  }
+
+  async selectVoice(voiceName: string): Promise<void> {
+    const name = this.resolveVoiceId(voiceName);
+    if (!name || name === this.selectedVoice()) return;
+
+    this.stopSpeaking(false);
+    this.selectedVoice.set(name);
+    const base = this.prefs ?? {
+      language: 'en',
+      voiceName: name,
+      speechRate: 1,
+      pitch: 1,
+      continuousListening: this.continuousListening(),
+      autoSpeak: this.autoSpeak(),
+      preferredAgentKey: 'sophia',
+    };
+    this.prefs = { ...base, voiceName: name };
+
+    try {
+      const saved = await firstValueFrom(
+        this.agentService.saveVoicePreferences({
+          language: 'en',
+          voiceName: name,
+          speechRate: base.speechRate ?? 1,
+          pitch: base.pitch ?? 1,
+          continuousListening: !!base.continuousListening,
+          autoSpeak: base.autoSpeak !== false,
+          preferredAgentKey: base.preferredAgentKey || 'sophia',
+        }),
+      );
+      this.applyPreferences(saved);
+      this.errorMessage.set(null);
+    } catch {
+      this.errorMessage.set('Could not save that voice. It will still be used for this session.');
+    }
   }
 
   setProcessing(active: boolean): void {
@@ -98,15 +164,21 @@ export class SophiaVoiceService implements OnDestroy {
       this.stopSpeaking(false);
       this.pauseRecognition();
       this.voiceState.set('processing');
-    } else {
-      if (this.voiceState() === 'processing' || this.voiceState() === 'working') {
-        this.voiceState.set('idle');
-      }
-      if (this.voiceState() !== 'speaking') this.resumeIfEngaged();
+      return;
+    }
+
+    if (this.utteranceActive()) return;
+
+    if (this.voiceState() === 'processing' || this.voiceState() === 'working') {
+      this.voiceState.set('idle');
+    }
+    if (this.voiceState() !== 'speaking' && this.voiceState() !== 'paused') {
+      this.resumeIfEngaged();
     }
   }
 
   setWorking(active: boolean): void {
+    if (this.utteranceActive()) return;
     this.voiceState.set(active ? 'working' : 'idle');
   }
 
@@ -223,38 +295,72 @@ export class SophiaVoiceService implements OnDestroy {
     this.startListening();
   }
 
-  speak(text: string): void {
-    if (!text.trim() || this.isMuted() || !this.autoSpeak()) return;
+  speak(text: string, options?: { manual?: boolean }): void {
+    const spoken = this.cleanForSpeech(text);
+    if (!spoken) return;
+    if (!options?.manual && (this.isMuted() || !this.autoSpeak())) return;
+
     this.stopSpeaking(false);
     this.pauseRecognition();
-    this.voiceState.set('speaking');
+    this.playbackId.update((id) => id + 1);
+    const generation = this.speakGeneration;
+    this.lastSpokenText.set(text);
+    this.utteranceActive.set(true);
+    this.errorMessage.set(null);
+    void this.playWithProvider(spoken, generation);
+  }
 
-    const spoken = this.cleanForSpeech(text);
-    if (!spoken) {
-      this.voiceState.set('idle');
-      this.resumeIfEngaged();
+  pause(): void {
+    if (!this.utteranceActive() && !this.audioEl && !this.utterance) return;
+    this.holdPlayback = true;
+    if (this.audioEl && !this.audioEl.paused && !this.audioEl.ended) {
+      this.audioEl.pause();
       return;
     }
+    if (this.utterance && this.ttsSupported()) {
+      window.speechSynthesis.pause();
+      this.voiceState.set('paused');
+      return;
+    }
+    this.voiceState.set('paused');
+  }
 
-    this.lastSpokenText.set(text);
-    const generation = ++this.speakGeneration;
-    this.speakBrowser(spoken, generation);
+  resume(): void {
+    this.holdPlayback = false;
+    if (this.audioEl && this.audioEl.paused && !this.audioEl.ended) {
+      void this.audioEl.play().catch(() => {
+        if (this.utteranceActive()) this.errorMessage.set('Could not resume playback.');
+      });
+      return;
+    }
+    if (this.utterance && this.ttsSupported()) {
+      window.speechSynthesis.resume();
+      this.voiceState.set('speaking');
+      return;
+    }
+    this.replay();
   }
 
   stopSpeaking(resumeMic = true): void {
     this.speakGeneration++;
+    this.utteranceActive.set(false);
+    this.holdPlayback = false;
+    this.ttsAbort?.abort();
+    this.ttsAbort = null;
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel();
     }
     this.utterance = null;
     this.disposeAudio();
-    if (this.voiceState() === 'speaking') this.voiceState.set('idle');
+    if (this.voiceState() === 'speaking' || this.voiceState() === 'paused') {
+      this.voiceState.set('idle');
+    }
     if (resumeMic) this.resumeIfEngaged();
   }
 
   replay(): void {
     const text = this.lastSpokenText();
-    if (text) this.speak(text);
+    if (text) this.speak(text, { manual: true });
   }
 
   toggleMute(): void {
@@ -268,10 +374,84 @@ export class SophiaVoiceService implements OnDestroy {
     this.onFinalTranscript = null;
   }
 
+  private async playWithProvider(text: string, generation: number): Promise<void> {
+    const abort = new AbortController();
+    this.ttsAbort = abort;
+    try {
+      const speech = await this.agentService.synthesizeSpeech(text, {
+        language: 'en',
+        speechRate: this.prefs?.speechRate ?? 1,
+        voiceName: this.selectedVoice(),
+        signal: abort.signal,
+      });
+      if (generation !== this.speakGeneration) return;
+      if (!speech.blob.size) throw new Error('Empty audio');
+
+      if (this.voiceProvider() === 'openai' && speech.provider && speech.provider !== 'openai') {
+        this.playbackNotice.set('The AI voice had a problem, so a backup voice was used.');
+      } else {
+        this.playbackNotice.set(null);
+      }
+      this.playBlob(speech.blob, generation);
+    } catch (err) {
+      if (generation !== this.speakGeneration || this.isAbortError(err)) return;
+      if (environment.browserSpeechFallback && this.ttsSupported()) {
+        this.playbackNotice.set('AI speech is unavailable, so the browser voice is being used.');
+        if (this.holdPlayback) {
+          this.voiceState.set('paused');
+          return;
+        }
+        this.speakBrowser(text, generation);
+        return;
+      }
+      this.failPlayback('Voice is unavailable right now. You can still read the reply.');
+    }
+  }
+
+  private playBlob(blob: Blob, generation: number): void {
+    this.disposeAudio();
+    const url = URL.createObjectURL(blob);
+    this.audioObjectUrl = url;
+    const audio = new Audio(url);
+    this.audioEl = audio;
+
+    audio.onplaying = () => {
+      if (generation === this.speakGeneration) this.voiceState.set('speaking');
+    };
+    audio.onpause = () => {
+      if (generation !== this.speakGeneration || this.disposingAudio || audio.ended) return;
+      this.voiceState.set('paused');
+    };
+    audio.onended = () => {
+      if (generation !== this.speakGeneration) return;
+      this.finishPlayback();
+    };
+    audio.onerror = () => {
+      if (generation !== this.speakGeneration) return;
+      if (environment.browserSpeechFallback && this.ttsSupported()) {
+        this.playbackNotice.set('AI speech is unavailable, so the browser voice is being used.');
+        this.speakBrowser(this.cleanForSpeech(this.lastSpokenText()), generation);
+        return;
+      }
+      this.failPlayback('Could not play the voice audio.');
+    };
+
+    if (this.holdPlayback) {
+      this.voiceState.set('paused');
+      return;
+    }
+
+    void audio.play().catch(() => {
+      if (generation !== this.speakGeneration) return;
+      this.holdPlayback = true;
+      this.voiceState.set('paused');
+      this.playbackNotice.set('Tap play to hear the reply.');
+    });
+  }
+
   private speakBrowser(text: string, generation: number): void {
-    if (!this.ttsSupported()) {
-      this.voiceState.set('idle');
-      this.resumeIfEngaged();
+    if (!this.ttsSupported() || !text) {
+      this.failPlayback('Voice is unavailable right now. You can still read the reply.');
       return;
     }
 
@@ -290,17 +470,12 @@ export class SophiaVoiceService implements OnDestroy {
     };
     utterance.onend = () => {
       this.utterance = null;
-      if (generation === this.speakGeneration && this.voiceState() === 'speaking') {
-        this.voiceState.set('idle');
-        this.resumeIfEngaged();
-      }
+      if (generation === this.speakGeneration) this.finishPlayback();
     };
     utterance.onerror = () => {
       this.utterance = null;
-      if (generation === this.speakGeneration && this.voiceState() === 'speaking') {
-        this.voiceState.set('idle');
-        this.resumeIfEngaged();
-      }
+      if (generation !== this.speakGeneration) return;
+      this.failPlayback('Voice is unavailable right now. You can still read the reply.');
     };
 
     this.utterance = utterance;
@@ -312,11 +487,36 @@ export class SophiaVoiceService implements OnDestroy {
     }, 20);
   }
 
+  private finishPlayback(): void {
+    this.utteranceActive.set(false);
+    if (this.voiceState() === 'speaking' || this.voiceState() === 'paused') {
+      this.voiceState.set('idle');
+    }
+    this.resumeIfEngaged();
+  }
+
+  private failPlayback(message: string): void {
+    this.utteranceActive.set(false);
+    this.playbackNotice.set(null);
+    this.errorMessage.set(message);
+    if (this.voiceState() === 'speaking' || this.voiceState() === 'paused' || this.voiceState() === 'processing') {
+      this.voiceState.set('idle');
+    }
+    this.resumeIfEngaged();
+  }
+
   private disposeAudio(): void {
+    this.disposingAudio = true;
     if (this.audioEl) {
+      const audio = this.audioEl;
+      audio.onplaying = null;
+      audio.onpause = null;
+      audio.onended = null;
+      audio.onerror = null;
       try {
-        this.audioEl.pause();
-        this.audioEl.src = '';
+        audio.pause();
+        audio.removeAttribute('src');
+        audio.load();
       } catch {
         /* ignore */
       }
@@ -326,6 +526,22 @@ export class SophiaVoiceService implements OnDestroy {
       URL.revokeObjectURL(this.audioObjectUrl);
       this.audioObjectUrl = null;
     }
+    this.disposingAudio = false;
+  }
+
+  private resolveVoiceId(voiceName: string | null | undefined): string {
+    const requested = (voiceName || '').trim();
+    if (requested && requested !== 'default' && this.voices().some((voice) => voice.id === requested)) {
+      return requested;
+    }
+    if (this.voices().some((voice) => voice.id === this.catalogDefaultVoice)) {
+      return this.catalogDefaultVoice;
+    }
+    return this.voices()[0]?.id || 'coral';
+  }
+
+  private isAbortError(err: unknown): boolean {
+    return err instanceof DOMException && err.name === 'AbortError';
   }
 
   private cleanForSpeech(text: string): string {
@@ -355,7 +571,8 @@ export class SophiaVoiceService implements OnDestroy {
   }
 
   private resumeIfEngaged(): void {
-    if (!this.micEngaged() || this.recognition || this.voiceState() === 'speaking') return;
+    if (!this.micEngaged() || this.recognition || this.utteranceActive()) return;
+    if (this.voiceState() === 'speaking' || this.voiceState() === 'paused') return;
     this.startListening();
   }
 

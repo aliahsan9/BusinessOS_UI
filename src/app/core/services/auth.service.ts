@@ -1,13 +1,16 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
+import { HttpBackend, HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, tap, catchError, throwError } from 'rxjs';
+import { Observable, tap, catchError, throwError, firstValueFrom } from 'rxjs';
 import { BaseApiService } from './base-api.service';
 import { TokenService } from './token.service';
 import { NotificationService } from './notification.service';
 import {
   AuthResponse,
   AuthUser,
+  CompleteGoogleRegistrationRequest,
   ForgotPasswordRequest,
+  GoogleSignInResponse,
   LoginRequest,
   RegisterRequest,
   RememberMeCredentials,
@@ -24,6 +27,8 @@ import { TenantSettingsStoreService } from './tenant-settings-store.service';
 export class AuthService extends BaseApiService {
   private readonly router = inject(Router);
   private readonly tokenService = inject(TokenService);
+  private readonly httpBackend = inject(HttpBackend);
+  private refreshInFlight: Promise<boolean> | null = null;
   private readonly notificationService = inject(NotificationService);
   private readonly themeService = inject(ThemeService);
   private readonly tenantSettingsStore = inject(TenantSettingsStoreService);
@@ -67,7 +72,41 @@ export class AuthService extends BaseApiService {
     });
   }
 
+  signInWithGoogle(idToken: string): Observable<GoogleSignInResponse> {
+    this.loadingSignal.set(true);
+    return this.post<GoogleSignInResponse>(API_ENDPOINTS.auth.google, { idToken }).pipe(
+      tap((response) => {
+        if (response.status === 'authenticated' && response.auth) {
+          this.handleAuthSuccess(response.auth, undefined, 'Welcome back!');
+          return;
+        }
+
+        this.loadingSignal.set(false);
+      }),
+      catchError((error: ApiError) => {
+        this.loadingSignal.set(false);
+        return throwError(() => error);
+      }),
+    );
+  }
+
+  completeGoogleRegistration(request: CompleteGoogleRegistrationRequest): Observable<AuthResponse> {
+    this.loadingSignal.set(true);
+    return this.post<AuthResponse>(API_ENDPOINTS.auth.googleComplete, request).pipe(
+      tap((response) => this.handleAuthSuccess(response, undefined, 'Welcome to BusinessOS!')),
+      catchError((error: ApiError) => {
+        this.loadingSignal.set(false);
+        return throwError(() => error);
+      }),
+    );
+  }
+
   logout(showNotification = true): void {
+    const headers = csrfHeaders();
+    const client = new HttpClient(this.httpBackend);
+    client
+      .post(`${this.baseUrl}${API_ENDPOINTS.auth.logout}`, {}, { withCredentials: true, headers })
+      .subscribe({ error: () => undefined });
     this.tokenService.clearSession();
     this.tenantSettingsStore.clear();
     StorageHelper.remove(STORAGE_KEYS.rememberMe);
@@ -83,16 +122,38 @@ export class AuthService extends BaseApiService {
   }
 
   refreshSessionIfNeeded(): boolean {
-    if (!this.tokenService.isAuthenticated()) {
-      this.logout(false);
+    return this.tokenService.isAuthenticated() && !this.tokenService.isTokenExpiringSoon(30_000);
+  }
+
+  tryRestoreSession(): Promise<boolean> {
+    if (this.refreshSessionIfNeeded()) {
+      return Promise.resolve(true);
+    }
+
+    if (!this.refreshInFlight) {
+      this.refreshInFlight = this.refreshAccessToken().finally(() => {
+        this.refreshInFlight = null;
+      });
+    }
+
+    return this.refreshInFlight;
+  }
+
+  private async refreshAccessToken(): Promise<boolean> {
+    const client = new HttpClient(this.httpBackend);
+    try {
+      const response = await firstValueFrom(
+        client.post<AuthResponse>(`${this.baseUrl}${API_ENDPOINTS.auth.refresh}`, {}, {
+          withCredentials: true,
+          headers: csrfHeaders(),
+        }),
+      );
+      this.handleAuthSuccess(response, undefined, '', true);
+      return true;
+    } catch {
+      this.tokenService.clearSession();
       return false;
     }
-    if (this.tokenService.isTokenExpiringSoon()) {
-      this.notificationService.warning('Your session is expiring soon. Please sign in again.');
-      this.logout(false);
-      return false;
-    }
-    return true;
   }
 
   establishSession(response: AuthResponse, options?: { welcomeMessage?: string; rememberEmail?: string }): void {
@@ -103,6 +164,7 @@ export class AuthService extends BaseApiService {
     response: AuthResponse,
     rememberEmail?: string,
     welcomeMessage = 'Welcome back!',
+    silent = false,
   ): void {
     const user: AuthUser = {
       userId: response.userId,
@@ -115,15 +177,36 @@ export class AuthService extends BaseApiService {
     this.tokenService.setSession(response.token, user);
     StorageHelper.setString(STORAGE_KEYS.tenantId, response.tenantId);
 
-    if (rememberEmail) {
-      StorageHelper.set<RememberMeCredentials>(STORAGE_KEYS.rememberMe, { email: rememberEmail });
-    } else {
-      StorageHelper.remove(STORAGE_KEYS.rememberMe);
+    if (!silent) {
+      if (rememberEmail) {
+        StorageHelper.set<RememberMeCredentials>(STORAGE_KEYS.rememberMe, { email: rememberEmail });
+      } else {
+        StorageHelper.remove(STORAGE_KEYS.rememberMe);
+      }
+
+      if (welcomeMessage) {
+        this.notificationService.success(welcomeMessage);
+      }
+      this.themeService.syncFromBackend();
+      this.tenantSettingsStore.load().subscribe();
     }
 
     this.loadingSignal.set(false);
-    this.notificationService.success(welcomeMessage);
-    this.themeService.syncFromBackend();
-    this.tenantSettingsStore.load().subscribe();
   }
+}
+
+function csrfHeaders(): HttpHeaders {
+  const csrf = readCookie('bos_csrf');
+  return csrf ? new HttpHeaders({ 'X-CSRF-Token': csrf }) : new HttpHeaders();
+}
+
+function readCookie(name: string): string | null {
+  const prefix = `${name}=`;
+  for (const part of document.cookie.split(';')) {
+    const trimmed = part.trim();
+    if (trimmed.startsWith(prefix)) {
+      return decodeURIComponent(trimmed.slice(prefix.length));
+    }
+  }
+  return null;
 }

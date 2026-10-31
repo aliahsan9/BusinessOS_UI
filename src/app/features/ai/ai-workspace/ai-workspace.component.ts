@@ -4,6 +4,7 @@ import {
   ElementRef,
   OnDestroy,
   OnInit,
+  effect,
   inject,
   signal,
   computed,
@@ -14,6 +15,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { AiChatService } from '../../../core/services/ai-chat.service';
+import { SophiaVoiceService } from '../../../core/services/sophia-voice.service';
 import { AiRetrievalService } from '../../../core/services/ai-retrieval.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import {
@@ -27,6 +29,7 @@ import {
 } from '../../../core/models/ai.model';
 import { ApiError } from '../../../core/models/api-error.model';
 import { ROUTES } from '../../../core/constants/route.constants';
+import { formatAssistantReplyHtml } from '../../../core/utils/assistant-reply-format';
 import { AppBreadcrumbComponent } from '../../../shared/components/app-breadcrumb/app-breadcrumb.component';
 import { AppCardComponent } from '../../../shared/components/app-card/app-card.component';
 import { AppConfirmDialogComponent } from '../../../shared/components/app-confirm-dialog/app-confirm-dialog.component';
@@ -96,6 +99,10 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
   private readonly aiRetrieval = inject(AiRetrievalService);
   private readonly notification = inject(NotificationService);
   private readonly sanitizer = inject(DomSanitizer);
+  private readonly voice = inject(SophiaVoiceService);
+  /** True when this page started the shared playback, so leaving it does not cut off another screen. */
+  private ownsPlayback = false;
+  private playbackToken = 0;
 
   private readonly messagesEl = viewChild<ElementRef<HTMLDivElement>>('messagesEl');
   private readonly composerEl = viewChild<ElementRef<HTMLTextAreaElement>>('composerEl');
@@ -165,8 +172,11 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
 
   /** True if this browser exposes SpeechRecognition (mic → text). */
   readonly voiceInputSupported = signal(false);
-  /** True if this browser exposes speechSynthesis (text → spoken audio). */
+  /** True when spoken replies can be played (server speech, with a browser fallback in development). */
   readonly voiceOutputSupported = signal(false);
+  readonly voiceSpeaking = this.voice.isSpeaking;
+  readonly voicePaused = this.voice.isPaused;
+  readonly playbackError = this.voice.errorMessage;
   /** True while the mic is actively capturing speech. */
   readonly isListening = signal(false);
   /** Last mic/voice error, shown near the composer until dismissed/retried. */
@@ -175,6 +185,15 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
   readonly autoSpeak = signal(false);
   /** Which message (by index) is currently being read aloud, for the UI. */
   readonly speakingIndex = signal<number | null>(null);
+
+  constructor() {
+    effect(() => {
+      if (!this.voice.utteranceActive()) {
+        this.speakingIndex.set(null);
+        this.ownsPlayback = false;
+      }
+    });
+  }
 
   readonly breadcrumbs = [
     { label: 'AI Copilot', route: ROUTES.ai.workspace },
@@ -193,7 +212,8 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.refreshSessions();
     this.setupSpeechRecognition();
-    this.voiceOutputSupported.set(typeof window !== 'undefined' && 'speechSynthesis' in window);
+    this.voiceOutputSupported.set(typeof window !== 'undefined');
+    void this.voice.loadPreferences();
     this.restoreHintedSession();
   }
 
@@ -201,8 +221,8 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
     this.clearStreamTimer();
     this.aiChat.stopGeneration();
     this.recognition?.abort();
-    if (this.voiceOutputSupported()) {
-      window.speechSynthesis.cancel();
+    if (this.ownsPlayback && this.voice.playbackId() === this.playbackToken) {
+      this.voice.stopSpeaking(false);
     }
   }
 
@@ -538,23 +558,36 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** Reads a message's text aloud; used both for auto-speak and the manual "listen" button. */
+  /** Reads a message aloud through the server voice. */
   speakMessage(index: number, text: string): void {
-    if (!this.voiceOutputSupported() || !text) return;
+    if (!text) return;
+    this.voice.speak(text, { manual: true });
+    this.playbackToken = this.voice.playbackId();
+    this.ownsPlayback = true;
+    this.speakingIndex.set(index);
+  }
 
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 1;
-    utterance.onstart = () => this.speakingIndex.set(index);
-    utterance.onend = () => this.speakingIndex.set(null);
-    utterance.onerror = () => this.speakingIndex.set(null);
-    window.speechSynthesis.speak(utterance);
+  pauseSpeaking(): void {
+    this.voice.pause();
+  }
+
+  resumeSpeaking(): void {
+    this.voice.resume();
+  }
+
+  isActiveUtterance(index: number): boolean {
+    return (
+      this.speakingIndex() === index &&
+      this.voice.playbackId() === this.playbackToken &&
+      this.voice.utteranceActive()
+    );
   }
 
   stopSpeaking(): void {
-    if (this.voiceOutputSupported()) {
-      window.speechSynthesis.cancel();
+    if (this.ownsPlayback && this.voice.playbackId() === this.playbackToken) {
+      this.voice.stopSpeaking();
     }
+    this.ownsPlayback = false;
     this.speakingIndex.set(null);
   }
 
@@ -787,55 +820,9 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** Lightweight markdown → HTML for assistant replies (**bold**, bullets, paragraphs). */
+  /** Assistant replies are shown as clean rows, without raw markdown asterisks. */
   formatReplyHtml(text: string | undefined | null): SafeHtml {
-    const raw = (text ?? '').trim();
-    if (!raw) {
-      return this.sanitizer.bypassSecurityTrustHtml('');
-    }
-
-    const escaped = raw
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
-
-    const withInline = escaped
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/`([^`]+)`/g, '<code>$1</code>');
-
-    const lines = withInline.split('\n');
-    const htmlParts: string[] = [];
-    let inList = false;
-
-    for (const line of lines) {
-      const bullet = line.match(/^\s*(?:[-*]|\d+\.)\s+(.*)$/);
-      if (bullet) {
-        if (!inList) {
-          htmlParts.push('<ul>');
-          inList = true;
-        }
-        htmlParts.push(`<li>${bullet[1]}</li>`);
-        continue;
-      }
-
-      if (inList) {
-        htmlParts.push('</ul>');
-        inList = false;
-      }
-
-      if (!line.trim()) {
-        htmlParts.push('<br />');
-        continue;
-      }
-
-      htmlParts.push(`<p>${line}</p>`);
-    }
-
-    if (inList) {
-      htmlParts.push('</ul>');
-    }
-
-    return this.sanitizer.bypassSecurityTrustHtml(htmlParts.join(''));
+    return this.sanitizer.bypassSecurityTrustHtml(formatAssistantReplyHtml(text));
   }
 
   private push(role: 'user' | 'assistant', content: string, isVoice = false): void {

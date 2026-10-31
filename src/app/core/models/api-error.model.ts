@@ -5,6 +5,7 @@ export interface ApiError {
   detail?: string;
   instance?: string;
   traceId?: string;
+  errorCode?: string;
   errors?: Record<string, string[]>;
 }
 

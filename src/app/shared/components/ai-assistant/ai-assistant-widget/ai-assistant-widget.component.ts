@@ -1,11 +1,14 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  inject,
-  OnInit,
-  signal,
-  HostListener,
   DestroyRef,
+  ElementRef,
+  HostListener,
+  OnInit,
+  effect,
+  inject,
+  signal,
+  viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, NavigationEnd } from '@angular/router';
@@ -31,8 +34,18 @@ export class AiAssistantWidgetComponent implements OnInit {
   readonly isOpen = this.aiAssistantState.isOpen;
   /** Compact / phone layout for the floating chat sheet. */
   readonly isMobile = signal(false);
+  private readonly fab = viewChild<ElementRef<HTMLButtonElement>>('fab');
 
   private readonly MOBILE_BREAKPOINT = 768;
+
+  constructor() {
+    effect(() => {
+      const lock = this.isOpen() && this.isMobile();
+      document.body.classList.toggle('bos-scroll-lock-chat', lock);
+    });
+
+    this.destroyRef.onDestroy(() => document.body.classList.remove('bos-scroll-lock-chat'));
+  }
 
   ngOnInit(): void {
     this.checkScreenSize();
@@ -73,9 +86,9 @@ export class AiAssistantWidgetComponent implements OnInit {
   }
 
   close(): void {
-    if (this.isOpen()) {
-      this.aiAssistantState.close();
-    }
+    if (!this.isOpen()) return;
+    this.aiAssistantState.close();
+    setTimeout(() => this.fab()?.nativeElement.focus(), 0);
   }
 
   navigate(route: string): void {

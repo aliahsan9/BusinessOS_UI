@@ -1,16 +1,18 @@
-<div class="dashboard-layout">
+<div class="dashboard-layout" [class.dashboard-layout--drawer-open]="mobileSidebarOpen()">
   <app-sidebar [mobileOpen]="mobileSidebarOpen()" (mobileClose)="closeMobileSidebar()" />
 
   <div class="dashboard-layout__main">
-    <app-navbar (menuToggle)="toggleMobileSidebar()" />
+    <app-navbar [menuOpen]="mobileSidebarOpen()" (menuToggle)="toggleMobileSidebar()" />
 
-    <main class="dashboard-layout__content" id="main-content">
-      <router-outlet />
-    </main>
+    <div class="dashboard-layout__body" [attr.inert]="mobileSidebarOpen() ? '' : null">
+      <main class="dashboard-layout__content" id="main-content">
+        <router-outlet />
+      </main>
 
-    <footer class="dashboard-layout__footer">
-      <span>© {{ currentYear }} BusinessOS. All rights reserved.</span>
-    </footer>
+      <footer class="dashboard-layout__footer">
+        <span>© {{ currentYear }} BusinessOS. All rights reserved.</span>
+      </footer>
+    </div>
   </div>
 
   <app-ai-assistant-widget />

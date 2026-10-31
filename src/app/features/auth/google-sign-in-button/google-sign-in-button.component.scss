@@ -1,0 +1,67 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.google-signin {
+  width: 100%;
+
+  &--busy {
+    pointer-events: none;
+    opacity: 0.65;
+  }
+
+  &__official {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    min-height: 44px;
+  }
+
+  &__hint {
+    margin: 0.55rem 0 0;
+    text-align: center;
+    color: var(--mkt-muted, var(--color-text-muted));
+    font-size: 0.82rem;
+  }
+}
+
+.google-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.65rem 1rem;
+  border: 1px solid #dadce0;
+  border-radius: 10px;
+  background: #fff;
+  color: #1f1f1f;
+  font-family: var(--mkt-font-display, inherit);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--mkt-accent, #0d6e6e);
+    outline-offset: 2px;
+  }
+
+  &__logo {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .google-btn {
+    font-size: 0.92rem;
+  }
+}

@@ -24,4 +24,13 @@ describe('LoginComponent', () => {
     fixture.componentInstance.onSubmit();
     expect(fixture.componentInstance.form.invalid).toBeTrue();
   });
+
+  it('shows a Continue with Google button without removing email sign-in', () => {
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).toContain('Continue with Google');
+    expect(text).toContain('Sign in');
+    expect(text).toContain('or');
+    const button = fixture.nativeElement.querySelector('.google-btn') as HTMLButtonElement;
+    expect(button.disabled).toBeTrue();
+  });
 });

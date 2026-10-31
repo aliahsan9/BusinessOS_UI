@@ -95,6 +95,31 @@
     min-height: 64px;
   }
 
+  &__close {
+    margin-left: auto;
+    width: 2.5rem;
+    height: 2.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    background: transparent;
+    color: var(--color-text);
+    cursor: pointer;
+    flex-shrink: 0;
+
+    &:hover {
+      border-color: color-mix(in srgb, var(--color-primary) 45%, var(--color-border));
+      color: var(--color-primary);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+    }
+  }
+
   &__logo {
     width: 2.35rem;
     height: 2.35rem;
@@ -115,6 +140,8 @@
   }
 
   &__name {
+    flex: 1;
+    min-width: 0;
     font-weight: 700;
     font-size: 1.05rem;
     white-space: nowrap;
@@ -325,7 +352,11 @@
   &__backdrop {
     position: fixed;
     inset: 0;
-    background: var(--overlay-backdrop-color);
+    border: 0;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    background: var(--overlay-backdrop-color, rgba(15, 23, 42, 0.48));
     z-index: 1035;
 
     @media (min-width: 992px) {
@@ -336,16 +367,19 @@
   /* Phones and tablets: off-canvas drawer, opened from the navbar */
   @media (max-width: 991.98px) {
     transform: translateX(-105%);
-    width: min(18.5rem, 86vw) !important;
+    width: min(18.75rem, calc(100vw - 2.75rem));
+    max-width: calc(100vw - 2.75rem);
     box-shadow: 4px 0 24px rgba(0, 0, 0, 0.18);
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
 
     &--mobile-open,
     &--tablet-open {
       transform: translateX(0);
     }
 
-    .app-sidebar__toggle {
-      display: flex;
+    .app-sidebar__nav {
+      overscroll-behavior: contain;
     }
   }
 

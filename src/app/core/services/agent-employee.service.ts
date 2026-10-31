@@ -17,6 +17,8 @@ import {
   AgentStreamChunk,
   AskSophiaSuggestions,
   SaveVoicePreferenceRequest,
+  SynthesizedSpeech,
+  TtsVoiceCatalog,
   VoicePreference,
 } from '../models/agent.model';
 
@@ -53,8 +55,20 @@ export class AgentEmployeeService extends BaseApiService {
     return this.get<AskSophiaSuggestions>(API_ENDPOINTS.agents.askSophia);
   }
 
-  /** Neural TTS (MP3) for English spoken replies. */
-  async synthesizeSpeech(text: string, language?: string, speechRate?: number): Promise<Blob> {
+  listTtsVoices(): Observable<TtsVoiceCatalog> {
+    return this.get<TtsVoiceCatalog>(API_ENDPOINTS.agents.ttsVoices);
+  }
+
+  /** Server-side speech synthesis. The provider key never leaves the API. */
+  async synthesizeSpeech(
+    text: string,
+    options?: {
+      language?: string;
+      speechRate?: number;
+      voiceName?: string;
+      signal?: AbortSignal;
+    },
+  ): Promise<SynthesizedSpeech> {
     const token = this.tokenService.getToken();
     const tenantId = this.tokenService.tenantId();
     const headers: Record<string, string> = {
@@ -69,17 +83,30 @@ export class AgentEmployeeService extends BaseApiService {
       headers,
       body: JSON.stringify({
         text,
-        language: language ?? this.language,
-        speechRate: speechRate ?? 1,
+        language: options?.language ?? this.language,
+        speechRate: options?.speechRate ?? 1,
+        voiceName: options?.voiceName,
       }),
+      signal: options?.signal,
     });
 
     if (!response.ok) {
-      const detail = await response.text().catch(() => '');
+      let detail = '';
+      try {
+        const payload = (await response.json()) as { error?: string };
+        detail = payload?.error ?? '';
+      } catch {
+        detail = await response.text().catch(() => '');
+      }
       throw new Error(detail || `TTS failed (${response.status})`);
     }
 
-    return response.blob();
+    return {
+      blob: await response.blob(),
+      provider: response.headers.get('X-Tts-Provider'),
+      voice: response.headers.get('X-Tts-Voice'),
+      fromCache: response.headers.get('X-Tts-Cache') === 'hit',
+    };
   }
 
   startOnboarding(request: AgentOnboardingStartRequest = {}): Observable<AgentOnboardingResponse> {

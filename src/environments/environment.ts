@@ -5,8 +5,12 @@ export const environment = {
   tokenRefreshBufferMs: 60_000,
   defaultPageSize: 20,
   maxPageSize: 100,
-  devCredentials: {
-    email: 'admin@businessos.local',
-    password: 'Admin123!',
-  },
+  devCredentials: undefined as { email: string; password: string } | undefined,
+  /** When the speech API fails in development, read the reply with the browser voice. */
+  browserSpeechFallback: true,
+  /**
+   * Public Google OAuth client ID (not a secret). Leave empty until Google Cloud Console is configured.
+   * Must match the API setting Google:ClientId.
+   */
+  googleClientId: '',
 };

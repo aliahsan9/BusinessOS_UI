@@ -72,6 +72,7 @@ export class SettingsHubComponent implements OnInit {
   readonly settings = signal<TenantSettingsDto | null>(null);
   readonly profile = signal<BusinessProfileDto | null>(null);
   readonly employees = signal<AgentEmployee[]>([]);
+  readonly ttsVoices = this.voiceService.voices;
   readonly routes = ROUTES;
   readonly canUpdate = this.tokenService.hasPermission(PermissionCodes.settings.update);
   readonly breadcrumbs = [{ label: 'Settings', route: ROUTES.settings.hub }];
@@ -124,6 +125,8 @@ export class SettingsHubComponent implements OnInit {
     autoSpeak: [true],
     continuousListening: [false],
     preferredAgentKey: ['sophia'],
+    voiceName: ['coral', Validators.required],
+    speechRate: [1, [Validators.required, Validators.min(0.5), Validators.max(2)]],
   });
 
   ngOnInit(): void {
@@ -275,17 +278,15 @@ export class SettingsHubComponent implements OnInit {
         ]),
     });
 
-    this.agentService.getVoicePreferences().subscribe({
-      next: (prefs) => {
-        this.voiceForm.patchValue({
-          language: 'en',
-          autoSpeak: prefs.autoSpeak !== false,
-          continuousListening: !!prefs.continuousListening,
-          preferredAgentKey: prefs.preferredAgentKey || 'sophia',
-        });
-        this.voiceService.applyPreferences(prefs);
-      },
-      error: () => undefined,
+    void this.voiceService.loadPreferences().then((prefs) => {
+      this.voiceForm.patchValue({
+        language: 'en',
+        autoSpeak: prefs?.autoSpeak !== false,
+        continuousListening: !!prefs?.continuousListening,
+        preferredAgentKey: prefs?.preferredAgentKey || 'sophia',
+        voiceName: this.voiceService.selectedVoice(),
+        speechRate: prefs?.speechRate ?? 1,
+      });
     });
   }
 
@@ -303,8 +304,8 @@ export class SettingsHubComponent implements OnInit {
         autoSpeak: value.autoSpeak,
         continuousListening: value.continuousListening,
         preferredAgentKey: value.preferredAgentKey,
-        voiceName: 'default',
-        speechRate: 1,
+        voiceName: value.voiceName,
+        speechRate: Number(value.speechRate) || 1,
         pitch: 1,
       })
       .subscribe({

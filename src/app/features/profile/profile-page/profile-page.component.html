@@ -111,6 +111,61 @@
       </div>
     </form>
 
+    <app-card title="Connected accounts" subtitle="Connect Google after you are already signed in. BusinessOS never asks for your Google password.">
+      @if (loginMessage()) {
+        <app-alert variant="warning" [message]="loginMessage()!" />
+      }
+      @if (externalLogins()?.googleLinked) {
+        <p>Google is connected to this account.</p>
+        <app-button
+          label="Disconnect Google"
+          type="button"
+          [variant]="ButtonVariant.Outline"
+          [loading]="linkingGoogle()"
+          [disabled]="linkingGoogle() || !externalLogins()?.hasPassword"
+          (clicked)="unlinkGoogle()"
+        />
+        @if (!externalLogins()?.hasPassword) {
+          <p class="profile-page__hint">Set a BusinessOS password before disconnecting Google.</p>
+        }
+      } @else {
+        <app-google-sign-in-button
+          [disabled]="linkingGoogle()"
+          [loading]="linkingGoogle()"
+          (credential)="onGoogleCredential($event)"
+        />
+      }
+    </app-card>
+
+    @if (externalLogins()?.hasPassword === false) {
+      <form [formGroup]="setPasswordForm" (ngSubmit)="setPassword()" class="profile-page__form">
+        <app-card title="Create a password" subtitle="Add a BusinessOS password so you can sign in without Google and disconnect Google later.">
+          <div class="form-grid">
+            <app-input
+              label="New password *"
+              type="password"
+              formControlName="newPassword"
+              [error]="fieldError('setPassword', 'newPassword') ?? undefined"
+            />
+            <app-input
+              label="Confirm password *"
+              type="password"
+              formControlName="confirmPassword"
+              [error]="fieldError('setPassword', 'confirmPassword') ?? undefined"
+            />
+          </div>
+        </app-card>
+        <div class="profile-page__actions">
+          <app-button
+            label="Save password"
+            type="submit"
+            [variant]="ButtonVariant.Outline"
+            [loading]="settingPassword()"
+            [disabled]="settingPassword()"
+          />
+        </div>
+      </form>
+    } @else {
     <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" class="profile-page__form">
       <app-card title="Security" subtitle="Change your password. Use at least 8 characters with upper, lower, and a number.">
         <div class="form-grid">
@@ -145,5 +200,6 @@
         />
       </div>
     </form>
+    }
   </div>
 }

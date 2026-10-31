@@ -141,7 +141,7 @@
             </form>
           </app-card>
 
-          <app-card title="Sophia Voice" subtitle="Spoken replies and microphone options for your AI employee.">
+          <app-card title="Sophia Voice" subtitle="Natural spoken replies. The speech key stays on the server.">
             <form [formGroup]="voiceForm" (ngSubmit)="saveVoicePreferences()">
               <div class="toggle-list">
                 <label class="toggle-item">
@@ -152,6 +152,23 @@
                   <input type="checkbox" formControlName="continuousListening" />
                   Continuous listening mode
                 </label>
+              </div>
+
+              <div class="mt-3">
+                <label class="form-label" for="sophiaVoice">Voice</label>
+                <select id="sophiaVoice" class="form-select" formControlName="voiceName">
+                  @for (voice of ttsVoices(); track voice.id) {
+                    <option [value]="voice.id">
+                      {{ voice.label }}@if (voice.description) { — {{ voice.description }} }
+                    </option>
+                  }
+                </select>
+              </div>
+
+              <div class="mt-3">
+                <label class="form-label" for="speechRate">Speaking pace</label>
+                <input id="speechRate" type="range" min="0.8" max="1.2" step="0.05" formControlName="speechRate" />
+                <p class="text-muted">Slower toward the left, faster toward the right. Natural is the middle.</p>
               </div>
 
               <div class="mt-3">

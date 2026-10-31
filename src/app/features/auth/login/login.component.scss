@@ -211,3 +211,17 @@
     }
   }
 }
+
+.auth-form__note {
+  margin: 0.75rem 0 1rem;
+  color: var(--mkt-muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+@media (max-width: 575.98px) {
+  .auth-form {
+    padding: 1.35rem;
+    box-shadow: var(--mkt-shadow-sm);
+  }
+}

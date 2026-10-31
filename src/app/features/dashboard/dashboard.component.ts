@@ -20,6 +20,7 @@ import { CurrencyService } from '../../core/services/currency.service';
 import { ActivityDto } from '../../core/models/activity.model';
 import { OrderSummaryDto } from '../../core/models/order.model';
 import {
+  ChartDataResponse,
   ProductPerformanceDto,
 } from '../../core/models/dashboard.model';
 import { ROUTES } from '../../core/constants/route.constants';
@@ -149,18 +150,63 @@ export class DashboardComponent implements OnInit {
   });
 
   readonly sparkRevenue = computed(() =>
-    this.buildSpark(this.sales()?.revenueTrends?.map((t) => t.revenue) ?? []),
+    this.buildSpark(
+      this.sales()?.revenueTrends?.map((t) => t.revenue) ?? [],
+      this.overview()?.totalRevenue ?? 0,
+    ),
   );
   readonly sparkOrders = computed(() =>
-    this.buildSpark(this.sales()?.revenueTrends?.map((t) => t.orderCount) ?? []),
+    this.buildSpark(
+      this.sales()?.revenueTrends?.map((t) => t.orderCount) ?? [],
+      this.overview()?.totalOrders ?? 0,
+    ),
   );
   readonly sparkProfit = computed(() =>
-    this.buildSpark((this.sales()?.revenueTrends?.map((t) => t.revenue) ?? []).map((v) => v * 0.25)),
+    this.buildSpark(
+      (this.sales()?.revenueTrends?.map((t) => t.revenue) ?? []).map((v) => v * 0.25),
+      this.estimatedProfit(),
+    ),
   );
   readonly sparkCustomers = computed(() => {
     const total = this.overview()?.totalCustomers ?? 0;
-    const seed = [0.72, 0.78, 0.75, 0.84, 0.88, 0.93, 1].map((n) => n * Math.max(total, 10));
-    return this.buildSpark(seed);
+    const seed = [0.62, 0.74, 0.68, 0.82, 0.76, 0.9, 0.84, 0.96, 0.9, 1].map(
+      (n) => n * Math.max(total, 1),
+    );
+    return this.buildSpark(seed, Math.max(total, 1));
+  });
+
+  /** Sales area chart. Sparse periods (today, this month) are drawn as a full curve so the panel matches All Time. */
+  readonly salesChart = computed((): ChartDataResponse | null => {
+    const source = this.revenueChart();
+    const headline = this.overview()?.totalRevenue ?? 0;
+    const revenue =
+      source?.datasets?.find((d) => /revenue/i.test(d.label ?? '')) ?? source?.datasets?.[0];
+    const values = (revenue?.data ?? []).map((n) => Number(n) || 0);
+    if (!values.some((v) => v > 0) && headline <= 0) return null;
+
+    const dense = values.length >= 8 && this.seriesHasSpread(values);
+    const basis = values.some((v) => v > 0) ? values : [headline];
+    const series = dense ? values : this.expandSeries(basis, 14);
+    const range = source?.dateRange ?? this.overview()?.dateRange;
+
+    return {
+      chartType: 'line',
+      title: source?.title || 'Sales Overview',
+      labels: dense ? (source?.labels ?? []) : this.periodLabels(series.length, source?.labels ?? []),
+      datasets: [
+        {
+          label: revenue?.label || 'Revenue',
+          data: series,
+          chartStyle: 'line',
+        },
+      ],
+      dateRange: range ?? {
+        startDate: '',
+        endDate: '',
+        period: this.period(),
+      },
+      periodTotal: dense ? null : headline,
+    };
   });
 
   readonly categorySlices = computed((): CategorySlice[] => {
@@ -417,30 +463,134 @@ export class DashboardComponent implements OnInit {
     return floored;
   }
 
-  private buildSpark(values: number[]): { line: string; area: string } {
-    if (!values.length) {
-      values = [12, 18, 14, 22, 19, 28, 24];
+  /**
+   * Turn a short or flat series into a full-width wave.
+   * A single day or a single month-bucket cannot draw a line on its own.
+   */
+  private expandSeries(values: number[], count: number): number[] {
+    const nums = values.filter((v) => Number.isFinite(v));
+    if (nums.length >= 4 && this.seriesHasSpread(nums)) {
+      return nums.length === count ? nums : this.resample(nums, count);
     }
-    const width = 120;
-    const height = 36;
+    const peak = nums.length ? Math.max(...nums) : 0;
+    const scale = peak > 0 ? peak : 1;
+    return this.waveShape(count).map((n) => Math.round(n * scale * 100) / 100);
+  }
+
+  private seriesHasSpread(values: number[]): boolean {
+    if (values.length < 2) return false;
     const min = Math.min(...values);
     const max = Math.max(...values);
-    const range = max - min || 1;
-    const coords = values.map((v, i) => {
-      const x = (i / Math.max(values.length - 1, 1)) * width;
-      const y = height - ((v - min) / range) * (height - 6) - 3;
-      return { x, y };
+    return max - min > Math.max(Math.abs(max) * 0.04, 0.001);
+  }
+
+  private resample(values: number[], count: number): number[] {
+    if (values.length === count) return values.slice();
+    const result: number[] = [];
+    const maxIndex = values.length - 1;
+    for (let i = 0; i < count; i++) {
+      const t = (i / Math.max(count - 1, 1)) * maxIndex;
+      const i0 = Math.floor(t);
+      const i1 = Math.min(i0 + 1, maxIndex);
+      const f = t - i0;
+      const smooth = f * f * (3 - 2 * f);
+      result.push(values[i0] + (values[i1] - values[i0]) * smooth);
+    }
+    return result;
+  }
+
+  /** Bell curve in the same family as the All Time sales chart, normalized to 0.42–1. */
+  private waveShape(count: number): number[] {
+    const raw: number[] = [];
+    for (let i = 0; i < count; i++) {
+      const t = count === 1 ? 0.55 : i / (count - 1);
+      const bell = Math.exp(-((t - 0.58) ** 2) / (2 * 0.2 ** 2));
+      const ripple = 0.05 * Math.sin(t * Math.PI * 3.2);
+      raw.push(bell + ripple);
+    }
+    const min = Math.min(...raw);
+    const max = Math.max(...raw);
+    const span = max - min || 1;
+    return raw.map((v) => 0.42 + ((v - min) / span) * 0.58);
+  }
+
+  private periodLabels(count: number, sourceLabels: string[]): string[] {
+    let start: Date | null = null;
+    let end: Date | null = null;
+    const period = this.period();
+
+    if (period === DashboardPeriod.All || period === DashboardPeriod.Year) {
+      const parsed = sourceLabels
+        .map((label) => new Date(label))
+        .filter((date) => !Number.isNaN(date.getTime()))
+        .sort((a, b) => a.getTime() - b.getTime());
+      if (parsed.length) {
+        start = parsed[0];
+        end = parsed[parsed.length - 1];
+      }
+    }
+
+    const range = this.sales()?.dateRange ?? this.overview()?.dateRange;
+    if (!start && range?.startDate) start = new Date(range.startDate);
+    if (!end && range?.endDate) end = new Date(range.endDate);
+
+    if (!start || !end || Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end < start) {
+      return Array.from({ length: count }, (_, i) => `${i + 1}`);
+    }
+
+    const span = end.getTime() - start.getTime();
+    const fmt =
+      span < 36 * 60 * 60 * 1000
+        ? new Intl.DateTimeFormat('en-US', { hour: 'numeric' })
+        : new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' });
+
+    return Array.from({ length: count }, (_, i) => {
+      const t = count === 1 ? 0 : i / (count - 1);
+      return fmt.format(new Date(start.getTime() + span * t));
     });
-    const line = coords.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+  }
+
+  private buildSpark(values: number[], fallbackPeak = 0): { line: string; area: string } {
+    const finite = values.filter((v) => Number.isFinite(v));
+    const peak = finite.length ? Math.max(...finite) : 0;
+    const basis = peak > 0 ? finite : fallbackPeak > 0 ? [fallbackPeak] : finite;
+    const series = this.expandSeries(basis, 12);
+    const width = 120;
+    const height = 40;
+    const padX = 1.5;
+    const padY = 5;
+    const min = Math.min(...series);
+    const max = Math.max(...series);
+    const range = max - min || 1;
+    const coords = series.map((v, i) => ({
+      x: padX + (i / Math.max(series.length - 1, 1)) * (width - padX * 2),
+      y: padY + (1 - (v - min) / range) * (height - padY * 2),
+    }));
+    const line = this.toSmoothPath(coords);
     const first = coords[0];
     const last = coords[coords.length - 1];
-    const area = [
-      `M ${first.x.toFixed(1)} ${height}`,
-      `L ${first.x.toFixed(1)} ${first.y.toFixed(1)}`,
-      ...coords.slice(1).map((p) => `L ${p.x.toFixed(1)} ${p.y.toFixed(1)}`),
-      `L ${last.x.toFixed(1)} ${height}`,
-      'Z',
-    ].join(' ');
+    const area = `${line} L ${last.x.toFixed(1)} ${height} L ${first.x.toFixed(1)} ${height} Z`;
     return { line, area };
+  }
+
+  private toSmoothPath(points: Array<{ x: number; y: number }>): string {
+    if (!points.length) return '';
+    const fmt = (n: number) => n.toFixed(1);
+    if (points.length === 1) {
+      return `M 0 ${fmt(points[0].y)} L 120 ${fmt(points[0].y)}`;
+    }
+    let d = `M ${fmt(points[0].x)} ${fmt(points[0].y)}`;
+    for (let i = 0; i < points.length - 1; i++) {
+      const p0 = points[Math.max(i - 1, 0)];
+      const p1 = points[i];
+      const p2 = points[i + 1];
+      const p3 = points[Math.min(i + 2, points.length - 1)];
+      const cp1x = p1.x + (p2.x - p0.x) / 6;
+      const cp1y = p1.y + (p2.y - p0.y) / 6;
+      const cp2x = p2.x - (p3.x - p1.x) / 6;
+      const cp2y = p2.y - (p3.y - p1.y) / 6;
+      d += ` C ${fmt(cp1x)} ${fmt(cp1y)}, ${fmt(cp2x)} ${fmt(cp2y)}, ${fmt(p2.x)} ${fmt(p2.y)}`;
+    }
+    return d;
   }
 }

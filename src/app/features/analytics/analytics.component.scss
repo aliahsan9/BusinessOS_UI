@@ -127,7 +127,7 @@
 
   &__stats {
     margin-bottom: 1.5rem;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
   }
 
   &__stat {
@@ -234,14 +234,14 @@
 
   &__charts {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
     gap: 1.25rem;
     margin-bottom: 1.5rem;
   }
 
   &__tables {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
     gap: 1.25rem;
     margin-bottom: 1.5rem;
   }
@@ -406,7 +406,7 @@
 @media (max-width: 992px) {
   .analytics {
     &__stats {
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
     }
   }
 }

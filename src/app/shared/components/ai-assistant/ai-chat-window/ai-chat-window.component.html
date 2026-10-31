@@ -18,7 +18,7 @@
         </svg>
         <span class="ai-chat__avatar-pulse"></span>
       </div>
-      <div>
+      <div class="ai-chat__identity-text">
         <strong class="ai-chat__name">{{ agentName() }}</strong>
         <span class="ai-chat__subtitle">{{ agentRole() }}</span>
         <span class="ai-chat__status" [attr.data-state]="voiceState()">
@@ -33,15 +33,20 @@
     </div>
 
     <div class="ai-chat__header-actions">
-      <button type="button" class="ai-chat__workspace-link" (click)="newConversation()" [disabled]="loading()" title="New conversation">
-        New
+      <button type="button" class="ai-chat__workspace-link" (click)="newConversation()" [disabled]="loading()" title="New conversation" aria-label="New conversation">
+        <i class="bi bi-plus-lg" aria-hidden="true"></i>
+        <span class="ai-chat__action-label">New</span>
       </button>
       @if (canRegenerate()) {
-        <button type="button" class="ai-chat__workspace-link" (click)="regenerateLast()" title="Regenerate">
-          Regen
+        <button type="button" class="ai-chat__workspace-link" (click)="regenerateLast()" title="Regenerate" aria-label="Regenerate">
+          <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+          <span class="ai-chat__action-label">Regen</span>
         </button>
       }
-      <a class="ai-chat__workspace-link" [routerLink]="workspaceRoute" (click)="onClose()">Workspace</a>
+      <a class="ai-chat__workspace-link" [routerLink]="workspaceRoute" (click)="onClose()" aria-label="Open workspace">
+        <i class="bi bi-layout-text-window-reverse" aria-hidden="true"></i>
+        <span class="ai-chat__action-label">Workspace</span>
+      </a>
       <button type="button" class="ai-chat__close" aria-label="Close" (click)="onClose()">
         <i class="bi bi-x-lg" aria-hidden="true"></i>
       </button>
@@ -93,15 +98,11 @@
             <span class="ai-chat__typing-dots" aria-live="polite" aria-label="Sophia is thinking">
               <span></span><span></span><span></span>
             </span>
+          } @else if (msg.role === 'assistant') {
+            <div class="ai-chat__rich" [innerHTML]="formatReplyHtml(msg.content)"></div>
+            @if (msg.streaming) {<span class="ai-chat__caret" aria-hidden="true"></span>}
           } @else {
-            {{ msg.content }}@if (msg.streaming) {<span class="ai-chat__caret" aria-hidden="true"></span>}
-          }
-
-          @if (msg.role === 'assistant' && sourcesSummary(msg)) {
-            <div class="ai-chat__sources">
-              <strong>Retrieved Data:</strong>
-              {{ sourcesSummary(msg) }}
-            </div>
+            {{ msg.content }}
           }
 
           @if (msg.citations && msg.citations.length > 0) {
@@ -183,12 +184,28 @@
         Listening — tap the mic again to stop
       } @else if (micEngaged()) {
         Mic is on — tap again to stop
-      } @else if (isSpeaking()) {
+      }       @else if (isSpeaking()) {
         Sophia is speaking
+      } @else if (isPaused()) {
+        Speech paused
+      } @else if (playbackNotice()) {
+        {{ playbackNotice() }}
       } @else {
         Tap the mic to talk · tap again to stop
       }
     </span>
+    @if (voices().length > 0) {
+      <select
+        class="ai-chat__voice-select"
+        [ngModel]="selectedVoice()"
+        (ngModelChange)="onVoiceChange($event)"
+        aria-label="Sophia voice"
+      >
+        @for (voice of voices(); track voice.id) {
+          <option [value]="voice.id">{{ voice.label }}</option>
+        }
+      </select>
+    }
   </div>
 
   <footer class="ai-chat__input">
@@ -218,7 +235,17 @@
       </button>
 
       @if (isSpeaking()) {
-        <button type="button" class="ai-chat__icon-btn" (click)="stopSpeaking()" aria-label="Stop speaking" title="Stop speaking">
+        <button type="button" class="ai-chat__icon-btn" (click)="pauseSpeaking()" aria-label="Pause speaking" title="Pause">
+          <i class="bi bi-pause-fill"></i>
+        </button>
+        <button type="button" class="ai-chat__icon-btn" (click)="stopSpeaking()" aria-label="Stop speaking" title="Stop">
+          <i class="bi bi-stop-fill"></i>
+        </button>
+      } @else if (isPaused()) {
+        <button type="button" class="ai-chat__icon-btn" (click)="resumeSpeaking()" aria-label="Play speaking" title="Play">
+          <i class="bi bi-play-fill"></i>
+        </button>
+        <button type="button" class="ai-chat__icon-btn" (click)="stopSpeaking()" aria-label="Stop speaking" title="Stop">
           <i class="bi bi-stop-fill"></i>
         </button>
       } @else {
@@ -228,14 +255,16 @@
       }
     </div>
 
-    <input
-      type="text"
+    <textarea
+      rows="1"
+      enterkeyhint="send"
+      aria-label="Message"
       placeholder="e.g. Create purchase order for Laptop quantity 5"
       [ngModel]="inputText()"
       (ngModelChange)="inputText.set($event)"
-      (keydown.enter)="sendMessage()"
+      (keydown)="onComposerKeydown($event)"
       [disabled]="loading()"
-    />
+    ></textarea>
 
     @if (loading()) {
       <button type="button" class="ai-chat__stop" (click)="stopGeneration()">Stop</button>

@@ -4,7 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ProfileService } from '../../../core/services/profile.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { TokenService } from '../../../core/services/token.service';
-import { AccountProfileDto } from '../../../core/models/profile.model';
+import { AccountProfileDto, ExternalLoginsDto } from '../../../core/models/profile.model';
 import { ROUTES } from '../../../core/constants/route.constants';
 import { ButtonVariant } from '../../../core/enums';
 import { ApiError } from '../../../core/models/api-error.model';
@@ -16,6 +16,7 @@ import { AppButtonComponent } from '../../../shared/components/app-button/app-bu
 import { AppSkeletonComponent } from '../../../shared/components/app-skeleton/app-skeleton.component';
 import { AppAlertComponent } from '../../../shared/components/app-alert/app-alert.component';
 import { AppBadgeComponent } from '../../../shared/components/app-badge/app-badge.component';
+import { GoogleSignInButtonComponent } from '../../auth/google-sign-in-button/google-sign-in-button.component';
 import {
   getFieldError,
   passwordMatchValidator,
@@ -36,6 +37,7 @@ import {
     AppSkeletonComponent,
     AppAlertComponent,
     AppBadgeComponent,
+    GoogleSignInButtonComponent,
   ],
   templateUrl: './profile-page.component.html',
   styleUrl: './profile-page.component.scss',
@@ -51,8 +53,12 @@ export class ProfilePageComponent implements OnInit {
   readonly loading = signal(true);
   readonly saving = signal(false);
   readonly changingPassword = signal(false);
+  readonly settingPassword = signal(false);
+  readonly linkingGoogle = signal(false);
   readonly error = signal<string | null>(null);
   readonly profile = signal<AccountProfileDto | null>(null);
+  readonly externalLogins = signal<ExternalLoginsDto | null>(null);
+  readonly loginMessage = signal<string | null>(null);
   readonly avatarBroken = signal(false);
   readonly avatarUrlValue = signal('');
   readonly breadcrumbs = [
@@ -71,6 +77,14 @@ export class ProfilePageComponent implements OnInit {
   readonly passwordForm = this.fb.nonNullable.group(
     {
       currentPassword: ['', [Validators.required]],
+      newPassword: ['', [Validators.required, strongPasswordValidator()]],
+      confirmPassword: ['', [Validators.required]],
+    },
+    { validators: passwordMatchValidator('newPassword', 'confirmPassword') },
+  );
+
+  readonly setPasswordForm = this.fb.nonNullable.group(
+    {
       newPassword: ['', [Validators.required, strongPasswordValidator()]],
       confirmPassword: ['', [Validators.required]],
     },
@@ -113,6 +127,7 @@ export class ProfilePageComponent implements OnInit {
       next: (profile) => {
         this.applyProfile(profile);
         this.loading.set(false);
+        this.loadLogins();
       },
       error: (err: ApiError) => {
         this.error.set(err.detail ?? 'Failed to load your profile.');
@@ -121,7 +136,7 @@ export class ProfilePageComponent implements OnInit {
     });
   }
 
-  fieldError(form: 'profile' | 'password', field: string): string | null {
+  fieldError(form: 'profile' | 'password' | 'setPassword', field: string): string | null {
     const labels: Record<string, string> = {
       firstName: 'First name',
       lastName: 'Last name',
@@ -133,7 +148,11 @@ export class ProfilePageComponent implements OnInit {
       confirmPassword: 'Confirm password',
     };
     const control =
-      form === 'profile' ? this.profileForm.get(field) : this.passwordForm.get(field);
+      form === 'profile'
+        ? this.profileForm.get(field)
+        : form === 'setPassword'
+          ? this.setPasswordForm.get(field)
+          : this.passwordForm.get(field);
     return getFieldError(control, labels[field] ?? field);
   }
 
@@ -198,6 +217,81 @@ export class ProfilePageComponent implements OnInit {
           this.changingPassword.set(false);
         },
       });
+  }
+
+  setPassword(): void {
+    if (this.settingPassword()) {
+      return;
+    }
+
+    if (this.setPasswordForm.invalid) {
+      this.setPasswordForm.markAllAsTouched();
+      return;
+    }
+
+    this.settingPassword.set(true);
+    this.profileService.setPassword({ newPassword: this.setPasswordForm.controls.newPassword.value }).subscribe({
+      next: () => {
+        this.settingPassword.set(false);
+        this.setPasswordForm.reset();
+        this.externalLogins.update((current) => ({
+          hasPassword: true,
+          googleLinked: current?.googleLinked ?? false,
+        }));
+        this.notification.success('Password saved. Sign in again if BusinessOS asks you to.');
+      },
+      error: (err: ApiError) => {
+        this.settingPassword.set(false);
+        this.notification.error(err.detail ?? 'A password could not be added.');
+      },
+    });
+  }
+
+  onGoogleCredential(idToken: string): void {
+    if (this.linkingGoogle()) {
+      return;
+    }
+
+    this.linkingGoogle.set(true);
+    this.loginMessage.set(null);
+    this.profileService.linkGoogle(idToken).subscribe({
+      next: (status) => {
+        this.externalLogins.set(status);
+        this.linkingGoogle.set(false);
+        this.notification.success('Google connected.');
+      },
+      error: (err: ApiError) => {
+        this.linkingGoogle.set(false);
+        this.loginMessage.set(err.detail ?? 'Google could not be connected.');
+      },
+    });
+  }
+
+  unlinkGoogle(): void {
+    if (this.linkingGoogle() || !this.externalLogins()?.hasPassword) {
+      return;
+    }
+
+    this.linkingGoogle.set(true);
+    this.loginMessage.set(null);
+    this.profileService.unlinkGoogle().subscribe({
+      next: (status) => {
+        this.externalLogins.set(status);
+        this.linkingGoogle.set(false);
+        this.notification.success('Google disconnected.');
+      },
+      error: (err: ApiError) => {
+        this.linkingGoogle.set(false);
+        this.loginMessage.set(err.detail ?? 'Google could not be disconnected.');
+      },
+    });
+  }
+
+  private loadLogins(): void {
+    this.profileService.getExternalLogins().subscribe({
+      next: (status) => this.externalLogins.set(status),
+      error: () => this.loginMessage.set('Connected accounts could not be loaded.'),
+    });
   }
 
   private applyProfile(profile: AccountProfileDto): void {

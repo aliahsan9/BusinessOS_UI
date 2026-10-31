@@ -2,12 +2,20 @@ export const API_ENDPOINTS = {
   auth: {
     login: '/auth/login',
     register: '/auth/register',
+    refresh: '/auth/refresh',
+    logout: '/auth/logout',
+    logoutAll: '/auth/logout-all',
     forgotPassword: '/auth/forgot-password',
     resetPassword: '/auth/reset-password',
+    google: '/auth/google',
+    googleComplete: '/auth/google/complete',
   },
   account: {
     me: '/account/me',
     changePassword: '/account/change-password',
+    setPassword: '/account/password',
+    externalLogins: '/account/external-logins',
+    linkGoogle: '/account/external-logins/google',
   },
   dashboard: {
     overview: '/dashboard/overview',
@@ -148,6 +156,7 @@ export const API_ENDPOINTS = {
     employees: '/agents/employees',
     voicePreferences: '/agents/voice-preferences',
     tts: '/agents/tts',
+    ttsVoices: '/agents/tts/voices',
     onboardingStart: '/agents/onboarding/start',
     onboardingContinue: '/agents/onboarding/continue',
     workflows: '/agents/workflows',
@@ -167,7 +176,9 @@ export const API_ENDPOINTS = {
 export const HTTP_HEADERS = {
   tenantId: 'X-Tenant-ID',
   authorization: 'Authorization',
+  csrf: 'X-CSRF-Token',
   contentType: 'Content-Type',
+  idempotencyKey: 'Idempotency-Key',
 } as const;
 
 export const RETRY_CONFIG = {

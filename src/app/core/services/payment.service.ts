@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { BaseApiService } from './base-api.service';
-import { API_ENDPOINTS } from '../constants/api.constants';
+import { API_ENDPOINTS, HTTP_HEADERS } from '../constants/api.constants';
+import { idempotencyKeyFor } from '../helpers/idempotency-key';
 import { PagedResult } from '../models/pagination.model';
 import {
   CreatePaymentRequest,
@@ -23,7 +24,10 @@ export class PaymentService extends BaseApiService {
   }
 
   create(request: CreatePaymentRequest): Observable<CreatePaymentResponse> {
-    return this.post<CreatePaymentResponse>(API_ENDPOINTS.payments, request);
+    const key = idempotencyKeyFor('payments.create', request);
+    return this.post<CreatePaymentResponse>(API_ENDPOINTS.payments, request, {
+      [HTTP_HEADERS.idempotencyKey]: key,
+    });
   }
 
   update(id: string, request: UpdatePaymentRequest): Observable<void> {

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostListener, OnDestroy, OnInit, effect, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { AppSidebarComponent } from '../../components/app-sidebar/app-sidebar.component';
 import { AppNavbarComponent } from '../../components/app-navbar/app-navbar.component';
@@ -14,12 +14,18 @@ import { TokenService } from '../../../core/services/token.service';
   styleUrl: './dashboard-layout.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class DashboardLayoutComponent implements OnInit {
+export class DashboardLayoutComponent implements OnInit, OnDestroy {
   private readonly profileService = inject(ProfileService);
   private readonly tokenService = inject(TokenService);
 
   readonly currentYear = new Date().getFullYear();
   readonly mobileSidebarOpen = signal(false);
+
+  constructor() {
+    effect(() => {
+      document.body.classList.toggle('bos-scroll-lock', this.mobileSidebarOpen());
+    });
+  }
 
   ngOnInit(): void {
     const user = this.tokenService.user();
@@ -47,5 +53,16 @@ export class DashboardLayoutComponent implements OnInit {
 
   closeMobileSidebar(): void {
     this.mobileSidebarOpen.set(false);
+  }
+
+  ngOnDestroy(): void {
+    document.body.classList.remove('bos-scroll-lock');
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.mobileSidebarOpen()) {
+      this.closeMobileSidebar();
+    }
   }
 }

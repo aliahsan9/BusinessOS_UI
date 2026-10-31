@@ -29,6 +29,7 @@ export class AppInputComponent implements ControlValueAccessor {
 
   protected readonly value = signal('');
   protected readonly isDisabled = signal(false);
+  protected readonly passwordVisible = signal(false);
 
   private onChange: (value: string) => void = () => undefined;
   private onTouched: () => void = () => undefined;
@@ -57,5 +58,17 @@ export class AppInputComponent implements ControlValueAccessor {
 
   onBlur(): void {
     this.onTouched();
+  }
+
+  togglePassword(): void {
+    this.passwordVisible.update((visible) => !visible);
+  }
+
+  protected resolvedType(): 'text' | 'email' | 'password' | 'number' | 'tel' | 'search' | 'date' {
+    if (this.type() === 'password' && this.passwordVisible()) {
+      return 'text';
+    }
+
+    return this.type();
   }
 }

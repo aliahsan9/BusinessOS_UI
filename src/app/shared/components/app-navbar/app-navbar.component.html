@@ -1,12 +1,15 @@
 <header class="app-navbar">
   <div class="app-navbar__start">
     <button
+      #menuButton
       type="button"
       class="btn app-navbar__menu-btn"
-      aria-label="Toggle navigation"
+      [attr.aria-label]="menuOpen() ? 'Close navigation' : 'Open navigation'"
+      [attr.aria-expanded]="menuOpen()"
+      aria-controls="app-sidebar"
       (click)="menuToggle.emit()"
     >
-      <i class="bi bi-list"></i>
+      <i class="bi" [class.bi-x-lg]="menuOpen()" [class.bi-list]="!menuOpen()" aria-hidden="true"></i>
     </button>
 
     <label class="app-navbar__search" aria-label="Search">

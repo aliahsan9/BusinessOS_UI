@@ -43,7 +43,16 @@ text-rendering: optimizeLegibility;
 -webkit-font-smoothing: antialiased;
 -moz-osx-font-smoothing: grayscale;
 
-overflow-x: hidden;
+}
+
+body.bos-scroll-lock,
+body.bos-scroll-lock-chat {
+  overflow: hidden;
+}
+
+html:has(body.bos-scroll-lock),
+html:has(body.bos-scroll-lock-chat) {
+  overflow: hidden;
 }
 
 /* ----------------------------------

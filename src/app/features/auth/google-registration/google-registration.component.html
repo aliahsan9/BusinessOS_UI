@@ -1,0 +1,33 @@
+<section class="google-registration" aria-labelledby="google-registration-title">
+  <h2 id="google-registration-title">Finish your workspace</h2>
+  <p>Google verified <strong>{{ pending().email }}</strong>. Add your business name to create the workspace. This does not ask for your Google password.</p>
+
+  @if (errorMessage()) {
+    <app-alert [message]="errorMessage()!" variant="danger"></app-alert>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label class="form-label" for="googleFirstName">First name</label>
+        <input id="googleFirstName" class="form-control auth-input" formControlName="firstName" autocomplete="given-name" />
+      </div>
+      <div class="col-md-6 mb-3">
+        <label class="form-label" for="googleLastName">Last name</label>
+        <input id="googleLastName" class="form-control auth-input" formControlName="lastName" autocomplete="family-name" />
+      </div>
+    </div>
+    <div class="mb-3">
+      <label class="form-label" for="googleBusinessName">Business name</label>
+      <input id="googleBusinessName" class="form-control auth-input" formControlName="businessName" autocomplete="organization" />
+    </div>
+    <button type="submit" class="mkt-btn mkt-btn--primary w-100" [disabled]="submitting()">
+      @if (submitting()) {
+        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        Creating workspace...
+      } @else {
+        Create workspace
+      }
+    </button>
+  </form>
+</section>

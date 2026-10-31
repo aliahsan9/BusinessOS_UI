@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { Meta } from '@angular/platform-browser';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { AppInputComponent } from '../../../shared/components/app-input/app-input.component';
@@ -17,18 +18,21 @@ import { ApiError } from '../../../core/models/api-error.model';
   styleUrl: './reset-password.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ResetPasswordComponent {
+export class ResetPasswordComponent implements OnInit, OnDestroy {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly notificationService = inject(NotificationService);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly meta = inject(Meta);
+  private previousReferrer: string | null = null;
 
   readonly submitted = signal(false);
   readonly loading = signal(false);
   readonly errorMessage = signal<string | null>(null);
-
   readonly token = this.route.snapshot.queryParamMap.get('token') ?? '';
   readonly email = this.route.snapshot.queryParamMap.get('email') ?? '';
+  readonly tokenMissing = !this.token;
 
   readonly form = this.fb.nonNullable.group(
     {
@@ -41,7 +45,34 @@ export class ResetPasswordComponent {
 
   getFieldError = getFieldError;
 
+  ngOnInit(): void {
+    const existing = this.meta.getTag('name="referrer"');
+    this.previousReferrer = existing?.content ?? null;
+    this.meta.updateTag({ name: 'referrer', content: 'no-referrer' });
+
+    if (this.token || this.email) {
+      void this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: {},
+        replaceUrl: true,
+      });
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.previousReferrer) {
+      this.meta.updateTag({ name: 'referrer', content: this.previousReferrer });
+      return;
+    }
+
+    this.meta.removeTag('name="referrer"');
+  }
+
   onSubmit(): void {
+    if (this.loading() || this.tokenMissing) {
+      return;
+    }
+
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -56,7 +87,7 @@ export class ResetPasswordComponent {
       next: () => {
         this.loading.set(false);
         this.submitted.set(true);
-        this.notificationService.success('Password reset successfully');
+        this.notificationService.success('Password reset. Sign in with your new password.');
       },
       error: (error: ApiError) => {
         this.loading.set(false);

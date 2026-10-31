@@ -14,7 +14,14 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
     catchError((error: HttpErrorResponse) => {
       const apiError = toApiError(error);
 
-      const isAuthEndpoint = req.url.includes('/auth/login') || req.url.includes('/auth/register');
+      const isAuthEndpoint =
+        req.url.includes('/auth/login') ||
+        req.url.includes('/auth/register') ||
+        req.url.includes('/auth/refresh') ||
+        req.url.includes('/auth/logout') ||
+        req.url.includes('/auth/google') ||
+        req.url.includes('/auth/forgot-password') ||
+        req.url.includes('/auth/reset-password');
       const isPostLoginSync =
         req.url.includes('/settings') || req.url.includes('/onboarding/status');
 

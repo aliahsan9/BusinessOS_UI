@@ -12,11 +12,18 @@ const mockSettings = (): TenantSettingsDto => ({
   language: 'en',
   taxRate: 0,
   theme: 'light',
+  timezone: 'UTC',
+  aiAssistantEnabled: true,
+  aiShowSuggestions: true,
   emailNotificationsEnabled: true,
   systemNotificationsEnabled: true,
   orderNotificationsEnabled: true,
   inventoryAlertsEnabled: true,
   paymentAlertsEnabled: true,
+  taskNotificationsEnabled: true,
+  invoiceNotificationsEnabled: true,
+  customerNotificationsEnabled: true,
+  projectNotificationsEnabled: true,
 });
 
 describe('ThemeSelectorComponent', () => {
