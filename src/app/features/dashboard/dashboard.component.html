@@ -375,7 +375,7 @@
             <span class="ai-card__eyebrow">AI Business Advisor</span>
             <h3>Need insights on sales or inventory?</h3>
             <p>Ask your AI assistant for recommendations and next actions.</p>
-            <button type="button" class="ai-card__btn" (click)="openAiAssistant()">
+            <button type="button" class="ai-card__btn" data-ai-open (click)="openAiAssistant($event)">
               Ask AI Assistant
             </button>
           </div>

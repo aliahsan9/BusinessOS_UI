@@ -107,10 +107,12 @@ export class AiAssistantWidgetComponent implements OnInit {
   onClickOutside(event: MouseEvent): void {
     if (!this.isOpen() || this.isMobile()) return;
 
-    const target = event.target as HTMLElement;
-    const widgetElement = document.querySelector('.ai-widget');
-    if (widgetElement && !widgetElement.contains(target)) {
-      this.close();
-    }
+    const target = event.target as HTMLElement | null;
+    if (!target) return;
+    // Keep the panel open when the click is inside it, on its backdrop,
+    // or on a control that just asked to open it.
+    if (target.closest('.ai-widget, .ai-widget__backdrop, [data-ai-open]')) return;
+
+    this.close();
   }
 }

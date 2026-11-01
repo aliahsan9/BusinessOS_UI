@@ -302,8 +302,12 @@ export class DashboardComponent implements OnInit {
     this.showAddMenu.set(false);
   }
 
-  openAiAssistant(): void {
-    this.aiAssistantState.open();
+  openAiAssistant(event: Event): void {
+    event.stopPropagation();
+    // This click also reaches the assistant's document listener. Opening in the
+    // same turn makes that listener treat the button as an outside click and
+    // close the panel before it appears. Open after the click finishes.
+    setTimeout(() => this.aiAssistantState.open());
   }
 
   toggleTask(id: string): void {
