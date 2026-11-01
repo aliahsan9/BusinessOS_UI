@@ -47,10 +47,10 @@
         <i class="bi bi-layout-text-window-reverse" aria-hidden="true"></i>
         <span class="ai-chat__action-label">Workspace</span>
       </a>
-      <button type="button" class="ai-chat__close" aria-label="Close" (click)="onClose()">
-        <i class="bi bi-x-lg" aria-hidden="true"></i>
-      </button>
     </div>
+    <button type="button" class="ai-chat__close" aria-label="Close" (click)="onClose()">
+      <i class="bi bi-x-lg" aria-hidden="true"></i>
+    </button>
   </header>
 
   @if (!chatEnabled()) {
@@ -259,7 +259,7 @@
       rows="1"
       enterkeyhint="send"
       aria-label="Message"
-      placeholder="e.g. Create purchase order for Laptop quantity 5"
+      placeholder="Ask Sophia anything…"
       [ngModel]="inputText()"
       (ngModelChange)="inputText.set($event)"
       (keydown)="onComposerKeydown($event)"
