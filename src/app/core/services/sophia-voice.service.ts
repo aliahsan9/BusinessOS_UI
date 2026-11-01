@@ -28,7 +28,8 @@ type SpeechRecognitionEventLike = {
 };
 
 /**
- * Browser STT + TTS for Sophia (English).
+ * Turn-based speech for Sophia. The browser transcribes one utterance, then the server
+ * answers and synthesizes speech. This is not a full-duplex realtime call.
  */
 @Injectable({ providedIn: 'root' })
 export class SophiaVoiceService implements OnDestroy {
@@ -65,7 +66,9 @@ export class SophiaVoiceService implements OnDestroy {
   readonly lastSpokenText = signal('');
   readonly micSupported = signal(false);
   readonly ttsSupported = signal(typeof window !== 'undefined' && 'speechSynthesis' in window);
-  readonly language = signal('en');
+  readonly language = signal(this.readStoredLanguage() ?? 'auto');
+  /** Language of the latest reply, used when preference is automatic. */
+  private replyLanguage = 'en';
   readonly autoSpeak = signal(true);
   readonly continuousListening = signal(false);
   readonly errorMessage = signal<string | null>(null);
@@ -113,14 +116,57 @@ export class SophiaVoiceService implements OnDestroy {
 
   applyPreferences(prefs: VoicePreference): void {
     this.prefs = { ...prefs };
-    this.language.set('en');
+    const stored = this.readStoredLanguage();
+    const server = this.normalizeLanguage(prefs.language || 'auto');
+    const lang = stored ?? (server === 'en' ? 'auto' : server);
+    this.language.set(lang);
     this.autoSpeak.set(prefs.autoSpeak !== false);
     this.continuousListening.set(!!prefs.continuousListening);
     this.selectedVoice.set(this.resolveVoiceId(prefs.voiceName));
     this.agentService.setPreferences({
       agentKey: prefs.preferredAgentKey || 'sophia',
-      language: 'en',
+      language: lang,
     });
+  }
+
+  pinLanguage(language: string): void {
+    const lang = this.normalizeLanguage(language);
+    this.language.set(lang);
+    this.writeStoredLanguage(lang);
+    this.agentService.setPreferences({ language: lang });
+    if (this.prefs) this.prefs = { ...this.prefs, language: lang };
+  }
+
+  async selectLanguage(language: string): Promise<void> {
+    const lang = this.normalizeLanguage(language);
+    this.pinLanguage(lang);
+    const base = this.prefs ?? {
+      language: lang,
+      voiceName: this.selectedVoice(),
+      speechRate: 1,
+      pitch: 1,
+      continuousListening: this.continuousListening(),
+      autoSpeak: this.autoSpeak(),
+      preferredAgentKey: 'sophia',
+    };
+    this.prefs = { ...base, language: lang };
+    try {
+      const saved = await firstValueFrom(
+        this.agentService.saveVoicePreferences({
+          language: lang,
+          voiceName: this.selectedVoice(),
+          speechRate: base.speechRate ?? 1,
+          pitch: base.pitch ?? 1,
+          continuousListening: !!base.continuousListening,
+          autoSpeak: base.autoSpeak !== false,
+          preferredAgentKey: base.preferredAgentKey || 'sophia',
+        }),
+      );
+      this.prefs = saved;
+      this.errorMessage.set(null);
+    } catch {
+      this.errorMessage.set('Could not save that language. It will still be used in this browser.');
+    }
   }
 
   async selectVoice(voiceName: string): Promise<void> {
@@ -130,7 +176,7 @@ export class SophiaVoiceService implements OnDestroy {
     this.stopSpeaking(false);
     this.selectedVoice.set(name);
     const base = this.prefs ?? {
-      language: 'en',
+      language: this.language(),
       voiceName: name,
       speechRate: 1,
       pitch: 1,
@@ -143,7 +189,7 @@ export class SophiaVoiceService implements OnDestroy {
     try {
       const saved = await firstValueFrom(
         this.agentService.saveVoicePreferences({
-          language: 'en',
+          language: this.language(),
           voiceName: name,
           speechRate: base.speechRate ?? 1,
           pitch: base.pitch ?? 1,
@@ -202,7 +248,7 @@ export class SophiaVoiceService implements OnDestroy {
     this.recognition = recognition;
     this.pushToTalkActive = !!options?.pushToTalk;
     const stayOn = this.micEngaged() && !this.pushToTalkActive;
-    recognition.lang = 'en-US';
+    recognition.lang = this.recognitionLocale();
     recognition.continuous = stayOn || (this.continuousListening() && !this.pushToTalkActive);
     recognition.interimResults = true;
     recognition.maxAlternatives = 1;
@@ -295,7 +341,7 @@ export class SophiaVoiceService implements OnDestroy {
     this.startListening();
   }
 
-  speak(text: string, options?: { manual?: boolean }): void {
+  speak(text: string, options?: { manual?: boolean; language?: string | null }): void {
     const spoken = this.cleanForSpeech(text);
     if (!spoken) return;
     if (!options?.manual && (this.isMuted() || !this.autoSpeak())) return;
@@ -304,6 +350,7 @@ export class SophiaVoiceService implements OnDestroy {
     this.pauseRecognition();
     this.playbackId.update((id) => id + 1);
     const generation = this.speakGeneration;
+    if (options?.language) this.replyLanguage = options.language;
     this.lastSpokenText.set(text);
     this.utteranceActive.set(true);
     this.errorMessage.set(null);
@@ -379,7 +426,7 @@ export class SophiaVoiceService implements OnDestroy {
     this.ttsAbort = abort;
     try {
       const speech = await this.agentService.synthesizeSpeech(text, {
-        language: 'en',
+        language: this.speechLocale(this.activeSpeechLanguage()),
         speechRate: this.prefs?.speechRate ?? 1,
         voiceName: this.selectedVoice(),
         signal: abort.signal,
@@ -456,7 +503,7 @@ export class SophiaVoiceService implements OnDestroy {
     }
 
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'en-US';
+    utterance.lang = this.speechLocale(this.activeSpeechLanguage());
     utterance.rate = this.prefs?.speechRate ?? 1;
     utterance.pitch = this.prefs?.pitch ?? 1;
     const voice = this.pickBestVoice();
@@ -615,7 +662,8 @@ export class SophiaVoiceService implements OnDestroy {
       'natasha',
     ];
 
-    const langVoices = voices.filter((v) => v.lang.toLowerCase().startsWith('en'));
+    const prefix = this.speechLocale(this.activeSpeechLanguage()).slice(0, 2).toLowerCase();
+    const langVoices = voices.filter((v) => v.lang.toLowerCase().startsWith(prefix));
     return (
       langVoices.find((v) => femaleHints.some((h) => v.name.toLowerCase().includes(h))) ||
       langVoices.find((v) => /female|woman/i.test(v.name)) ||
@@ -624,5 +672,46 @@ export class SophiaVoiceService implements OnDestroy {
       voices[0] ||
       null
     );
+  }
+
+  private activeSpeechLanguage(): string {
+    return this.language() === 'auto' ? this.replyLanguage : this.language();
+  }
+
+  private recognitionLocale(): string {
+    return this.speechLocale(this.activeSpeechLanguage());
+  }
+
+  private speechLocale(language: string): string {
+    const code = language.toLowerCase();
+    if (code.startsWith('ur')) return 'ur-PK';
+    if (code.startsWith('ar')) return 'ar-SA';
+    if (code.startsWith('en')) return 'en-US';
+    return 'en-US';
+  }
+
+  private normalizeLanguage(language: string): string {
+    const value = (language || 'auto').trim().toLowerCase();
+    if (value === 'ur' || value === 'urdu') return 'ur';
+    if (value === 'ar' || value === 'arabic') return 'ar';
+    if (value === 'en' || value === 'english') return 'en';
+    return 'auto';
+  }
+
+  private readStoredLanguage(): string | null {
+    try {
+      const raw = localStorage.getItem('bos.sophia.lang');
+      return raw ? this.normalizeLanguage(raw) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private writeStoredLanguage(language: string): void {
+    try {
+      localStorage.setItem('bos.sophia.lang', language);
+    } catch {
+      /* private mode */
+    }
   }
 }

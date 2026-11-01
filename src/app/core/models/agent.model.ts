@@ -60,6 +60,8 @@ export interface AgentChatResponse {
   sources?: import('./ai.model').AiRetrievedSources;
   actionResult?: import('./ai.model').AiActionResult | null;
   permissionDenied?: boolean;
+  language?: string | null;
+  textDirection?: 'ltr' | 'rtl' | string | null;
 }
 
 export interface AgentStreamChunk {

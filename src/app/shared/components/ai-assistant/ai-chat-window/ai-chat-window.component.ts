@@ -3,6 +3,7 @@ import {
   Component,
   DestroyRef,
   ElementRef,
+  HostListener,
   OnDestroy,
   OnInit,
   afterNextRender,
@@ -39,6 +40,7 @@ import { AiAssistantStateService } from '../../../../state/ai-assistant.state';
 import { ROUTES } from '../../../../core/constants/route.constants';
 import { TenantSettingsStoreService } from '../../../../core/services/tenant-settings-store.service';
 import { formatAssistantReplyHtml } from '../../../../core/utils/assistant-reply-format';
+import { directionForLanguage, directionForText } from '../../../../core/utils/chat-direction';
 
 @Component({
   selector: 'app-ai-chat-window',
@@ -62,6 +64,7 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
   private readonly sanitizer = inject(DomSanitizer);
   private readonly destroyRef = inject(DestroyRef);
   private readonly messagesContainer = viewChild<ElementRef<HTMLDivElement>>('messagesContainer');
+  private readonly languageMenu = viewChild<ElementRef<HTMLElement>>('languageMenu');
 
   readonly close = output<void>();
   readonly navigate = output<string>();
@@ -72,12 +75,20 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
   readonly liveTaskStatus = signal<string | null>(null);
   readonly liveToolName = signal<string | null>(null);
 
-  private buildWelcome(_lang: string, name = 'Sophia'): AiChatMessage {
+  private buildWelcome(lang: string, name = 'Sophia'): AiChatMessage {
+    const content =
+      lang === 'ur'
+        ? `سلام، میں ${name} ہوں۔ اردو، رومن اردو، یا English میں پوچھیں۔`
+        : lang === 'ar'
+          ? `مرحباً، أنا ${name}. اسأل بالعربية أو الإنجليزية.`
+          : `Hi — I'm ${name}. Ask in English, Urdu, or Arabic. Try "this month's sales" or "which products are low in stock?".`;
     return {
       role: 'assistant',
-      content: `Hi — I'm ${name}, your Senior Business Analyst. Talk or type anytime. Try: "Create order for this customer", "Create supplier Acme", "What should I reorder?", or "Inventory summary".`,
+      content,
       timestamp: new Date(),
       agentDisplayName: name,
+      language: lang === 'auto' ? 'en' : lang,
+      textDirection: directionForLanguage(lang),
     };
   }
 
@@ -105,6 +116,16 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
   readonly isMuted = this.voice.isMuted;
   readonly micSupported = this.voice.micSupported;
   readonly language = this.voice.language;
+  readonly languageMenuOpen = signal(false);
+  readonly languageOptions = [
+    { value: 'auto', label: 'Auto', hint: 'Match the message', lang: 'en' },
+    { value: 'en', label: 'English', hint: 'Always English', lang: 'en' },
+    { value: 'ur', label: 'اردو', hint: 'Urdu', lang: 'ur' },
+    { value: 'ar', label: 'العربية', hint: 'Arabic', lang: 'ar' },
+  ] as const;
+  readonly languageLabel = computed(
+    () => this.languageOptions.find((option) => option.value === this.language())?.label ?? 'Auto',
+  );
   readonly interimTranscript = this.voice.transcriptInterim;
 
   readonly showSuggestions = computed(
@@ -134,6 +155,14 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
     const msgs = this.messages();
     return !this.loading() && msgs.some((m) => m.role === 'user');
   });
+  readonly composerDir = computed(() => directionForText(this.inputText(), this.language()));
+  readonly composerLang = computed(() => {
+    const selected = this.language();
+    if (selected === 'ur') return 'ur';
+    if (selected === 'ar') return 'ar';
+    return this.composerDir() === 'rtl' ? 'ur' : 'en';
+  });
+
   readonly statusLabel = computed(() => {
     const live = this.liveTaskStatus();
     if (live && this.loading()) return live;
@@ -158,6 +187,7 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    document.addEventListener('keydown', this.onEscapeCapture, true);
     void this.bootstrap();
     this.voice.onFinalTranscript = (text) => this.sendMessage(text);
     this.aiAssistantState.pendingPrompt;
@@ -169,6 +199,7 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    document.removeEventListener('keydown', this.onEscapeCapture, true);
     this.agentService.stopGeneration();
     this.voice.stopListening();
     this.voice.stopSpeaking();
@@ -314,6 +345,48 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
     });
     this.sendMessage(lastUser.content);
   }
+
+  messageDir(message: AiChatMessage): 'rtl' | 'ltr' {
+    if (message.textDirection === 'rtl' || message.textDirection === 'ltr') {
+      return message.textDirection;
+    }
+    return directionForText(message.content, message.language);
+  }
+
+  messageLang(message: AiChatMessage): string {
+    if (message.language && message.language !== 'auto') return message.language;
+    return this.messageDir(message) === 'rtl' ? 'ur' : 'en';
+  }
+
+  onLanguagePreference(language: string): void {
+    void this.voice.selectLanguage(language);
+  }
+
+  toggleLanguageMenu(event: Event): void {
+    event.stopPropagation();
+    this.languageMenuOpen.update((open) => !open);
+  }
+
+  chooseLanguage(language: string, event: Event): void {
+    event.stopPropagation();
+    this.languageMenuOpen.set(false);
+    if (language !== this.language()) this.onLanguagePreference(language);
+  }
+
+  @HostListener('document:click', ['$event'])
+  closeLanguageMenu(event: MouseEvent): void {
+    if (!this.languageMenuOpen()) return;
+    const root = this.languageMenu()?.nativeElement;
+    if (root && event.target instanceof Node && root.contains(event.target)) return;
+    this.languageMenuOpen.set(false);
+  }
+
+  private readonly onEscapeCapture = (event: KeyboardEvent): void => {
+    if (event.key !== 'Escape' || !this.languageMenuOpen()) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    this.languageMenuOpen.set(false);
+  };
 
   toggleMic(): void {
     this.voice.toggleListening();
@@ -512,6 +585,8 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
         ...copy[msgIndex],
         content: response.reply || copy[msgIndex].content,
         streaming: false,
+        language: response.language,
+        textDirection: response.textDirection,
         sources: response.sources,
         citations: response.citations ?? [],
         toolsUsed: response.toolsUsed,
@@ -526,7 +601,7 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
     this.suggestions.set(response.suggestions ?? []);
 
     const speakText = (response.spokenReply || response.reply || '').trim();
-    if (speakText) this.voice.speak(speakText);
+    if (speakText) this.voice.speak(speakText, { language: response.language });
 
     const navRoute = response.actionResult
       ? this.aiActionService.shouldNavigate(response.actionResult)

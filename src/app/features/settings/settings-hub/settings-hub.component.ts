@@ -121,7 +121,7 @@ export class SettingsHubComponent implements OnInit {
   });
 
   readonly voiceForm = this.fb.nonNullable.group({
-    language: ['en', Validators.required],
+    language: ['auto', Validators.required],
     autoSpeak: [true],
     continuousListening: [false],
     preferredAgentKey: ['sophia'],
@@ -280,7 +280,7 @@ export class SettingsHubComponent implements OnInit {
 
     void this.voiceService.loadPreferences().then((prefs) => {
       this.voiceForm.patchValue({
-        language: 'en',
+        language: this.voiceService.language() || 'auto',
         autoSpeak: prefs?.autoSpeak !== false,
         continuousListening: !!prefs?.continuousListening,
         preferredAgentKey: prefs?.preferredAgentKey || 'sophia',
@@ -300,7 +300,7 @@ export class SettingsHubComponent implements OnInit {
     const value = this.voiceForm.getRawValue();
     this.agentService
       .saveVoicePreferences({
-        language: 'en',
+        language: value.language || 'auto',
         autoSpeak: value.autoSpeak,
         continuousListening: value.continuousListening,
         preferredAgentKey: value.preferredAgentKey,
@@ -310,6 +310,7 @@ export class SettingsHubComponent implements OnInit {
       })
       .subscribe({
         next: (prefs) => {
+          this.voiceService.pinLanguage(value.language || 'auto');
           this.voiceService.applyPreferences(prefs);
           this.notification.success('Sophia voice preferences saved.');
           this.voiceSaving.set(false);

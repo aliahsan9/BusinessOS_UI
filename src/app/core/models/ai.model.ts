@@ -130,6 +130,8 @@ export interface AiChatMessage {
   streaming?: boolean;
   workflowSteps?: import('./agent.model').AgentWorkflowStep[] | null;
   agentDisplayName?: string | null;
+  language?: string | null;
+  textDirection?: 'ltr' | 'rtl' | string | null;
 }
 
 export interface AiConversationSession {

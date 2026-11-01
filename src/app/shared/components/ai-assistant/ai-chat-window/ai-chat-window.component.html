@@ -23,8 +23,42 @@
         <span class="ai-chat__subtitle">{{ agentRole() }}</span>
         <span class="ai-chat__status" [attr.data-state]="voiceState()">
           <span class="ai-chat__status-dot"></span>
-          {{ statusLabel() }}
-          <span class="ai-chat__lang">EN</span>
+          <span class="ai-chat__status-label">{{ statusLabel() }}</span>
+          <div class="ai-chat__lang" #languageMenu>
+            <button
+              type="button"
+              class="ai-chat__lang-btn"
+              [attr.aria-expanded]="languageMenuOpen()"
+              aria-haspopup="listbox"
+              aria-controls="sophia-language-menu"
+              aria-label="Reply language"
+              title="Sophia detects English, Urdu, and Arabic unless you choose one"
+              (click)="toggleLanguageMenu($event)"
+            >
+              <span>{{ languageLabel() }}</span>
+              <i class="bi bi-chevron-down" aria-hidden="true"></i>
+            </button>
+            @if (languageMenuOpen()) {
+              <ul id="sophia-language-menu" class="ai-chat__lang-menu" role="listbox" aria-label="Reply language">
+                @for (option of languageOptions; track option.value) {
+                  <li>
+                    <button
+                      type="button"
+                      role="option"
+                      class="ai-chat__lang-option"
+                      [class.ai-chat__lang-option--active]="language() === option.value"
+                      [attr.aria-selected]="language() === option.value"
+                      [attr.lang]="option.lang"
+                      (click)="chooseLanguage(option.value, $event)"
+                    >
+                      <span class="ai-chat__lang-option-label">{{ option.label }}</span>
+                      <span class="ai-chat__lang-option-hint">{{ option.hint }}</span>
+                    </button>
+                  </li>
+                }
+              </ul>
+            }
+          </div>
         </span>
         @if (contextLabel()) {
           <span class="ai-chat__context">{{ contextLabel() }}</span>
@@ -93,7 +127,7 @@
   <div class="ai-chat__messages" #messagesContainer>
     @for (msg of messages(); track $index) {
       <div class="ai-chat__message" [class.ai-chat__message--user]="msg.role === 'user'">
-        <div class="ai-chat__bubble">
+        <div class="ai-chat__bubble" [attr.dir]="messageDir(msg)" [attr.lang]="messageLang(msg)">
           @if (msg.streaming && !msg.content) {
             <span class="ai-chat__typing-dots" aria-live="polite" aria-label="Sophia is thinking">
               <span></span><span></span><span></span>
@@ -191,7 +225,7 @@
       } @else if (playbackNotice()) {
         {{ playbackNotice() }}
       } @else {
-        Tap the mic to talk · tap again to stop
+        Tap the mic to talk · tap again to stop. Spoken replies are AI-generated.
       }
     </span>
     @if (voices().length > 0) {
@@ -259,7 +293,9 @@
       rows="1"
       enterkeyhint="send"
       aria-label="Message"
-      placeholder="Ask Sophia anything…"
+      placeholder="Ask in English, Urdu, or Arabic…"
+      [attr.dir]="composerDir()"
+      [attr.lang]="composerLang()"
       [ngModel]="inputText()"
       (ngModelChange)="inputText.set($event)"
       (keydown)="onComposerKeydown($event)"
