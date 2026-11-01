@@ -9,6 +9,8 @@
   border: 1px solid var(--color-border);
   box-shadow: var(--shadow-lg);
   animation: slideIn 0.2s ease;
+  /* Bootstrap's .toast-container sets pointer-events: none and it inherits. */
+  pointer-events: auto;
 
   &__title {
     display: block;
@@ -23,12 +25,28 @@
   }
 
   &__close {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    margin: -0.25rem -0.25rem 0 0;
+    padding: 0;
     background: none;
     border: none;
-    font-size: 1.125rem;
+    border-radius: var(--radius-sm, 6px);
+    color: inherit;
+    font-size: 1rem;
     cursor: pointer;
-    opacity: 0.6;
+    opacity: 0.75;
     line-height: 1;
+    pointer-events: auto;
+
+    &:hover {
+      opacity: 1;
+      background: color-mix(in srgb, var(--color-text) 8%, transparent);
+    }
   }
 
   &--success {

@@ -191,6 +191,8 @@ max-width: min(
 420px,
 calc(100vw - 2rem)
 );
+
+pointer-events: none;
 }
 
 /* ----------------------------------
