@@ -223,6 +223,12 @@ export class ProductListComponent implements OnInit {
     return this.categories().find((c) => c.id === categoryId)?.name ?? '—';
   }
 
+  stockTone(product: ProductDto): 'ok' | 'low' | 'out' {
+    if (product.currentStock <= 0) return 'out';
+    if (product.currentStock <= product.reorderLevel) return 'low';
+    return 'ok';
+  }
+
   filteredItems(): ProductDto[] {
     const status = this.statusFilter();
     if (!status) return this.items();

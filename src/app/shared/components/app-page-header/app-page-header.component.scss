@@ -52,13 +52,15 @@
         flex: 1 1 auto;
       }
 
-      a {
+      a,
+      app-button {
         display: flex;
         flex: 1 1 auto;
+        min-width: 0;
+      }
 
-        .app-btn {
-          width: 100%;
-        }
+      ::ng-deep .app-btn {
+        width: 100%;
       }
     }
   }

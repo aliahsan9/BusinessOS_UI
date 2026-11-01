@@ -10,9 +10,31 @@
     display: flex;
     gap: var(--space-2);
     justify-content: flex-end;
+    flex-wrap: wrap;
 
     a {
       text-decoration: none;
+    }
+  }
+}
+
+@media (max-width: 575.98px) {
+  .product-form__actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+
+    a,
+    app-button,
+    .app-btn {
+      width: 100%;
+    }
+
+    a {
+      display: block;
+    }
+
+    ::ng-deep .app-btn {
+      width: 100%;
     }
   }
 }

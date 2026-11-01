@@ -15,14 +15,14 @@
   <app-search-bar placeholder="Search by name or SKU..." [value]="searchTerm()" (search)="onSearch($event)" />
 
   <div class="toolbar__filters">
-    <select class="form-select form-select-sm" [ngModel]="categoryFilter()" (ngModelChange)="onCategoryFilter($event)">
+    <select class="form-select" aria-label="Filter by category" [ngModel]="categoryFilter()" (ngModelChange)="onCategoryFilter($event)">
       <option value="">All Categories</option>
       @for (cat of categories(); track cat.id) {
         <option [value]="cat.id">{{ cat.name }}</option>
       }
     </select>
 
-    <select class="form-select form-select-sm" [ngModel]="statusFilter()" (ngModelChange)="onStatusFilter($event)">
+    <select class="form-select" aria-label="Filter by status" [ngModel]="statusFilter()" (ngModelChange)="onStatusFilter($event)">
       <option value="">All Status</option>
       <option value="active">Active</option>
       <option value="inactive">Inactive</option>
@@ -56,37 +56,37 @@
     description="Create your first product or adjust your search filters."
   />
 } @else {
-  <div class="bos-table-wrapper">
-    <table class="bos-table bos-table--striped bos-table--hover bos-table--compact">
+  <div class="bos-table-wrapper products-table-wrap">
+    <table class="bos-table products-table bos-table--striped bos-table--hover bos-table--compact">
       <thead>
         <tr>
           @if (canDelete || canUpdate) {
-            <th>
+            <th class="col-check">
               <input
                 type="checkbox"
-                [checked]="selectedIds().size === filteredItems().length"
+                [checked]="selectedIds().size === filteredItems().length && filteredItems().length > 0"
                 (change)="toggleSelectAll($any($event.target).checked)"
                 aria-label="Select all"
               />
             </th>
           }
-          <th (click)="onSort('name')" class="sortable">Name</th>
-          <th (click)="onSort('sku')" class="sortable">SKU</th>
-          <th>Category</th>
-          <th (click)="onSort('costPrice')" class="sortable">Cost</th>
-          <th (click)="onSort('salePrice')" class="sortable">Price</th>
-          <th>Margin</th>
-          <th (click)="onSort('currentStock')" class="sortable">Stock</th>
-          <th>Reorder</th>
-          <th>Status</th>
-          <th></th>
+          <th (click)="onSort('name')" class="sortable col-name">Name</th>
+          <th (click)="onSort('sku')" class="sortable col-sku">SKU</th>
+          <th class="col-category">Category</th>
+          <th (click)="onSort('costPrice')" class="sortable col-cost">Cost</th>
+          <th (click)="onSort('salePrice')" class="sortable col-price">Price</th>
+          <th class="col-margin">Margin</th>
+          <th (click)="onSort('currentStock')" class="sortable col-stock">Stock</th>
+          <th class="col-reorder">Reorder</th>
+          <th class="col-status">Status</th>
+          <th class="col-actions"></th>
         </tr>
       </thead>
       <tbody>
         @for (product of filteredItems(); track product.id) {
           <tr>
             @if (canDelete || canUpdate) {
-              <td>
+              <td class="col-check">
                 <input
                   type="checkbox"
                   [checked]="selectedIds().has(product.id)"
@@ -95,25 +95,24 @@
                 />
               </td>
             }
-            <td>
+            <td class="col-name">
               <a [routerLink]="[routes.products.base, product.id]" class="link-primary">{{ product.name }}</a>
             </td>
-            <td>{{ product.sku }}</td>
-            <td>{{ getCategoryName(product.categoryId) }}</td>
-            <td>{{ product.costPrice | appCurrency }}</td>
-            <td>{{ product.salePrice | appCurrency }}</td>
-            <td>{{ profitMargin(product) | number: '1.1-1' }}%</td>
-            <td>
-              <span [class.text-warning]="product.currentStock > 0 && product.currentStock <= product.reorderLevel"
-                    [class.text-danger]="product.currentStock <= 0">
+            <td class="col-sku">{{ product.sku }}</td>
+            <td class="col-category">{{ getCategoryName(product.categoryId) }}</td>
+            <td class="col-cost">{{ product.costPrice | appCurrency }}</td>
+            <td class="col-price">{{ product.salePrice | appCurrency }}</td>
+            <td class="col-margin">{{ profitMargin(product) | number: '1.1-1' }}%</td>
+            <td class="col-stock">
+              <span [attr.data-tone]="stockTone(product)">
                 {{ product.currentStock | number: '1.0-2' }}
               </span>
             </td>
-            <td>{{ product.reorderLevel | number: '1.0-2' }}</td>
-            <td>
+            <td class="col-reorder">{{ product.reorderLevel | number: '1.0-2' }}</td>
+            <td class="col-status">
               <app-badge [label]="product.isActive ? 'Active' : 'Inactive'" [variant]="product.isActive ? 'success' : 'neutral'" />
             </td>
-            <td class="bos-table__actions">
+            <td class="bos-table__actions col-actions">
               <a [routerLink]="[routes.products.base, product.id]">View</a>
               @if (canUpdate) {
                 <a [routerLink]="[routes.products.base, product.id, 'edit']">Edit</a>
@@ -123,6 +122,67 @@
         }
       </tbody>
     </table>
+  </div>
+
+  <div class="catalog">
+    @if (canDelete || canUpdate) {
+      <label class="catalog__select-all">
+        <input
+          type="checkbox"
+          [checked]="selectedIds().size === filteredItems().length && filteredItems().length > 0"
+          (change)="toggleSelectAll($any($event.target).checked)"
+        />
+        <span>Select all on this page</span>
+      </label>
+    }
+    <ul class="catalog__list">
+      @for (product of filteredItems(); track product.id) {
+        <li class="product-card">
+          <div class="product-card__head">
+            @if (canDelete || canUpdate) {
+              <input
+                class="product-card__check"
+                type="checkbox"
+                [checked]="selectedIds().has(product.id)"
+                (change)="toggleSelect(product.id, $any($event.target).checked)"
+                [attr.aria-label]="'Select ' + product.name"
+              />
+            }
+            <div class="product-card__identity">
+              <a class="product-card__name" [routerLink]="[routes.products.base, product.id]">{{ product.name }}</a>
+              <span class="product-card__sku">{{ product.sku }}</span>
+            </div>
+            <app-badge [label]="product.isActive ? 'Active' : 'Inactive'" [variant]="product.isActive ? 'success' : 'neutral'" />
+          </div>
+
+          <dl class="product-card__stats">
+            <div>
+              <dt>Price</dt>
+              <dd>{{ product.salePrice | appCurrency }}</dd>
+            </div>
+            <div>
+              <dt>Stock</dt>
+              <dd [attr.data-tone]="stockTone(product)">{{ product.currentStock | number: '1.0-2' }}</dd>
+            </div>
+            <div>
+              <dt>Category</dt>
+              <dd>{{ getCategoryName(product.categoryId) }}</dd>
+            </div>
+            <div>
+              <dt>Margin</dt>
+              <dd>{{ profitMargin(product) | number: '1.1-1' }}%</dd>
+            </div>
+          </dl>
+
+          <div class="product-card__actions">
+            <a [routerLink]="[routes.products.base, product.id]">View</a>
+            @if (canUpdate) {
+              <a [routerLink]="[routes.products.base, product.id, 'edit']">Edit</a>
+            }
+          </div>
+        </li>
+      }
+    </ul>
   </div>
 
   <app-pagination
