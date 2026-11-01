@@ -6,7 +6,6 @@ import { BillingUsageDto, limitLabel, usagePercent, usageTone } from '../../../c
 import { ROUTES } from '../../../core/constants/route.constants';
 import { AppBreadcrumbComponent } from '../../../shared/components/app-breadcrumb/app-breadcrumb.component';
 import { AppPageHeaderComponent } from '../../../shared/components/app-page-header/app-page-header.component';
-import { AppCardComponent } from '../../../shared/components/app-card/app-card.component';
 import { AppSkeletonComponent } from '../../../shared/components/app-skeleton/app-skeleton.component';
 import { AppAlertComponent } from '../../../shared/components/app-alert/app-alert.component';
 
@@ -18,7 +17,6 @@ import { AppAlertComponent } from '../../../shared/components/app-alert/app-aler
     RouterLink,
     AppBreadcrumbComponent,
     AppPageHeaderComponent,
-    AppCardComponent,
     AppSkeletonComponent,
     AppAlertComponent,
   ],
@@ -38,6 +36,18 @@ export class UsagePageComponent implements OnInit {
   readonly error = signal<string | null>(null);
   readonly usage = signal<BillingUsageDto | null>(null);
   readonly breadcrumbs = [{ label: 'Billing', route: ROUTES.billing.base }, { label: 'Usage' }];
+
+  rows(u: BillingUsageDto) {
+    return [
+      { label: 'Users', icon: 'bi bi-people', current: u.userCount, max: u.maxUsers, custom: u.usersAreCustom },
+      { label: 'Customers', icon: 'bi bi-person-badge', current: u.customerCount, max: u.maxCustomers, custom: false },
+      { label: 'Products', icon: 'bi bi-box', current: u.productCount, max: u.maxProducts, custom: false },
+      { label: 'Projects', icon: 'bi bi-folder', current: u.projectCount, max: u.maxProjects, custom: false },
+      { label: 'Tasks', icon: 'bi bi-check2-square', current: u.taskCount, max: u.maxTasks, custom: false },
+      { label: 'Storage (MB)', icon: 'bi bi-hdd', current: u.storageUsedMb, max: u.maxStorageMb, custom: false },
+      { label: 'AI requests', icon: 'bi bi-stars', current: u.aiRequestsUsed, max: u.maxAiRequests, custom: u.aiRequestsAreCustom },
+    ];
+  }
 
   ngOnInit(): void {
     this.billingService.getUsage().subscribe({

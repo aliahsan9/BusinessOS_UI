@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { BillingService } from '../../../core/services/billing.service';
+import { ApiError } from '../../../core/models/api-error.model';
 import {
   BILLING_COUNTRIES,
   CurrentPlanDto,
@@ -39,6 +40,9 @@ export class PricingPageComponent implements OnInit {
   readonly country = signal(localStorage.getItem('bos.billingCountry') ?? 'US');
   readonly preview = signal<string | null>(null);
   readonly canManage = this.tokenService.hasPermission(PermissionCodes.subscription.manage);
+  readonly maxSavings = computed(() =>
+    this.plans().reduce((highest, plan) => Math.max(highest, plan.annualSavingsPercent || 0), 0),
+  );
 
   ngOnInit(): void {
     this.loadPlans();
@@ -57,6 +61,8 @@ export class PricingPageComponent implements OnInit {
   onCountry(value: string): void {
     this.country.set(value);
     localStorage.setItem('bos.billingCountry', value);
+    this.error.set(null);
+    this.preview.set(null);
     this.loadPlans();
   }
 
@@ -80,7 +86,8 @@ export class PricingPageComponent implements OnInit {
     if (plan.slug === 'free') return 'Move to Free';
     if (plan.isCustomPricing) return 'Subscribe at starting price';
     const current = this.currentPlan();
-    if (!current) return plan.monthlyPrice === 0 ? 'Get started' : 'Start 14-day trial';
+    if (!current) return plan.monthlyPrice === 0 ? 'Get started' : 'Choose plan';
+    if (this.shouldStartTrial(plan)) return 'Start 14-day trial';
     return plan.sortOrder > (this.plans().find((item) => item.slug === current.planSlug)?.sortOrder ?? 0)
       ? 'Upgrade'
       : 'Downgrade';
@@ -92,10 +99,20 @@ export class PricingPageComponent implements OnInit {
     this.notice.set(null);
     this.preview.set(null);
     this.actionLoading.set(plan.id);
+    this.requestChange(plan, this.shouldStartTrial(plan));
+  }
+
+  private shouldStartTrial(plan: SubscriptionPlanDto): boolean {
+    if (plan.monthlyPrice <= 0 || plan.trialDays <= 0) return false;
+    const current = this.currentPlan();
+    if (!current) return false;
+    return current.planSlug === 'free' || current.status === 'Free';
+  }
+
+  private requestChange(plan: SubscriptionPlanDto, startTrial: boolean): void {
     const interval = this.annual() ? 'yearly' : 'monthly';
     const country = this.country();
     const currency = this.selectedCurrency();
-    const startTrial = plan.monthlyPrice > 0 && (this.currentPlan()?.planSlug === 'free' || !this.currentPlan());
 
     this.billingService.changePlan({
       planId: plan.id,
@@ -106,11 +123,13 @@ export class PricingPageComponent implements OnInit {
       confirm: false,
       startTrial,
     }).subscribe({
-      next: (preview) => {
-        const due = this.money(preview.preview.amountDue, preview.preview.currency);
-        const note = preview.preview.priceNote ? ` ${preview.preview.priceNote}` : '';
-        this.preview.set(`${preview.preview.prorationNote} Amount due now: ${due}.${note}`);
-        if (!confirm(`${preview.preview.planName} (${preview.preview.billingInterval})\nAmount due: ${due}\n\n${preview.preview.prorationNote}`)) {
+      next: (result) => {
+        const quote = result.preview;
+        const due = this.money(quote?.amountDue, quote?.currency);
+        const note = quote?.priceNote ? ` ${quote.priceNote}` : '';
+        const explanation = quote?.prorationNote || 'Review the amount due before continuing.';
+        this.preview.set(`${explanation} Amount due now: ${due}.${note}`);
+        if (!confirm(`${quote?.planName ?? plan.name} (${quote?.billingInterval ?? interval})\nAmount due: ${due}\n\n${explanation}`)) {
           this.actionLoading.set(null);
           return;
         }
@@ -125,15 +144,20 @@ export class PricingPageComponent implements OnInit {
           successUrl: window.location.origin + ROUTES.billing.base,
           cancelUrl: window.location.origin + ROUTES.pricing.base,
         }).subscribe({
-          next: (result) => this.finishChange(result.checkout?.checkoutUrl, result.checkout, result.subscription, result.applied),
-          error: () => {
-            this.error.set('The plan change was not applied.');
+          next: (applied) => this.finishChange(applied.checkout?.checkoutUrl, applied.checkout, applied.subscription, applied.applied),
+          error: (error: ApiError) => {
+            this.error.set(error.detail || 'The plan change was not applied. Nothing else was charged.');
             this.actionLoading.set(null);
           },
         });
       },
-      error: () => {
-        this.error.set('The server could not price this change.');
+      error: (error: ApiError) => {
+        const detail = error.detail || '';
+        if (startTrial && /trial/i.test(detail)) {
+          this.requestChange(plan, false);
+          return;
+        }
+        this.error.set(detail || 'This change could not be priced. Nothing was charged.');
         this.actionLoading.set(null);
       },
     });

@@ -1,12 +1,12 @@
 <app-page-header
   title="Pricing"
-  subtitle="Four plans, priced by the server. Paid plans include a 14-day trial."
+  subtitle="Plans priced for your billing country. Paid plans include a 14-day trial."
 />
 
 <div class="pricing-toolbar">
-  <label class="pricing-country">
+  <label class="pricing-field">
     <span>Billing country</span>
-    <select [value]="country()" (change)="onCountry($any($event.target).value)">
+    <select class="form-select" [value]="country()" (change)="onCountry($any($event.target).value)">
       @for (item of countries; track item.country) {
         <option [value]="item.country">{{ item.label }}</option>
       }
@@ -14,8 +14,13 @@
   </label>
 
   <div class="pricing-toggle" role="group" aria-label="Billing interval">
-    <button type="button" [class.active]="!annual()" (click)="annual.set(false)">Monthly</button>
-    <button type="button" [class.active]="annual()" (click)="annual.set(true)">Annual</button>
+    <button type="button" [class.is-active]="!annual()" (click)="annual.set(false)">Monthly</button>
+    <button type="button" [class.is-active]="annual()" (click)="annual.set(true)">
+      Annual
+      @if (maxSavings() > 0) {
+        <em>Save {{ maxSavings() }}%</em>
+      }
+    </button>
   </div>
 </div>
 
@@ -36,57 +41,60 @@
   }
   <div class="pricing-grid">
     @for (plan of plans(); track plan.id) {
-      <article class="plan-card" [class.plan-card--recommended]="plan.isRecommended" [class.plan-card--current]="isCurrentPlan(plan)">
-        <header>
-          @if (plan.isRecommended) {
-            <span class="plan-badge">Recommended</span>
-          }
-          @if (isCurrentPlan(plan)) {
-            <span class="plan-badge plan-badge--current">Current plan</span>
-          }
+      <article class="plan" [class.plan--featured]="plan.isRecommended" [class.plan--current]="isCurrentPlan(plan)">
+        <header class="plan__head">
+          <div class="plan__badges">
+            @if (plan.isRecommended) {
+              <span class="pill pill--accent">Recommended</span>
+            }
+            @if (isCurrentPlan(plan)) {
+              <span class="pill pill--current">Current plan</span>
+            }
+          </div>
           <h2>{{ plan.name }}</h2>
           <p>{{ plan.description }}</p>
         </header>
 
-        <div class="plan-price">
+        <div class="plan__price">
           @if (plan.isCustomPricing) {
-            <span class="plan-price__from">Starting at</span>
+            <span class="plan__from">Starting at</span>
           }
           <strong>{{ money(price(plan), plan.currency) }}</strong>
           <span>/ {{ annual() ? 'year' : 'month' }}</span>
         </div>
+
         @if (annual() && plan.annualSavingsPercent > 0) {
-          <p class="plan-save">Save {{ plan.annualSavingsPercent }}% compared with monthly billing</p>
+          <p class="plan__note plan__note--save">Save {{ plan.annualSavingsPercent }}% compared with monthly billing</p>
         }
         @if (plan.priceNote) {
-          <p class="plan-note">{{ plan.priceNote }}</p>
+          <p class="plan__note">{{ plan.priceNote }}</p>
         }
         @if (plan.trialDays > 0) {
-          <p class="plan-note">{{ plan.trialDays }}-day free trial on first subscription</p>
+          <p class="plan__note">{{ plan.trialDays }}-day free trial on the first subscription</p>
         }
 
-        <ul>
+        <ul class="plan__features">
           @for (feature of plan.features; track feature) {
-            <li>{{ feature }}</li>
+            <li><i class="bi bi-check2" aria-hidden="true"></i>{{ feature }}</li>
           }
         </ul>
 
-        <footer>
+        <footer class="plan__foot">
           @if (canManage) {
             <button
               type="button"
-              class="plan-action"
+              class="plan__cta"
               [disabled]="isCurrentPlan(plan) || actionLoading() === plan.id"
               (click)="selectPlan(plan)">
-              {{ actionLoading() === plan.id ? 'Working...' : actionLabel(plan) }}
+              {{ actionLoading() === plan.id ? 'Working…' : actionLabel(plan) }}
             </button>
             @if (plan.isCustomPricing) {
-              <a class="plan-contact" href="mailto:sales@businessos.app">Contact sales for a custom contract</a>
+              <a class="plan__contact" href="mailto:sales@businessos.app">Contact sales for a custom contract</a>
             }
           } @else if (isAuthenticated()) {
-            <p class="plan-note">Ask an administrator to change the plan.</p>
+            <p class="plan__note">Ask an administrator to change the plan.</p>
           } @else {
-            <a class="plan-action" [routerLink]="ROUTES.auth.register">Create an account</a>
+            <a class="plan__cta" [routerLink]="ROUTES.auth.register">Create an account</a>
           }
         </footer>
       </article>

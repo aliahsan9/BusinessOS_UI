@@ -12,9 +12,9 @@ import {
 import { PermissionCodes } from '../../../core/constants/permission.constants';
 import { TokenService } from '../../../core/services/token.service';
 import { ROUTES } from '../../../core/constants/route.constants';
-import { AppBreadcrumbComponent } from '../../../shared/components/app-breadcrumb/app-breadcrumb.component';
+import { ButtonVariant } from '../../../core/enums';
 import { AppPageHeaderComponent } from '../../../shared/components/app-page-header/app-page-header.component';
-import { AppCardComponent } from '../../../shared/components/app-card/app-card.component';
+import { AppButtonComponent } from '../../../shared/components/app-button/app-button.component';
 import { AppSkeletonComponent } from '../../../shared/components/app-skeleton/app-skeleton.component';
 import { AppAlertComponent } from '../../../shared/components/app-alert/app-alert.component';
 @Component({
@@ -23,9 +23,8 @@ import { AppAlertComponent } from '../../../shared/components/app-alert/app-aler
   imports: [
     DatePipe,
     RouterLink,
-    AppBreadcrumbComponent,
     AppPageHeaderComponent,
-    AppCardComponent,
+    AppButtonComponent,
     AppSkeletonComponent,
     AppAlertComponent,
   ],
@@ -35,6 +34,7 @@ import { AppAlertComponent } from '../../../shared/components/app-alert/app-aler
 })
 export class BillingDashboardComponent implements OnInit {
   readonly ROUTES = ROUTES;
+  readonly ButtonVariant = ButtonVariant;
   readonly money = formatIsoCurrency;
   readonly limitLabel = limitLabel;
   readonly usagePercent = usagePercent;
@@ -50,7 +50,6 @@ export class BillingDashboardComponent implements OnInit {
   readonly actionLoading = signal(false);
   readonly confirmCancel = signal(false);
   readonly canManage = this.tokenService.hasPermission(PermissionCodes.subscription.manage);
-  readonly breadcrumbs = [{ label: 'Billing' }];
 
   ngOnInit(): void {
     this.load();
@@ -65,7 +64,7 @@ export class BillingDashboardComponent implements OnInit {
         this.actionLoading.set(false);
       },
       error: () => {
-        this.error.set('Failed to load billing dashboard.');
+        this.error.set('Billing details could not be loaded. Refresh the page to try again.');
         this.loading.set(false);
         this.actionLoading.set(false);
       },
@@ -75,14 +74,27 @@ export class BillingDashboardComponent implements OnInit {
   usageRows(data: BillingDashboardDto) {
     const usage = data.usage;
     return [
-      { label: 'Users', current: usage.userCount, max: usage.maxUsers, custom: usage.usersAreCustom },
-      { label: 'Customers', current: usage.customerCount, max: usage.maxCustomers, custom: false },
-      { label: 'Products', current: usage.productCount, max: usage.maxProducts, custom: false },
-      { label: 'Projects', current: usage.projectCount, max: usage.maxProjects, custom: false },
-      { label: 'Tasks', current: usage.taskCount, max: usage.maxTasks, custom: false },
-      { label: 'AI requests', current: usage.aiRequestsUsed, max: usage.maxAiRequests, custom: usage.aiRequestsAreCustom },
-      { label: 'Storage (MB)', current: usage.storageUsedMb, max: usage.maxStorageMb, custom: false },
+      { label: 'Users', icon: 'bi bi-people', current: usage.userCount, max: usage.maxUsers, custom: usage.usersAreCustom },
+      { label: 'Customers', icon: 'bi bi-person-badge', current: usage.customerCount, max: usage.maxCustomers, custom: false },
+      { label: 'Products', icon: 'bi bi-box', current: usage.productCount, max: usage.maxProducts, custom: false },
+      { label: 'Projects', icon: 'bi bi-folder', current: usage.projectCount, max: usage.maxProjects, custom: false },
+      { label: 'Tasks', icon: 'bi bi-check2-square', current: usage.taskCount, max: usage.maxTasks, custom: false },
+      { label: 'AI requests', icon: 'bi bi-stars', current: usage.aiRequestsUsed, max: usage.maxAiRequests, custom: usage.aiRequestsAreCustom },
+      { label: 'Storage (MB)', icon: 'bi bi-hdd', current: usage.storageUsedMb, max: usage.maxStorageMb, custom: false },
     ];
+  }
+
+  text(value: string | null | undefined, fallback: string): string {
+    const trimmed = value?.trim();
+    return trimmed ? trimmed : fallback;
+  }
+
+  statusClass(status: string): string {
+    const value = status.toLowerCase();
+    if (value.includes('active') || value.includes('trial')) return 'pill is-good';
+    if (value.includes('past') || value.includes('cancel')) return 'pill is-bad';
+    if (value.includes('pending')) return 'pill is-warn';
+    return 'pill';
   }
 
   openPortal(): void {
@@ -93,7 +105,7 @@ export class BillingDashboardComponent implements OnInit {
         this.actionLoading.set(false);
       },
       error: () => {
-        this.error.set('The payment portal is unavailable until Stripe is configured for this workspace.');
+        this.error.set('Payment methods open after a card is saved. Stripe is not connected for this workspace yet.');
         this.actionLoading.set(false);
       },
     });
