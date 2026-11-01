@@ -1,5 +1,5 @@
-import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Injectable, signal } from '@angular/core';
+import { Observable, tap } from 'rxjs';
 import { BaseApiService } from './base-api.service';
 import { HTTP_HEADERS } from '../constants/api.constants';
 import { idempotencyKeyFor } from '../helpers/idempotency-key';
@@ -21,6 +21,13 @@ import {
 
 @Injectable({ providedIn: 'root' })
 export class BillingService extends BaseApiService {
+  /** Latest subscription known to the app, shared by the sidebar and billing pages. */
+  readonly currentPlan = signal<CurrentPlanDto | null>(null);
+
+  rememberPlan(plan: CurrentPlanDto | null | undefined): void {
+    this.currentPlan.set(plan ?? null);
+  }
+
   getPlans(currency?: string, country?: string): Observable<SubscriptionPlanDto[]> {
     return this.get<SubscriptionPlanDto[]>('/billing/plans', {
       ...(currency ? { currency } : {}),
@@ -29,19 +36,23 @@ export class BillingService extends BaseApiService {
   }
 
   getCurrentPlan(): Observable<CurrentPlanDto> {
-    return this.get<CurrentPlanDto>('/billing/subscription');
+    return this.remember(this.get<CurrentPlanDto>('/billing/subscription'));
   }
 
   changePlan(request: ChangePlanRequest): Observable<PlanChangeResultDto> {
-    return this.post<PlanChangeResultDto>('/billing/change-plan', request);
+    return this.post<PlanChangeResultDto>('/billing/change-plan', request).pipe(
+      tap((result) => {
+        if (result.applied && result.subscription) this.rememberPlan(result.subscription);
+      }),
+    );
   }
 
   reactivate(): Observable<CurrentPlanDto> {
-    return this.post<CurrentPlanDto>('/billing/reactivate', {});
+    return this.remember(this.post<CurrentPlanDto>('/billing/reactivate', {}));
   }
 
   confirmCheckout(sessionId: string): Observable<CurrentPlanDto> {
-    return this.post<CurrentPlanDto>('/billing/checkout/confirm', { sessionId });
+    return this.remember(this.post<CurrentPlanDto>('/billing/checkout/confirm', { sessionId }));
   }
 
   downloadInvoice(id: string): Observable<Blob> {
@@ -56,7 +67,9 @@ export class BillingService extends BaseApiService {
   }
 
   getDashboard(): Observable<BillingDashboardDto> {
-    return this.get<BillingDashboardDto>('/billing/dashboard');
+    return this.get<BillingDashboardDto>('/billing/dashboard').pipe(
+      tap((data) => this.rememberPlan(data.currentPlan)),
+    );
   }
 
   getInvoices(): Observable<BillingInvoiceDto[]> {
@@ -72,19 +85,19 @@ export class BillingService extends BaseApiService {
   }
 
   upgradePlan(request: UpgradePlanRequest): Observable<CurrentPlanDto> {
-    return this.post<CurrentPlanDto>('/billing/upgrade', request);
+    return this.remember(this.post<CurrentPlanDto>('/billing/upgrade', request));
   }
 
   downgradePlan(planId: string): Observable<CurrentPlanDto> {
-    return this.post<CurrentPlanDto>('/billing/downgrade', { planId });
+    return this.remember(this.post<CurrentPlanDto>('/billing/downgrade', { planId }));
   }
 
   cancelPlan(cancelImmediately = false): Observable<CurrentPlanDto> {
-    return this.post<CurrentPlanDto>('/billing/cancel', { cancelImmediately });
+    return this.remember(this.post<CurrentPlanDto>('/billing/cancel', { cancelImmediately }));
   }
 
   renewPlan(billingInterval = 'monthly', provider = 'stripe'): Observable<CurrentPlanDto> {
-    return this.post<CurrentPlanDto>('/billing/renew', { billingInterval, provider });
+    return this.remember(this.post<CurrentPlanDto>('/billing/renew', { billingInterval, provider }));
   }
 
   checkout(request: CheckoutRequest): Observable<CheckoutSessionDto> {
@@ -106,5 +119,9 @@ export class BillingService extends BaseApiService {
 
   validateDowngrade(planId: string): Observable<DowngradeValidationDto> {
     return this.post<DowngradeValidationDto>(`/billing/validate-downgrade/${planId}`, {});
+  }
+
+  private remember(source: Observable<CurrentPlanDto>): Observable<CurrentPlanDto> {
+    return source.pipe(tap((plan) => this.rememberPlan(plan)));
   }
 }

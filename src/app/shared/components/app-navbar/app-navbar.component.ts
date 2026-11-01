@@ -3,6 +3,7 @@ import {
   Component,
   ElementRef,
   HostListener,
+  OnDestroy,
   OnInit,
   computed,
   effect,
@@ -33,7 +34,7 @@ import { NotificationBellComponent } from '../notification-bell/notification-bel
   styleUrl: './app-navbar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AppNavbarComponent implements OnInit {
+export class AppNavbarComponent implements OnInit, OnDestroy {
   private readonly authService = inject(AuthService);
   private readonly tokenService = inject(TokenService);
   private readonly tenantSettingsStore = inject(TenantSettingsStoreService);
@@ -45,6 +46,7 @@ export class AppNavbarComponent implements OnInit {
   readonly menuToggle = output<void>();
   readonly isMobileMenuOpen = signal(false);
   private readonly menuButton = viewChild<ElementRef<HTMLButtonElement>>('menuButton');
+  private readonly profileMenu = viewChild<ElementRef<HTMLElement>>('profileMenu');
   private menuWasOpen = false;
   readonly searchQuery = signal('');
   readonly isCompactNav = signal(false);
@@ -137,9 +139,22 @@ export class AppNavbarComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    document.addEventListener('pointerdown', this.dismissProfileOnOutsidePointer, true);
     this.notificationState.initialize();
     this.syncCompactNav();
   }
+
+  ngOnDestroy(): void {
+    document.removeEventListener('pointerdown', this.dismissProfileOnOutsidePointer, true);
+  }
+
+  private readonly dismissProfileOnOutsidePointer = (event: Event): void => {
+    if (!this.showProfile()) return;
+    const root = this.profileMenu()?.nativeElement;
+    const target = event.target;
+    if (root && target instanceof Node && root.contains(target)) return;
+    this.showProfile.set(false);
+  };
 
   @HostListener('window:resize')
   onWindowResize(): void {
@@ -152,6 +167,11 @@ export class AppNavbarComponent implements OnInit {
 
   @HostListener('document:keydown', ['$event'])
   onGlobalKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Escape' && this.showProfile()) {
+      this.showProfile.set(false);
+      return;
+    }
+
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
       event.preventDefault();
       const input = document.querySelector<HTMLInputElement>('.app-navbar__search input');

@@ -16,6 +16,8 @@ import {
 } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { NAV_GROUP_ORDER, NAV_ITEMS, NavItem, ROUTES } from '../../constants/nav.constants';
+import { BillingService } from '../../../core/services/billing.service';
+import { CurrentPlanDto } from '../../../core/models/billing.model';
 import { TokenService } from '../../../core/services/token.service';
 import { ThemeService } from '../../../core/theme/theme.service';
 import { STORAGE_KEYS } from '../../../core/constants/storage.constants';
@@ -33,6 +35,7 @@ import { Subscription } from 'rxjs';
 })
 export class AppSidebarComponent implements OnInit, OnDestroy {
   private readonly tokenService = inject(TokenService);
+  private readonly billingService = inject(BillingService);
   private readonly themeService = inject(ThemeService);
   private readonly breakpointObserver = inject(BreakpointObserver);
 
@@ -40,6 +43,8 @@ export class AppSidebarComponent implements OnInit, OnDestroy {
   readonly collapsed = signal(StorageHelper.get<boolean>(STORAGE_KEYS.sidebarCollapsed) ?? false);
   readonly tabletOpen = signal(false);
   readonly billingRoute = ROUTES.billing.base;
+  /** Free plan and the signup free trial. Hidden once a paid plan is selected. */
+  readonly showProUpsell = computed(() => !isPremiumSubscription(this.billingService.currentPlan()));
 
   readonly mobileClose = output<void>();
 
@@ -55,6 +60,7 @@ export class AppSidebarComponent implements OnInit, OnDestroy {
   private readonly expandOverride = signal(false);
 
   private breakpointSubscription?: Subscription;
+  private planSubscription?: Subscription;
 
   private readonly overlayQuery = '(max-width: 991.98px)';
   private readonly contractQuery = '(min-width: 992px) and (max-width: 1599.98px)';
@@ -74,6 +80,8 @@ export class AppSidebarComponent implements OnInit, OnDestroy {
       }
     }
 
+    this.planSubscription = this.billingService.getCurrentPlan().subscribe({ error: () => undefined });
+
     this.breakpointSubscription = this.breakpointObserver
       .observe([this.overlayQuery, this.contractQuery])
       .subscribe(() => {
@@ -91,6 +99,7 @@ export class AppSidebarComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.planSubscription?.unsubscribe();
     this.breakpointSubscription?.unsubscribe();
   }
 
@@ -190,4 +199,16 @@ export class AppSidebarComponent implements OnInit, OnDestroy {
       this.closeDrawer();
     }
   }
+}
+
+const PREMIUM_PLAN_SLUGS = new Set(['starter', 'professional', 'enterprise']);
+
+/** A paid plan, including the trial that starts when that plan is selected. */
+function isPremiumSubscription(plan: CurrentPlanDto | null): boolean {
+  if (!plan) return false;
+  const slug = plan.planSlug?.trim().toLowerCase() ?? '';
+  const status = plan.status?.trim().toLowerCase() ?? '';
+  if (slug === 'free' || status === 'free') return false;
+  if (PREMIUM_PLAN_SLUGS.has(slug)) return true;
+  return plan.currentPrice > 0;
 }

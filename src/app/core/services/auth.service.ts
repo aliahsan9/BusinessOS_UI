@@ -22,6 +22,7 @@ import { StorageHelper } from '../helpers/storage.helper';
 import { ApiError } from '../models/api-error.model';
 import { ThemeService } from '../theme/theme.service';
 import { TenantSettingsStoreService } from './tenant-settings-store.service';
+import { BillingService } from './billing.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService extends BaseApiService {
@@ -32,6 +33,7 @@ export class AuthService extends BaseApiService {
   private readonly notificationService = inject(NotificationService);
   private readonly themeService = inject(ThemeService);
   private readonly tenantSettingsStore = inject(TenantSettingsStoreService);
+  private readonly billingService = inject(BillingService);
 
   private readonly loadingSignal = signal(false);
   readonly loading = this.loadingSignal.asReadonly();
@@ -109,6 +111,7 @@ export class AuthService extends BaseApiService {
       .subscribe({ error: () => undefined });
     this.tokenService.clearSession();
     this.tenantSettingsStore.clear();
+    this.billingService.rememberPlan(null);
     StorageHelper.remove(STORAGE_KEYS.rememberMe);
     if (showNotification) {
       this.notificationService.info('You have been signed out.');
