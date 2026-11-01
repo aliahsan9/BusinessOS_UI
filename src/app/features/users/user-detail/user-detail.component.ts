@@ -19,6 +19,8 @@ import { AppButtonComponent } from '../../../shared/components/app-button/app-bu
 import { AppInputComponent } from '../../../shared/components/app-input/app-input.component';
 import { AppSkeletonComponent } from '../../../shared/components/app-skeleton/app-skeleton.component';
 import { AppConfirmDialogComponent } from '../../../shared/components/app-confirm-dialog/app-confirm-dialog.component';
+import { getFieldError, strongPasswordValidator } from '../../../shared/validators/form.validators';
+import { ApiError } from '../../../core/models/api-error.model';
 
 @Component({
   selector: 'app-user-detail',
@@ -60,8 +62,12 @@ export class UserDetailComponent implements OnInit {
   readonly canUpdate = this.tokenService.hasPermission(PermissionCodes.user.update);
 
   readonly resetForm = this.fb.nonNullable.group({
-    newPassword: ['', [Validators.required, Validators.minLength(8)]],
+    newPassword: ['', [Validators.required, strongPasswordValidator()]],
   });
+
+  fieldError(field: string): string | null {
+    return getFieldError(this.resetForm.get(field), field);
+  }
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -189,8 +195,8 @@ export class UserDetailComponent implements OnInit {
         this.resetForm.reset();
         this.actionLoading.set(false);
       },
-      error: () => {
-        this.notification.error('Failed to reset password.');
+      error: (error: ApiError) => {
+        this.notification.error('Failed to reset password.', error.detail);
         this.actionLoading.set(false);
       },
     });

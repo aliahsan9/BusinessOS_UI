@@ -20,7 +20,13 @@
         <app-input label="Last Name *" formControlName="lastName" [error]="fieldError('lastName') ?? undefined" />
         <app-input label="Email *" type="email" formControlName="email" [error]="fieldError('email') ?? undefined" />
         @if (!isEdit()) {
-          <app-input label="Password *" type="password" formControlName="password" [error]="fieldError('password') ?? undefined" />
+          <app-input
+            label="Password *"
+            type="password"
+            formControlName="password"
+            hint="Use 8 or more characters with uppercase, lowercase, and a number."
+            [error]="fieldError('password') ?? undefined"
+          />
         }
         @if (isEdit()) {
           <div class="form-field">

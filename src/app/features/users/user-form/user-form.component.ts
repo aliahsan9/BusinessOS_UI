@@ -12,7 +12,8 @@ import { AppInputComponent } from '../../../shared/components/app-input/app-inpu
 import { AppButtonComponent } from '../../../shared/components/app-button/app-button.component';
 import { AppCardComponent } from '../../../shared/components/app-card/app-card.component';
 import { AppSkeletonComponent } from '../../../shared/components/app-skeleton/app-skeleton.component';
-import { getFieldError } from '../../../shared/validators/form.validators';
+import { getFieldError, strongPasswordValidator } from '../../../shared/validators/form.validators';
+import { ApiError } from '../../../core/models/api-error.model';
 
 @Component({
   selector: 'app-user-form',
@@ -63,7 +64,7 @@ export class UserFormComponent implements OnInit {
     if (this.isEdit()) {
       this.form.controls.password.clearValidators();
     } else {
-      this.form.controls.password.setValidators([Validators.required, Validators.minLength(8)]);
+      this.form.controls.password.setValidators([Validators.required, strongPasswordValidator()]);
     }
     this.form.controls.password.updateValueAndValidity();
 
@@ -92,6 +93,10 @@ export class UserFormComponent implements OnInit {
   }
 
   submit(): void {
+    if (this.saving()) {
+      return;
+    }
+
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -113,8 +118,8 @@ export class UserFormComponent implements OnInit {
             this.notification.success('User updated.');
             this.router.navigate([ROUTES.users.base, this.userId()]);
           },
-          error: () => {
-            this.notification.error('Failed to update user.');
+          error: (error: ApiError) => {
+            this.notification.error('Failed to update user.', error.detail);
             this.saving.set(false);
           },
         });
@@ -138,8 +143,8 @@ export class UserFormComponent implements OnInit {
             this.notification.success('User created.');
             this.router.navigate([ROUTES.users.base, user.id]);
           },
-          error: () => {
-            this.notification.error('Failed to create user.');
+          error: (error: ApiError) => {
+            this.notification.error('Failed to create user.', error.detail);
             this.saving.set(false);
           },
         });

@@ -6,7 +6,7 @@ import { environment } from '../../../environments/environment';
 import { RETRY_CONFIG } from '../constants/api.constants';
 import { PaginationParams } from '../models/pagination.model';
 import { PaginationHelper } from '../helpers/pagination.helper';
-import { ApiError } from '../models/api-error.model';
+import { ApiError, fromHttpError } from '../models/api-error.model';
 
 @Injectable({ providedIn: 'root' })
 export class BaseApiService {
@@ -81,46 +81,17 @@ export class BaseApiService {
   }
 
   protected parseError(error: HttpErrorResponse | ApiError): ApiError {
-    if (!(error instanceof HttpErrorResponse)) {
-      return {
-        status: error.status,
-        title: error.title || 'An unexpected error occurred',
-        detail: error.detail,
-        traceId: error.traceId,
-        errorCode: error.errorCode,
-        errors: error.errors,
-      };
-    }
-
-    if (error.status === 0) {
-      return {
-        status: 0,
-        title: 'Cannot reach server',
-        detail:
-          'The API is unavailable. Start the backend with "dotnet run" in BusinessOS.API (http://localhost:5162), then try again.',
-      };
-    }
-
-    if (error.status === 500 && (!error.error || typeof error.error === 'string')) {
-      return {
-        status: 500,
-        title: 'Server unavailable',
-        detail:
-          'The API may not be running. Start the backend with "dotnet run" in BusinessOS.API (http://localhost:5162), then try again.',
-      };
-    }
-
-    if (error.error && typeof error.error === 'object') {
-      const body = error.error as ApiError;
-      if (body.status || body.title || body.detail) {
-        return body;
-      }
+    if (error instanceof HttpErrorResponse) {
+      return fromHttpError(error);
     }
 
     return {
       status: error.status,
-      title: error.statusText || 'An unexpected error occurred',
-      detail: error.message,
+      title: error.title || 'An unexpected error occurred',
+      detail: error.detail,
+      traceId: error.traceId,
+      errorCode: error.errorCode,
+      errors: error.errors,
     };
   }
 }

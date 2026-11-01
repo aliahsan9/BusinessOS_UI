@@ -30,7 +30,18 @@ function initializeApp(
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
-    provideRouter(routes, withComponentInputBinding(), withViewTransitions()),
+    provideRouter(
+      routes,
+      withComponentInputBinding(),
+      withViewTransitions({
+        onViewTransitionCreated: ({ transition }) => {
+          transition.finished.catch(() => undefined);
+          if (document.hidden) {
+            transition.skipTransition();
+          }
+        },
+      }),
+    ),
     provideHttpClient(withInterceptors([errorInterceptor, loadingInterceptor, authInterceptor])),
     provideAnimations(),
     {

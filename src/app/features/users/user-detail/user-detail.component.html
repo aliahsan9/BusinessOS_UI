@@ -69,7 +69,13 @@
     <div class="modal-panel">
       <h3>Reset Password</h3>
       <form [formGroup]="resetForm" (ngSubmit)="submitResetPassword()">
-        <app-input label="New Password *" type="password" formControlName="newPassword" />
+        <app-input
+          label="New Password *"
+          type="password"
+          formControlName="newPassword"
+          hint="Use 8 or more characters with uppercase, lowercase, and a number."
+          [error]="fieldError('newPassword') ?? undefined"
+        />
         <div class="modal-actions">
           <app-button label="Cancel" [variant]="ButtonVariant.Outline" type="button" (clicked)="showResetPassword.set(false)" />
           <app-button label="Reset Password" type="submit" [loading]="actionLoading()" />
