@@ -89,13 +89,13 @@ export class ProfitLossComponent implements OnInit {
         });
         break;
       case 'monthly':
-        this.financeService.getProfitLoss({ period: 'monthly', groupBy: 'month' }).subscribe({
+        this.financeService.getProfitLoss({ period: 'all', groupBy: 'month' }).subscribe({
           next: (r) => this.finishLoad(() => this.monthlyReport.set(r)),
           error: () => this.failLoad('Failed to load monthly report.'),
         });
         break;
       case 'yearly':
-        this.financeService.getProfitLoss({ period: 'yearly', groupBy: 'year' }).subscribe({
+        this.financeService.getProfitLoss({ period: 'all', groupBy: 'year' }).subscribe({
           next: (r) => this.finishLoad(() => this.yearlyReport.set(r)),
           error: () => this.failLoad('Failed to load yearly report.'),
         });
