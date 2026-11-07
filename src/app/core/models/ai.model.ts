@@ -132,6 +132,7 @@ export interface AiChatMessage {
   agentDisplayName?: string | null;
   language?: string | null;
   textDirection?: 'ltr' | 'rtl' | string | null;
+  pendingConfirmation?: import('./agent.model').AiPendingConfirmation | null;
 }
 
 export interface AiConversationSession {

@@ -135,6 +135,26 @@
           } @else if (msg.role === 'assistant') {
             <div class="ai-chat__rich" [innerHTML]="formatReplyHtml(msg.content)"></div>
             @if (msg.streaming) {<span class="ai-chat__caret" aria-hidden="true"></span>}
+            @if (msg.pendingConfirmation) {
+              <div class="ai-chat__confirm" role="group" [attr.aria-label]="msg.pendingConfirmation.action">
+                <p class="ai-chat__confirm-title">{{ msg.pendingConfirmation.action }}</p>
+                @for (field of msg.pendingConfirmation.fields; track field.label) {
+                  <div class="ai-chat__confirm-row">
+                    <span>{{ field.label }}</span>
+                    <strong>{{ field.value }}</strong>
+                  </div>
+                }
+                <p class="ai-chat__confirm-note">Nothing is saved until you confirm.</p>
+                <div class="ai-chat__confirm-actions">
+                  <button type="button" class="ai-chat__confirm-go" (click)="confirmPending()" [disabled]="loading()">
+                    Confirm
+                  </button>
+                  <button type="button" class="ai-chat__confirm-stop" (click)="cancelPending()" [disabled]="loading()">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            }
           } @else {
             {{ msg.content }}
           }

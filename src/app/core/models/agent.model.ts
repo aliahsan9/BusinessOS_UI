@@ -62,6 +62,17 @@ export interface AgentChatResponse {
   permissionDenied?: boolean;
   language?: string | null;
   textDirection?: 'ltr' | 'rtl' | string | null;
+  pendingConfirmation?: AiPendingConfirmation | null;
+}
+
+export interface AiPendingConfirmation {
+  action: string;
+  fields: AiConfirmationField[];
+}
+
+export interface AiConfirmationField {
+  label: string;
+  value: string;
 }
 
 export interface AgentStreamChunk {

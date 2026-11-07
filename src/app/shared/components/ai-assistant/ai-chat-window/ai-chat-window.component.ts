@@ -146,7 +146,8 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
     () =>
       this.showSuggestions() &&
       this.suggestions().length > 0 &&
-      this.messages().some((message) => message.role === 'user'),
+      this.messages().some((message) => message.role === 'user') &&
+      !this.messages().some((message) => message.pendingConfirmation),
   );
   readonly chatEnabled = this.aiAssistantState.chatEnabled;
   readonly settingsRoute = ROUTES.settings.hub;
@@ -600,8 +601,11 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
         actionResult: response.actionResult,
         workflowSteps: response.workflowSteps ?? [],
         agentDisplayName: response.agentDisplayName,
+        pendingConfirmation: response.pendingConfirmation ?? null,
       };
-      return copy;
+      return copy.map((message, index) =>
+        index === msgIndex ? message : { ...message, pendingConfirmation: null },
+      );
     });
 
     this.searchResults.set(response.searchResults ?? []);
@@ -639,6 +643,17 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
 
   useSuggestion(suggestion: AiSuggestionDto): void {
     this.sendMessage(suggestion.message);
+  }
+
+  confirmPending(): void {
+    const confirm = this.suggestions().find(
+      (suggestion) => /confirm|yes/i.test(suggestion.message) && !/cancel|no,/i.test(suggestion.label),
+    );
+    this.sendMessage(confirm?.message ?? 'Confirm');
+  }
+
+  cancelPending(): void {
+    this.sendMessage('Cancel');
   }
 
   goTo(route: string): void {
