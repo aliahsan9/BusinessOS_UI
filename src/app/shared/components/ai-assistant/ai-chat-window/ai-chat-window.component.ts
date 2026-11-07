@@ -112,6 +112,9 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
   readonly isPaused = this.voice.isPaused;
   readonly voices = this.voice.voices;
   readonly selectedVoice = this.voice.selectedVoice;
+  readonly selectedVoiceLabel = computed(
+    () => this.voices().find((voice) => voice.id === this.selectedVoice())?.label ?? this.selectedVoice(),
+  );
   readonly playbackNotice = this.voice.playbackNotice;
   readonly isMuted = this.voice.isMuted;
   readonly micSupported = this.voice.micSupported;
@@ -414,6 +417,10 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
 
   onVoiceChange(voiceName: string): void {
     void this.voice.selectVoice(voiceName);
+  }
+
+  previewVoice(): void {
+    this.voice.previewVoice(this.selectedVoice());
   }
 
   toggleCitations(messageIndex: number): void {

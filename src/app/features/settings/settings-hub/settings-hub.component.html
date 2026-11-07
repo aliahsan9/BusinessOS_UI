@@ -167,13 +167,15 @@
 
               <div class="mt-3">
                 <label class="form-label" for="sophiaVoice">Voice</label>
-                <select id="sophiaVoice" class="form-select" formControlName="voiceName">
+                <select id="sophiaVoice" class="form-select" formControlName="voiceName" (change)="onVoicePicked($any($event.target).value)">
                   @for (voice of ttsVoices(); track voice.id) {
                     <option [value]="voice.id">
                       {{ voice.label }}@if (voice.description) { — {{ voice.description }} }
                     </option>
                   }
                 </select>
+                <p class="text-muted mt-2">Selected voice: {{ voiceForm.controls.voiceName.value }}</p>
+                <button type="button" class="btn btn-outline-secondary btn-sm" (click)="previewVoice()">Preview this voice</button>
               </div>
 
               <div class="mt-3">

@@ -290,6 +290,16 @@ export class SettingsHubComponent implements OnInit {
     });
   }
 
+  onVoicePicked(voiceName: string): void {
+    if (!voiceName) return;
+    void this.voiceService.selectVoice(voiceName);
+  }
+
+  previewVoice(): void {
+    const voiceName = this.voiceForm.controls.voiceName.value;
+    if (voiceName) this.voiceService.previewVoice(voiceName);
+  }
+
   saveVoicePreferences(): void {
     if (this.voiceForm.invalid) {
       this.voiceForm.markAllAsTouched();

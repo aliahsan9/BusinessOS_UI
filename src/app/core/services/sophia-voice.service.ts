@@ -45,6 +45,8 @@ export class SophiaVoiceService implements OnDestroy {
   private prefs: VoicePreference | null = null;
   private pushToTalkActive = false;
   private speakGeneration = 0;
+  /** Increments on every local voice change so a slower preference load cannot restore the old voice. */
+  private preferenceEpoch = 0;
   private catalogDefaultVoice = 'coral';
 
   readonly voiceState = signal<VoiceUiState>('idle');
@@ -53,7 +55,7 @@ export class SophiaVoiceService implements OnDestroy {
   /** Increments each time a new utterance starts, so other screens can tell playback apart. */
   readonly playbackId = signal(0);
   readonly voices = signal<TtsVoiceOption[]>(FALLBACK_TTS_VOICES);
-  readonly selectedVoice = signal('coral');
+  readonly selectedVoice = signal(this.readStoredVoice() ?? 'coral');
   readonly voiceProvider = signal('openai');
   readonly playbackNotice = signal<string | null>(null);
   /** Stays on from the click that starts the mic until the click that stops it. */
@@ -86,6 +88,7 @@ export class SophiaVoiceService implements OnDestroy {
   }
 
   async loadPreferences(): Promise<VoicePreference | null> {
+    const epoch = this.preferenceEpoch;
     const [prefsResult, catalogResult] = await Promise.allSettled([
       firstValueFrom(this.agentService.getVoicePreferences()),
       firstValueFrom(this.agentService.listTtsVoices()),
@@ -97,9 +100,17 @@ export class SophiaVoiceService implements OnDestroy {
       this.catalogDefaultVoice = catalogResult.value.defaultVoice || 'coral';
     }
 
+    if (epoch !== this.preferenceEpoch) {
+      this.selectedVoice.set(this.resolveVoiceId(this.selectedVoice()));
+      return this.prefs;
+    }
+
     if (prefsResult.status === 'fulfilled') {
-      this.applyPreferences(prefsResult.value);
-      return prefsResult.value;
+      const stored = this.readStoredVoice();
+      const serverVoice = prefsResult.value.voiceName;
+      const voiceName = stored && stored !== 'default' ? stored : serverVoice;
+      this.applyPreferences({ ...prefsResult.value, voiceName });
+      return { ...prefsResult.value, voiceName };
     }
 
     this.applyPreferences({
@@ -123,6 +134,7 @@ export class SophiaVoiceService implements OnDestroy {
     this.autoSpeak.set(prefs.autoSpeak !== false);
     this.continuousListening.set(!!prefs.continuousListening);
     this.selectedVoice.set(this.resolveVoiceId(prefs.voiceName));
+    this.writeStoredVoice(this.selectedVoice());
     this.agentService.setPreferences({
       agentKey: prefs.preferredAgentKey || 'sophia',
       language: lang,
@@ -173,8 +185,10 @@ export class SophiaVoiceService implements OnDestroy {
     const name = this.resolveVoiceId(voiceName);
     if (!name || name === this.selectedVoice()) return;
 
+    this.preferenceEpoch++;
     this.stopSpeaking(false);
     this.selectedVoice.set(name);
+    this.writeStoredVoice(name);
     const base = this.prefs ?? {
       language: this.language(),
       voiceName: name,
@@ -186,6 +200,7 @@ export class SophiaVoiceService implements OnDestroy {
     };
     this.prefs = { ...base, voiceName: name };
 
+    const epoch = this.preferenceEpoch;
     try {
       const saved = await firstValueFrom(
         this.agentService.saveVoicePreferences({
@@ -198,11 +213,28 @@ export class SophiaVoiceService implements OnDestroy {
           preferredAgentKey: base.preferredAgentKey || 'sophia',
         }),
       );
-      this.applyPreferences(saved);
+      if (epoch !== this.preferenceEpoch) return;
+      const savedName = (saved.voiceName || '').trim();
+      this.applyPreferences({
+        ...saved,
+        voiceName: !savedName || savedName === 'default' ? name : savedName,
+      });
+      this.writeStoredVoice(this.selectedVoice());
       this.errorMessage.set(null);
     } catch {
       this.errorMessage.set('Could not save that voice. It will still be used for this session.');
     }
+  }
+
+  /** Speaks a short sample in the given voice without changing the saved preference. */
+  previewVoice(voiceName: string): void {
+    const name = this.resolveVoiceId(voiceName);
+    this.stopSpeaking(false);
+    const generation = this.speakGeneration;
+    this.utteranceActive.set(true);
+    this.errorMessage.set(null);
+    this.playbackNotice.set(null);
+    void this.playWithProvider('Hello. This is a preview of the selected voice.', generation, name);
   }
 
   setProcessing(active: boolean): void {
@@ -350,11 +382,12 @@ export class SophiaVoiceService implements OnDestroy {
     this.pauseRecognition();
     this.playbackId.update((id) => id + 1);
     const generation = this.speakGeneration;
+    const voiceName = this.selectedVoice();
     if (options?.language) this.replyLanguage = options.language;
     this.lastSpokenText.set(text);
     this.utteranceActive.set(true);
     this.errorMessage.set(null);
-    void this.playWithProvider(spoken, generation);
+    void this.playWithProvider(spoken, generation, voiceName);
   }
 
   pause(): void {
@@ -421,20 +454,27 @@ export class SophiaVoiceService implements OnDestroy {
     this.onFinalTranscript = null;
   }
 
-  private async playWithProvider(text: string, generation: number): Promise<void> {
+  private async playWithProvider(text: string, generation: number, voiceName?: string): Promise<void> {
+    const requestedVoice = voiceName || this.selectedVoice();
     const abort = new AbortController();
     this.ttsAbort = abort;
     try {
       const speech = await this.agentService.synthesizeSpeech(text, {
         language: this.speechLocale(this.activeSpeechLanguage()),
         speechRate: this.prefs?.speechRate ?? 1,
-        voiceName: this.selectedVoice(),
+        voiceName: requestedVoice,
         signal: abort.signal,
       });
       if (generation !== this.speakGeneration) return;
       if (!speech.blob.size) throw new Error('Empty audio');
 
-      if (this.voiceProvider() === 'openai' && speech.provider && speech.provider !== 'openai') {
+      const actual = (speech.voice || '').trim().toLowerCase();
+      const requested = requestedVoice.trim().toLowerCase();
+      if (actual && requested && actual !== requested) {
+        this.playbackNotice.set(
+          `The selected voice (${requestedVoice}) was not available, so this audio uses ${speech.voice}.`,
+        );
+      } else if (this.voiceProvider() === 'openai' && speech.provider && speech.provider !== 'openai') {
         this.playbackNotice.set('The AI voice had a problem, so a backup voice was used.');
       } else {
         this.playbackNotice.set(null);
@@ -442,8 +482,9 @@ export class SophiaVoiceService implements OnDestroy {
       this.playBlob(speech.blob, generation);
     } catch (err) {
       if (generation !== this.speakGeneration || this.isAbortError(err)) return;
+      const detail = this.safeSpeechError(err);
       if (environment.browserSpeechFallback && this.ttsSupported()) {
-        this.playbackNotice.set('AI speech is unavailable, so the browser voice is being used.');
+        this.playbackNotice.set(detail || 'AI speech is unavailable, so the browser voice is being used.');
         if (this.holdPlayback) {
           this.voiceState.set('paused');
           return;
@@ -451,7 +492,7 @@ export class SophiaVoiceService implements OnDestroy {
         this.speakBrowser(text, generation);
         return;
       }
-      this.failPlayback('Voice is unavailable right now. You can still read the reply.');
+      this.failPlayback(detail || 'Voice is unavailable right now. You can still read the reply.');
     }
   }
 
@@ -540,6 +581,15 @@ export class SophiaVoiceService implements OnDestroy {
       this.voiceState.set('idle');
     }
     this.resumeIfEngaged();
+  }
+
+  private safeSpeechError(err: unknown): string {
+    const raw = err instanceof Error ? err.message.trim() : '';
+    return raw
+      .replace(/sk-[a-zA-Z0-9_-]{8,}/gi, '')
+      .replace(/bearer\s+\S+/gi, '')
+      .trim()
+      .slice(0, 240);
   }
 
   private failPlayback(message: string): void {
@@ -696,6 +746,23 @@ export class SophiaVoiceService implements OnDestroy {
     if (value === 'ar' || value === 'arabic') return 'ar';
     if (value === 'en' || value === 'english') return 'en';
     return 'auto';
+  }
+
+  private readStoredVoice(): string | null {
+    try {
+      const raw = localStorage.getItem('bos.sophia.voice')?.trim();
+      return raw || null;
+    } catch {
+      return null;
+    }
+  }
+
+  private writeStoredVoice(voiceName: string): void {
+    try {
+      localStorage.setItem('bos.sophia.voice', voiceName);
+    } catch {
+      /* private mode */
+    }
   }
 
   private readStoredLanguage(): string | null {

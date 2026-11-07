@@ -229,6 +229,7 @@
       }
     </span>
     @if (voices().length > 0) {
+      <span class="ai-chat__voice-current">Voice: {{ selectedVoiceLabel() }}</span>
       <select
         class="ai-chat__voice-select"
         [ngModel]="selectedVoice()"
@@ -239,6 +240,7 @@
           <option [value]="voice.id">{{ voice.label }}</option>
         }
       </select>
+      <button type="button" class="ai-chat__voice-preview" (click)="previewVoice()">Preview</button>
     }
   </div>
 

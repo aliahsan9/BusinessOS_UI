@@ -415,6 +415,23 @@
     overflow: hidden;
   }
 
+  &__voice-current {
+    flex: 0 1 auto;
+    font-size: 0.72rem;
+    color: var(--color-text-muted, #64748b);
+    white-space: nowrap;
+  }
+
+  &__voice-preview {
+    flex: 0 0 auto;
+    border: 1px solid var(--color-border);
+    background: transparent;
+    color: var(--color-text);
+    border-radius: 999px;
+    font-size: 0.72rem;
+    padding: 0.15rem 0.55rem;
+  }
+
   &__voice-select {
     flex: 0 1 7.5rem;
     width: auto;
