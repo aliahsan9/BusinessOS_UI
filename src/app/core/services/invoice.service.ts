@@ -9,6 +9,7 @@ import {
   InvoiceDto,
   InvoiceQueryParams,
   InvoiceSummaryDto,
+  InvoicePortfolioSummary,
   UpdateInvoiceRequest,
 } from '../models/invoice.model';
 import { InvoiceStatus } from '../enums';
@@ -18,6 +19,10 @@ import { environment } from '../../../environments/environment';
 export class InvoiceService extends BaseApiService {
   getAll(params?: InvoiceQueryParams): Observable<PagedResult<InvoiceSummaryDto>> {
     return this.get<PagedResult<InvoiceSummaryDto>>(API_ENDPOINTS.invoices, params);
+  }
+
+  getSummary(): Observable<InvoicePortfolioSummary> {
+    return this.get<InvoicePortfolioSummary>(`${API_ENDPOINTS.invoices}/summary`);
   }
 
   getById(id: string): Observable<InvoiceDto> {

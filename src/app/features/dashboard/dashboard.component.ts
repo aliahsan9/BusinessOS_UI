@@ -4,6 +4,7 @@ import {
   HostListener,
   OnInit,
   computed,
+  effect,
   inject,
   signal,
 } from '@angular/core';
@@ -17,6 +18,7 @@ import { NotificationStateService } from '../../state/notification.state';
 import { AiAssistantStateService } from '../../state/ai-assistant.state';
 import { AuthService } from '../../core/services/auth.service';
 import { CurrencyService } from '../../core/services/currency.service';
+import { FinanceService } from '../../core/services/finance.service';
 import { ActivityDto } from '../../core/models/activity.model';
 import { OrderSummaryDto } from '../../core/models/order.model';
 import {
@@ -76,6 +78,8 @@ export class DashboardComponent implements OnInit {
   private readonly aiAssistantState = inject(AiAssistantStateService);
   private readonly authService = inject(AuthService);
   private readonly currencyService = inject(CurrencyService);
+  private readonly financeService = inject(FinanceService);
+  readonly netProfit = signal<number | null>(null);
 
   readonly recentActivities = signal<ActivityDto[]>([]);
   readonly recentOrders = signal<OrderSummaryDto[]>([]);
@@ -83,6 +87,7 @@ export class DashboardComponent implements OnInit {
   readonly ordersLoading = signal(false);
   readonly showAddMenu = signal(false);
   readonly tasks = signal<DashboardTask[]>([]);
+  private readonly completedFollowUps = new Set<string>();
   readonly chartHeight = signal(280);
 
   readonly routes = ROUTES;
@@ -106,6 +111,29 @@ export class DashboardComponent implements OnInit {
   readonly customers = this.dashboardState.customers;
   readonly products = this.dashboardState.products;
   readonly orders = this.dashboardState.orders;
+  private readonly syncFollowUps = effect(() => {
+    const low = this.overview()?.lowStockProducts ?? 0;
+    const pending = this.orders()?.ordersByStatus
+      ?.find((status) => status.status.toLowerCase() === 'pending')?.count ?? 0;
+    const next: DashboardTask[] = [];
+    if (low > 0) {
+      next.push({
+        id: 'low-stock',
+        label: `Review ${low} low-stock products`,
+        priority: 'High',
+        done: this.completedFollowUps.has('low-stock'),
+      });
+    }
+    if (pending > 0) {
+      next.push({
+        id: 'pending-orders',
+        label: `Follow up ${pending} pending orders`,
+        priority: 'Medium',
+        done: this.completedFollowUps.has('pending-orders'),
+      });
+    }
+    this.tasks.set(next);
+  });
   readonly revenueChart = this.dashboardState.revenueChart;
   readonly loading = this.dashboardState.loading;
   readonly error = this.dashboardState.error;
@@ -136,18 +164,8 @@ export class DashboardComponent implements OnInit {
     return this.currentPeriodLabel();
   });
 
-  readonly revenueTrend = computed(() => this.customers()?.customerGrowthRate ?? 12.5);
-  readonly ordersTrend = computed(() => {
-    const rate = this.orders()?.successRate;
-    return rate != null ? Math.min(Math.max(rate / 5, 4), 28) : 18.7;
-  });
-  readonly profitTrend = computed(() => 8.3);
-  readonly customersTrend = computed(() => this.customers()?.customerGrowthRate ?? 21.6);
-
-  readonly estimatedProfit = computed(() => {
-    const revenue = this.overview()?.totalRevenue ?? 0;
-    return Math.round(revenue * 0.25);
-  });
+  readonly revenueTrend = computed((): number | null => this.customers()?.customerGrowthRate ?? null);
+  readonly customersTrend = computed((): number | null => this.customers()?.customerGrowthRate ?? null);
 
   readonly sparkRevenue = computed(() =>
     this.buildSpark(
@@ -161,18 +179,13 @@ export class DashboardComponent implements OnInit {
       this.overview()?.totalOrders ?? 0,
     ),
   );
-  readonly sparkProfit = computed(() =>
-    this.buildSpark(
-      (this.sales()?.revenueTrends?.map((t) => t.revenue) ?? []).map((v) => v * 0.25),
-      this.estimatedProfit(),
-    ),
-  );
+  readonly sparkProfit = computed(() => {
+    const profit = this.netProfit();
+    return this.buildSpark(profit == null ? [] : [profit], profit ?? 0);
+  });
   readonly sparkCustomers = computed(() => {
     const total = this.overview()?.totalCustomers ?? 0;
-    const seed = [0.62, 0.74, 0.68, 0.82, 0.76, 0.9, 0.84, 0.96, 0.9, 1].map(
-      (n) => n * Math.max(total, 1),
-    );
-    return this.buildSpark(seed, Math.max(total, 1));
+    return this.buildSpark(total > 0 ? [total] : [], total);
   });
 
   /** Sales area chart. Sparse periods (today, this month) are drawn as a full curve so the panel matches All Time. */
@@ -184,19 +197,17 @@ export class DashboardComponent implements OnInit {
     const values = (revenue?.data ?? []).map((n) => Number(n) || 0);
     if (!values.some((v) => v > 0) && headline <= 0) return null;
 
-    const dense = values.length >= 8 && this.seriesHasSpread(values);
-    const basis = values.some((v) => v > 0) ? values : [headline];
-    const series = dense ? values : this.expandSeries(basis, 14);
+    if (!values.length) return null;
     const range = source?.dateRange ?? this.overview()?.dateRange;
 
     return {
       chartType: 'line',
       title: source?.title || 'Sales Overview',
-      labels: dense ? (source?.labels ?? []) : this.periodLabels(series.length, source?.labels ?? []),
+      labels: source?.labels?.length ? source.labels : values.map((_, index) => `${index + 1}`),
       datasets: [
         {
           label: revenue?.label || 'Revenue',
-          data: series,
+          data: values,
           chartStyle: 'line',
         },
       ],
@@ -205,7 +216,7 @@ export class DashboardComponent implements OnInit {
         endDate: '',
         period: this.period(),
       },
-      periodTotal: dense ? null : headline,
+      periodTotal: headline,
     };
   });
 
@@ -251,10 +262,10 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit(): void {
     this.dashboardState.loadDashboard();
+    this.loadFinance();
     this.loadRecentActivity();
     this.loadRecentOrders();
     void this.notificationState.refresh(5);
-    this.seedTasks();
     this.syncChartHeight();
   }
 
@@ -281,15 +292,17 @@ export class DashboardComponent implements OnInit {
 
   setPeriod(value: DashboardPeriod): void {
     this.dashboardState.setPeriod(value);
+    this.loadFinance();
   }
 
   onPeriodChange(event: Event): void {
     const value = (event.target as HTMLSelectElement).value as DashboardPeriod;
-    this.dashboardState.setPeriod(value);
+    this.setPeriod(value);
   }
 
   retry(): void {
     this.dashboardState.loadDashboard(this.period());
+    this.loadFinance();
     this.loadRecentActivity();
     this.loadRecentOrders();
   }
@@ -311,14 +324,11 @@ export class DashboardComponent implements OnInit {
   }
 
   toggleTask(id: string): void {
+    if (this.completedFollowUps.has(id)) this.completedFollowUps.delete(id);
+    else this.completedFollowUps.add(id);
     this.tasks.update((list) =>
-      list.map((task) => (task.id === id ? { ...task, done: !task.done } : task)),
+      list.map((task) => (task.id === id ? { ...task, done: this.completedFollowUps.has(id) } : task)),
     );
-  }
-
-  productTrend(index: number): number {
-    const trends = [15, -3, 8, 12, -5, 6, 9];
-    return trends[index % trends.length];
   }
 
   statusTone(status: string): StatusTone {
@@ -399,49 +409,18 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  private seedTasks(): void {
-    this.tasks.set([
-      { id: 't1', label: 'Follow up pending orders', priority: 'High', done: false },
-      { id: 't2', label: 'Review low-stock products', priority: 'Medium', done: false },
-      { id: 't3', label: 'Send weekly sales summary', priority: 'Low', done: false },
-    ]);
+  private loadFinance(): void {
+    this.financeService.getDashboard({ period: this.period() }).subscribe({
+      next: (report) => this.netProfit.set(report.netProfit),
+      error: () => this.netProfit.set(null),
+    });
   }
 
   private buildCategoryRaw(): Array<{ name: string; value: number }> {
     const products = this.products()?.bestSellingProducts?.slice(0, 5) ?? [];
-    const productRows = products
+    return products
       .filter((p) => (p.totalRevenue ?? 0) > 0)
       .map((p) => ({ name: p.productName, value: p.totalRevenue }));
-
-    if (productRows.length) {
-      return productRows;
-    }
-
-    const statuses = this.orders()?.ordersByStatus ?? [];
-    if (statuses.length) {
-      return statuses
-        .filter((s) => s.count > 0)
-        .map((s) => ({ name: s.status, value: s.count }));
-    }
-
-    const total = this.overview()?.totalRevenue ?? 0;
-    if (total > 0) {
-      return [
-        { name: 'Electronics', value: total * 0.36 },
-        { name: 'Accessories', value: total * 0.25 },
-        { name: 'Office Supplies', value: total * 0.17 },
-        { name: 'Software', value: total * 0.12 },
-        { name: 'Others', value: total * 0.1 },
-      ];
-    }
-
-    return [
-      { name: 'Electronics', value: 36 },
-      { name: 'Accessories', value: 25 },
-      { name: 'Office Supplies', value: 17 },
-      { name: 'Software', value: 12 },
-      { name: 'Others', value: 10 },
-    ];
   }
 
   private formatCompactMoney(value: number): string {
@@ -473,19 +452,9 @@ export class DashboardComponent implements OnInit {
    */
   private expandSeries(values: number[], count: number): number[] {
     const nums = values.filter((v) => Number.isFinite(v));
-    if (nums.length >= 4 && this.seriesHasSpread(nums)) {
-      return nums.length === count ? nums : this.resample(nums, count);
-    }
-    const peak = nums.length ? Math.max(...nums) : 0;
-    const scale = peak > 0 ? peak : 1;
-    return this.waveShape(count).map((n) => Math.round(n * scale * 100) / 100);
-  }
-
-  private seriesHasSpread(values: number[]): boolean {
-    if (values.length < 2) return false;
-    const min = Math.min(...values);
-    const max = Math.max(...values);
-    return max - min > Math.max(Math.abs(max) * 0.04, 0.001);
+    if (nums.length === 0) return Array.from({ length: Math.max(count, 2) }, () => 0);
+    if (nums.length === 1) return Array.from({ length: Math.max(count, 2) }, () => nums[0]);
+    return nums.length === count ? nums.slice() : this.resample(nums, count);
   }
 
   private resample(values: number[], count: number): number[] {
@@ -501,21 +470,6 @@ export class DashboardComponent implements OnInit {
       result.push(values[i0] + (values[i1] - values[i0]) * smooth);
     }
     return result;
-  }
-
-  /** Bell curve in the same family as the All Time sales chart, normalized to 0.42–1. */
-  private waveShape(count: number): number[] {
-    const raw: number[] = [];
-    for (let i = 0; i < count; i++) {
-      const t = count === 1 ? 0.55 : i / (count - 1);
-      const bell = Math.exp(-((t - 0.58) ** 2) / (2 * 0.2 ** 2));
-      const ripple = 0.05 * Math.sin(t * Math.PI * 3.2);
-      raw.push(bell + ripple);
-    }
-    const min = Math.min(...raw);
-    const max = Math.max(...raw);
-    const span = max - min || 1;
-    return raw.map((v) => 0.42 + ((v - min) / span) * 0.58);
   }
 
   private periodLabels(count: number, sourceLabels: string[]): string[] {

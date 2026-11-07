@@ -90,10 +90,12 @@
               <span class="kpi__label">Total Revenue</span>
             </div>
             <div class="kpi__value">{{ overview()?.totalRevenue | appCurrency }}</div>
-            <div class="kpi__trend kpi__trend--up">
-              <i class="bi bi-arrow-up-short" aria-hidden="true"></i>
-              {{ revenueTrend() | number: '1.1-1' }}% vs last period
-            </div>
+            @if (revenueTrend() !== null) {
+              <div class="kpi__trend kpi__trend--up">
+                <i class="bi bi-arrow-up-short" aria-hidden="true"></i>
+                {{ revenueTrend() | number: '1.1-1' }}% vs last period
+              </div>
+            }
             <svg class="kpi__spark" viewBox="0 0 120 40" preserveAspectRatio="none" aria-hidden="true">
               <defs>
                 <linearGradient id="sparkFillPurple" x1="0" y1="0" x2="0" y2="1">
@@ -112,10 +114,6 @@
               <span class="kpi__label">Total Orders</span>
             </div>
             <div class="kpi__value">{{ overview()?.totalOrders | number }}</div>
-            <div class="kpi__trend kpi__trend--up">
-              <i class="bi bi-arrow-up-short" aria-hidden="true"></i>
-              {{ ordersTrend() | number: '1.1-1' }}% vs last period
-            </div>
             <svg class="kpi__spark" viewBox="0 0 120 40" preserveAspectRatio="none" aria-hidden="true">
               <defs>
                 <linearGradient id="sparkFillBlue" x1="0" y1="0" x2="0" y2="1">
@@ -133,11 +131,10 @@
               <span class="kpi__icon" aria-hidden="true"><i class="bi bi-graph-up-arrow"></i></span>
               <span class="kpi__label">Profit</span>
             </div>
-            <div class="kpi__value">{{ estimatedProfit() | appCurrency }}</div>
-            <div class="kpi__trend kpi__trend--up">
-              <i class="bi bi-arrow-up-short" aria-hidden="true"></i>
-              {{ profitTrend() | number: '1.1-1' }}% vs last period
+            <div class="kpi__value">
+              @if (netProfit() === null) { — } @else { {{ netProfit() | appCurrency }} }
             </div>
+            <div class="kpi__trend">Net of recorded expenses</div>
             <svg class="kpi__spark" viewBox="0 0 120 40" preserveAspectRatio="none" aria-hidden="true">
               <defs>
                 <linearGradient id="sparkFillGreen" x1="0" y1="0" x2="0" y2="1">
@@ -156,10 +153,12 @@
               <span class="kpi__label">Customers</span>
             </div>
             <div class="kpi__value">{{ overview()?.totalCustomers | number }}</div>
-            <div class="kpi__trend kpi__trend--up">
-              <i class="bi bi-arrow-up-short" aria-hidden="true"></i>
-              {{ customersTrend() | number: '1.1-1' }}% vs last period
-            </div>
+            @if (customersTrend() !== null) {
+              <div class="kpi__trend kpi__trend--up">
+                <i class="bi bi-arrow-up-short" aria-hidden="true"></i>
+                {{ customersTrend() | number: '1.1-1' }}% vs last period
+              </div>
+            }
             <svg class="kpi__spark" viewBox="0 0 120 40" preserveAspectRatio="none" aria-hidden="true">
               <defs>
                 <linearGradient id="sparkFillOrange" x1="0" y1="0" x2="0" y2="1">
@@ -199,7 +198,7 @@
 
           <article class="panel panel--category">
             <div class="panel__head">
-              <h2 class="panel__title">Revenue by Category</h2>
+              <h2 class="panel__title">Top product revenue</h2>
             </div>
             <div class="category">
               <div class="category__chart">
@@ -278,9 +277,6 @@
                     </div>
                     <div class="product-list__stats">
                       <strong>{{ product.totalRevenue | appCurrency }}</strong>
-                      <span [class.up]="productTrend(i) >= 0" [class.down]="productTrend(i) < 0">
-                        {{ productTrend(i) >= 0 ? '+' : '' }}{{ productTrend(i) }}%
-                      </span>
                     </div>
                   </li>
                 }
@@ -357,6 +353,9 @@
           <div class="panel__head">
             <h2 class="panel__title">Tasks</h2>
           </div>
+          @if (!tasks().length) {
+            <app-empty-state title="No follow-ups" description="Low stock and pending orders show up here." />
+          } @else {
           <ul class="tasks">
             @for (task of tasks(); track task.id) {
               <li class="tasks__item" [class.tasks__item--done]="task.done">
@@ -368,6 +367,7 @@
               </li>
             }
           </ul>
+          }
         </article>
 
         <article class="ai-card">

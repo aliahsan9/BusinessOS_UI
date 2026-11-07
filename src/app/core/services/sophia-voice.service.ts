@@ -28,7 +28,7 @@ type SpeechRecognitionEventLike = {
 };
 
 /**
- * Turn-based speech for Sophia. The browser transcribes one utterance, then the server
+ * Turn-based speech for Navla. The browser transcribes one utterance, then the server
  * answers and synthesizes speech. This is not a full-duplex realtime call.
  */
 @Injectable({ providedIn: 'root' })
@@ -284,7 +284,7 @@ export class SophiaVoiceService implements OnDestroy {
       }
       this.errorMessage.set(
         event.error === 'not-allowed'
-          ? 'Microphone permission denied. Allow mic access to talk to Sophia.'
+          ? 'Microphone permission denied. Allow mic access to talk to Navla.'
           : `Speech error: ${event.error}`,
       );
       this.micEngaged.set(false);

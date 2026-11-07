@@ -56,3 +56,11 @@ export interface InvoiceQueryParams extends PaginationParams {
 export interface CreateInvoiceResponse {
   id: string;
 }
+
+export interface InvoicePortfolioSummary {
+  total: number;
+  paid: number;
+  outstanding: number;
+  overdue: number;
+  totalOutstandingAmount: number;
+}

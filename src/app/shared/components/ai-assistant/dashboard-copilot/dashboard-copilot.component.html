@@ -64,15 +64,15 @@
     }
   </section>
 
-  <!-- Sophia helper — compact, secondary -->
-  <section class="ask-sophia" aria-label="Ask Sophia for help">
+  <!-- Navla helper — compact, secondary -->
+  <section class="ask-sophia" aria-label="Ask Navla for help">
     <div class="ask-sophia__hero">
       <div class="ask-sophia__avatar" aria-hidden="true">
         <i class="bi bi-stars"></i>
       </div>
       <div class="ask-sophia__intro">
         <h3 id="ask-sophia-heading">Need a hand?</h3>
-        <p>{{ askSophia()?.greeting || 'Sophia can explain your numbers or suggest what to do next.' }}</p>
+        <p>{{ askSophia()?.greeting || 'Navla can explain your numbers or suggest what to do next.' }}</p>
       </div>
       <button
         type="button"
@@ -81,7 +81,7 @@
         aria-describedby="ask-sophia-heading"
       >
         <i class="bi bi-mic-fill" aria-hidden="true"></i>
-        <span>Talk to Sophia</span>
+        <span>Talk to Navla</span>
       </button>
     </div>
 
@@ -105,7 +105,7 @@
 
     <a [routerLink]="routes.ai.workspace" class="workspace-link">
       <i class="bi bi-layout-sidebar" aria-hidden="true"></i>
-      Open full Sophia workspace
+      Open full Navla AI workspace
     </a>
   </section>
 </div>

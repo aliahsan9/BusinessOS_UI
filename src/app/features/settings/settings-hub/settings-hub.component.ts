@@ -85,7 +85,7 @@ export class SettingsHubComponent implements OnInit {
     { id: 'email', label: 'Email' },
     { id: 'notifications', label: 'Notifications' },
     { id: 'appearance', label: 'Appearance' },
-    { id: 'ai', label: 'Sophia / AI' },
+    { id: 'ai', label: 'Navla AI' },
     { id: 'security', label: 'Security' },
     { id: 'branding', label: 'Branding' },
   ];
@@ -268,7 +268,7 @@ export class SettingsHubComponent implements OnInit {
         this.employees.set([
           {
             key: 'sophia',
-            displayName: 'Sophia',
+            displayName: 'Navla AI',
             roleTitle: 'Senior Business Analyst',
             specialty: 'Business operations',
             defaultLanguage: 'en',
@@ -312,7 +312,7 @@ export class SettingsHubComponent implements OnInit {
         next: (prefs) => {
           this.voiceService.pinLanguage(value.language || 'auto');
           this.voiceService.applyPreferences(prefs);
-          this.notification.success('Sophia voice preferences saved.');
+          this.notification.success('Navla voice preferences saved.');
           this.voiceSaving.set(false);
         },
         error: () => {

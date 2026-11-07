@@ -11,7 +11,8 @@ import {
   ProductAnalyticsResponse,
   SalesAnalyticsResponse,
 } from '../../../core/models/dashboard.model';
-import { InvoiceStatus, OrderStatus } from '../../../core/enums';
+import { OrderStatus } from '../../../core/enums';
+import { InvoicePortfolioSummary } from '../../../core/models/invoice.model';
 import { ROUTES } from '../../../core/constants/route.constants';
 import { AppBreadcrumbComponent } from '../../../shared/components/app-breadcrumb/app-breadcrumb.component';
 import { AppPageHeaderComponent } from '../../../shared/components/app-page-header/app-page-header.component';
@@ -21,13 +22,7 @@ import { AppSkeletonComponent } from '../../../shared/components/app-skeleton/ap
 import { AppAlertComponent } from '../../../shared/components/app-alert/app-alert.component';
 import { AppEmptyStateComponent } from '../../../shared/components/app-empty-state/app-empty-state.component';
 
-interface InvoiceStats {
-  total: number;
-  paid: number;
-  outstanding: number;
-  overdue: number;
-  totalOutstandingAmount: number;
-}
+type InvoiceStats = InvoicePortfolioSummary;
 
 @Component({
   selector: 'app-sales-dashboard',
@@ -99,14 +94,14 @@ export class SalesDashboardComponent implements OnInit {
       sales: this.dashboardService.getSales(),
       orders: this.dashboardService.getOrders(),
       products: this.dashboardService.getProducts({ top: 10 }),
-      invoices: this.invoiceService.getAll({ pageSize: 500 }),
+      invoices: this.invoiceService.getSummary(),
     }).subscribe({
       next: ({ overview, sales, orders, products, invoices }) => {
         this.overview.set(overview);
         this.sales.set(sales);
         this.orders.set(orders);
         this.products.set(products);
-        this.invoiceStats.set(this.computeInvoiceStats(invoices.items));
+        this.invoiceStats.set(invoices);
         this.loading.set(false);
       },
       error: () => {
@@ -114,18 +109,6 @@ export class SalesDashboardComponent implements OnInit {
         this.loading.set(false);
       },
     });
-  }
-
-  private computeInvoiceStats(
-    items: { status: InvoiceStatus; outstandingAmount: number }[],
-  ): InvoiceStats {
-    return {
-      total: items.length,
-      paid: items.filter((i) => i.status === InvoiceStatus.Paid).length,
-      outstanding: items.filter((i) => i.outstandingAmount > 0).length,
-      overdue: items.filter((i) => i.status === InvoiceStatus.Overdue).length,
-      totalOutstandingAmount: items.reduce((sum, i) => sum + i.outstandingAmount, 0),
-    };
   }
 
   retry(): void {

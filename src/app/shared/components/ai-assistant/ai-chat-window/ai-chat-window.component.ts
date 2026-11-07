@@ -69,13 +69,13 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
   readonly close = output<void>();
   readonly navigate = output<string>();
 
-  readonly agentName = signal('Sophia');
+  readonly agentName = signal('Navla AI');
   readonly agentRole = signal('Senior Business Analyst');
   readonly workflowSteps = signal<AgentWorkflowStep[]>([]);
   readonly liveTaskStatus = signal<string | null>(null);
   readonly liveToolName = signal<string | null>(null);
 
-  private buildWelcome(lang: string, name = 'Sophia'): AiChatMessage {
+  private buildWelcome(lang: string, name = 'Navla AI'): AiChatMessage {
     const content =
       lang === 'ur'
         ? `سلام، میں ${name} ہوں۔ اردو، رومن اردو، یا English میں پوچھیں۔`
@@ -138,7 +138,7 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
       this.suggestions().length > 0 &&
       !this.messages().some((message) => message.role === 'user'),
   );
-  /** Confirm / cancel chips while Sophia is collecting details for an action. */
+  /** Confirm / cancel chips while Navla is collecting details for an action. */
   readonly showActionSuggestions = computed(
     () =>
       this.showSuggestions() &&
@@ -191,7 +191,7 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
     void this.bootstrap();
     this.voice.onFinalTranscript = (text) => this.sendMessage(text);
     this.aiAssistantState.pendingPrompt;
-    // Consume pending Ask Sophia prompts when the window opens.
+    // Consume pending Ask Navla prompts when the window opens.
     const pending = this.aiAssistantState.consumePendingPrompt();
     if (pending) {
       setTimeout(() => this.sendMessage(pending), 120);
@@ -293,7 +293,7 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
     if (!this.chatEnabled()) {
       this.appendMessage(
         'assistant',
-        'Sophia is turned off in tenant settings. Enable her under Settings → AI Assistant.',
+        'Navla is turned off in tenant settings. Enable Navla under Settings → AI Assistant.',
       );
       return;
     }
@@ -666,6 +666,6 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
     if (err && typeof err === 'object' && 'detail' in err) {
       return String((err as ApiError).detail || (err as ApiError).title || 'Request failed.');
     }
-    return 'Sorry, I could not reach Sophia right now. Please try again.';
+    return 'Sorry, I could not reach Navla right now. Please try again.';
   }
 }

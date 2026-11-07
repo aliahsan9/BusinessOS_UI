@@ -1,4 +1,4 @@
-/** Direction for a Sophia message. English and Roman Urdu stay left-to-right. */
+/** Direction for a Navla message. English and Roman Urdu stay left-to-right. */
 
 export function directionForLanguage(language?: string | null): 'rtl' | 'ltr' {
   const code = (language || '').toLowerCase();

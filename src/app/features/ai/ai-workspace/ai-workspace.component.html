@@ -25,7 +25,7 @@
         New conversation
       </button>
 
-      <app-card title="Sophia Workspace">
+      <app-card title="Navla AI Workspace">
         <div class="d-flex align-items-center gap-2 mb-2 text-secondary">
           <i class="bi bi-clock-history"></i>
           <span class="small">Recent conversations</span>
@@ -102,8 +102,8 @@
           <i class="bi bi-cpu"></i>
         </div>
         <div class="ai-workspace__header-text">
-          <h1>Sophia Workspace</h1>
-          <p>Context-aware answers grounded in your live BusinessOS data — sales, products, trends, and more.</p>
+          <h1>Navla AI Workspace</h1>
+          <p>Your intelligent AI business assistant. Context-aware answers grounded in your live BusinessOS data — sales, products, trends, and more.</p>
         </div>
 
         @if (voiceOutputSupported()) {
@@ -192,7 +192,7 @@
                   <i class="bi bi-mic-fill voice-badge" title="Sent by voice"></i>
                 }
                 @if (msg.isStreaming && !(msg.displayContent ?? msg.content)) {
-                  <span class="thinking-dots" aria-live="polite" aria-label="AI Copilot is thinking">
+                  <span class="thinking-dots" aria-live="polite" aria-label="Navla is thinking">
                     <span></span><span></span><span></span>
                   </span>
                 } @else if (msg.role === 'assistant') {
@@ -302,7 +302,7 @@
               [class.composer__mic--listening]="isListening()"
               [attr.aria-pressed]="isListening()"
               [disabled]="loading() || streaming()"
-              [title]="isListening() ? 'Stop listening' : 'Talk to AI Copilot'"
+              [title]="isListening() ? 'Stop listening' : 'Talk to Navla'"
               (click)="toggleVoiceInput()"
             >
               <i class="bi bi-mic-fill"></i>

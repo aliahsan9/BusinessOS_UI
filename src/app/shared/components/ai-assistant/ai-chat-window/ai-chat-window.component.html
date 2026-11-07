@@ -32,7 +32,7 @@
               aria-haspopup="listbox"
               aria-controls="sophia-language-menu"
               aria-label="Reply language"
-              title="Sophia detects English, Urdu, and Arabic unless you choose one"
+              title="Navla detects English, Urdu, and Arabic unless you choose one"
               (click)="toggleLanguageMenu($event)"
             >
               <span>{{ languageLabel() }}</span>
@@ -89,7 +89,7 @@
 
   @if (!chatEnabled()) {
     <div class="ai-chat__notice" role="status">
-      Sophia is disabled in tenant settings.
+      Navla is disabled in tenant settings.
       <a [routerLink]="settingsRoute">Enable in Settings</a>
     </div>
   }
@@ -129,7 +129,7 @@
       <div class="ai-chat__message" [class.ai-chat__message--user]="msg.role === 'user'">
         <div class="ai-chat__bubble" [attr.dir]="messageDir(msg)" [attr.lang]="messageLang(msg)">
           @if (msg.streaming && !msg.content) {
-            <span class="ai-chat__typing-dots" aria-live="polite" aria-label="Sophia is thinking">
+            <span class="ai-chat__typing-dots" aria-live="polite" aria-label="Navla is thinking">
               <span></span><span></span><span></span>
             </span>
           } @else if (msg.role === 'assistant') {
@@ -219,7 +219,7 @@
       } @else if (micEngaged()) {
         Mic is on — tap again to stop
       }       @else if (isSpeaking()) {
-        Sophia is speaking
+        Navla is speaking
       } @else if (isPaused()) {
         Speech paused
       } @else if (playbackNotice()) {
@@ -233,7 +233,7 @@
         class="ai-chat__voice-select"
         [ngModel]="selectedVoice()"
         (ngModelChange)="onVoiceChange($event)"
-        aria-label="Sophia voice"
+        aria-label="Navla voice"
       >
         @for (voice of voices(); track voice.id) {
           <option [value]="voice.id">{{ voice.label }}</option>
@@ -251,7 +251,7 @@
         [disabled]="!micSupported() || !chatEnabled()"
         (click)="toggleMic()"
         [attr.aria-pressed]="micEngaged()"
-        [attr.aria-label]="micEngaged() ? 'Stop listening' : 'Talk to Sophia'"
+        [attr.aria-label]="micEngaged() ? 'Stop listening' : 'Talk to Navla'"
         title="{{ micSupported() ? (micEngaged() ? 'Stop listening' : 'Tap to talk. Tap again to stop.') : 'Microphone not supported' }}"
       >
         <i class="bi bi-mic-fill"></i>

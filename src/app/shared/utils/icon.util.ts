@@ -14,7 +14,7 @@ export function bootstrapIconClass(icon: string | null | undefined): string {
   return '';
 }
 
-/** Legacy emoji → Bootstrap Icons (Ask Sophia / quick actions migration). */
+/** Legacy emoji → Bootstrap Icons (Ask Navla / quick actions migration). */
 const EMOJI_TO_BI: Record<string, string> = {
   '📦': 'bi-box-seam',
   '⚠️': 'bi-exclamation-triangle',

@@ -23,7 +23,7 @@ import {
 } from '../models/agent.model';
 
 /**
- * Client for Sophia and other AI employees (`/api/v1/agents`).
+ * Client for Navla and other AI employees (`/api/v1/agents`).
  */
 @Injectable({ providedIn: 'root' })
 export class AgentEmployeeService extends BaseApiService {
@@ -198,7 +198,7 @@ export class AgentEmployeeService extends BaseApiService {
       clearTimeout(timeoutId);
       if (timedOut) throw new AiStreamError('Streaming timed out.', 408);
       if (this.isAbortError(err)) throw new AiStreamError('Generation stopped.', 0, true);
-      throw new AiStreamError('Unable to reach Sophia streaming endpoint.', 0);
+      throw new AiStreamError('Unable to reach Navla streaming endpoint.', 0);
     }
 
     if (!response.ok || !response.body) {
@@ -266,7 +266,7 @@ export class AgentEmployeeService extends BaseApiService {
       sources: response.sources ?? { customers: 0, orders: 0, invoices: 0, projects: 0 },
       citations: response.citations ?? [],
       agentKey: response.agentKey || 'sophia',
-      agentDisplayName: response.agentDisplayName || 'Sophia',
+      agentDisplayName: response.agentDisplayName || 'Navla AI',
     };
   }
 

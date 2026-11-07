@@ -196,7 +196,7 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
   }
 
   readonly breadcrumbs = [
-    { label: 'AI Copilot', route: ROUTES.ai.workspace },
+    { label: 'Navla AI', route: ROUTES.ai.workspace },
     { label: 'Workspace' },
   ];
 
@@ -705,8 +705,8 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
           const copy = [...msgs];
           copy[msgIndex] = {
             ...copy[msgIndex],
-            content: 'Unable to reach AI Copilot. Please try again in a moment.',
-            displayContent: 'Unable to reach AI Copilot. Please try again in a moment.',
+            content: 'Unable to reach Navla. Please try again in a moment.',
+            displayContent: 'Unable to reach Navla. Please try again in a moment.',
             isStreaming: false,
           };
           return copy;

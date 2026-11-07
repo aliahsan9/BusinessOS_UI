@@ -26,7 +26,7 @@ export class AiAssistantStateService {
     this._isOpen.update((open) => !open);
   }
 
-  /** Open Sophia and queue a prompt to send once the chat window is ready. */
+  /** Open Navla and queue a prompt to send once the chat window is ready. */
   askSophia(message: string): void {
     const trimmed = message.trim();
     if (!trimmed) {

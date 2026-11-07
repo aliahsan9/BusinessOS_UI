@@ -11,7 +11,7 @@ export const AI_ROUTES: Routes = [
     path: 'workspace',
     loadComponent: () =>
       import('./ai-workspace/ai-workspace.component').then((m) => m.AiWorkspaceComponent),
-    title: 'AI Workspace | BusinessOS',
+    title: 'Navla AI | BusinessOS',
   },
   {
     path: 'diagnostics',

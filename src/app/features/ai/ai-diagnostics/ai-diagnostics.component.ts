@@ -22,7 +22,7 @@ export class AiDiagnosticsComponent implements OnInit {
   readonly diagnostics = signal<AiDiagnosticsSummary | null>(null);
   readonly loading = signal(true);
   readonly breadcrumbs = [
-    { label: 'AI Copilot', route: ROUTES.ai.workspace },
+    { label: 'Navla AI', route: ROUTES.ai.workspace },
     { label: 'Diagnostics' },
   ];
 

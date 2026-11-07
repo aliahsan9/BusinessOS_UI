@@ -122,7 +122,7 @@
           </app-card>
         }
         @case ('ai') {
-          <app-card title="AI Assistant" subtitle="Configure BusinessOS AI behavior.">
+          <app-card title="Navla AI" subtitle="Your intelligent AI business assistant.">
             <form [formGroup]="settingsForm" (ngSubmit)="saveSettings()">
               <div class="toggle-list">
                 <label class="toggle-item">
@@ -134,19 +134,19 @@
                   Show Suggestions
                 </label>
               </div>
-              <p class="text-muted">When disabled, the floating Sophia widget will be hidden. Suggestions control context-aware prompts in the chat.</p>
+              <p class="text-muted">When disabled, the floating Navla widget will be hidden. Suggestions control context-aware prompts in the chat.</p>
               @if (canUpdate) {
                 <div class="form-actions"><app-button label="Save" type="submit" [loading]="saving()" /></div>
               }
             </form>
           </app-card>
 
-          <app-card title="Sophia Voice" subtitle="Natural spoken replies. The speech key stays on the server.">
+          <app-card title="Navla Voice" subtitle="Natural spoken replies. The speech key stays on the server.">
             <form [formGroup]="voiceForm" (ngSubmit)="saveVoicePreferences()">
               <div class="toggle-list">
                 <label class="toggle-item">
                   <input type="checkbox" formControlName="autoSpeak" />
-                  Auto-speak Sophia's replies
+                  Auto-speak Navla's replies
                 </label>
                 <label class="toggle-item">
                   <input type="checkbox" formControlName="continuousListening" />

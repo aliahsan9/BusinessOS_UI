@@ -66,16 +66,21 @@ export class BaseApiService {
         return throwError(() => new Error(`Unsupported HTTP method: ${method}`));
     }
 
-    return request$.pipe(
-      retry({
-        count: RETRY_CONFIG.maxRetries,
-        delay: (error: HttpErrorResponse, retryCount) => {
-          if (!RETRY_CONFIG.retryableStatuses.includes(error.status as (typeof RETRY_CONFIG.retryableStatuses)[number])) {
-            throw error;
-          }
-          return timer(RETRY_CONFIG.delayMs * retryCount);
-        },
-      }),
+    const recoverable = method === 'GET'
+      ? request$.pipe(
+          retry({
+            count: RETRY_CONFIG.maxRetries,
+            delay: (error: HttpErrorResponse, retryCount) => {
+              if (!RETRY_CONFIG.retryableStatuses.includes(error.status as (typeof RETRY_CONFIG.retryableStatuses)[number])) {
+                throw error;
+              }
+              return timer(RETRY_CONFIG.delayMs * retryCount);
+            },
+          }),
+        )
+      : request$;
+
+    return recoverable.pipe(
       catchError((error: HttpErrorResponse) => throwError(() => this.parseError(error))),
     );
   }

@@ -15,7 +15,7 @@ describe('chat direction', () => {
     expect(directionForLanguage('en')).toBe('ltr');
   });
 
-  it('lays out the Sophia audit prompts in the script direction', () => {
+  it('lays out the assistant audit prompts in the script direction', () => {
     expect(directionForText('Mujhe batao meri total inventory kitni hai?')).toBe('ltr');
     expect(directionForText('Kon sa product sab se zyada sell ho raha hai?')).toBe('ltr');
     expect(directionForText('آج میری کتنی سیل ہوئی ہے؟')).toBe('rtl');

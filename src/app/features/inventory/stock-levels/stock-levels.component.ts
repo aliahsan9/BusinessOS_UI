@@ -118,7 +118,7 @@ export class StockLevelsComponent implements OnInit {
 
   submitAdjust(): void {
     const item = this.selectedItem();
-    if (!item || this.adjustQuantity === 0) return;
+    if (!item || this.adjustQuantity <= 0) return;
 
     this.adjustLoading.set(true);
     this.inventoryService

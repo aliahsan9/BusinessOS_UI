@@ -181,6 +181,7 @@ export class OrderFormComponent implements OnInit {
   }
 
   submit(): void {
+    if (this.saving()) return;
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
