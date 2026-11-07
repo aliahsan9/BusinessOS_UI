@@ -1,0 +1,51 @@
+.article-toc {
+  &__label {
+    margin: 0 0 0.75rem;
+    color: var(--mkt-muted, #5c6b7a);
+    font-family: var(--mkt-font-display, 'Outfit', sans-serif);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  li + li {
+    margin-top: 0.15rem;
+  }
+
+  a {
+    display: block;
+    padding: 0.35rem 0 0.35rem 0.75rem;
+    border-left: 2px solid var(--mkt-border, #d5dde6);
+    color: #3d5163;
+    font-size: 0.88rem;
+    line-height: 1.45;
+    text-decoration: none;
+
+    &:hover,
+    &.is-active {
+      border-left-color: var(--mkt-accent, #0d6e6e);
+      color: var(--mkt-accent, #0d6e6e);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--mkt-accent, #0d6e6e);
+      outline-offset: 2px;
+    }
+  }
+
+  &__nested a {
+    padding-left: 1.35rem;
+    font-size: 0.84rem;
+  }
+
+  &__deep a {
+    padding-left: 1.9rem;
+  }
+}

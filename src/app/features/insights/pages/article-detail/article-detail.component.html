@@ -1,0 +1,98 @@
+<div class="mkt-page insights-page">
+  <app-home-navbar />
+
+  <div class="container article-page">
+    @if (loading()) {
+      <p class="article-status" role="status">Loading article…</p>
+    } @else if (notFound()) {
+      <div class="article-missing" role="alert">
+        <p class="mkt-eyebrow">Insights</p>
+        <h1>Article not found</h1>
+        <p>That link does not match a published article. It may have been renamed, or the address was typed incorrectly.</p>
+        <a class="mkt-btn mkt-btn--primary" routerLink="/insights">Back to insights</a>
+      </div>
+    } @else if (article()) {
+      @if (article(); as article) {
+      <article>
+        <app-article-header [article]="article" />
+
+        <figure class="article-hero">
+          <img
+            [src]="article.featuredImage"
+            [alt]="article.featuredImageAlt"
+            width="1200"
+            height="675"
+            loading="eager"
+          />
+        </figure>
+
+        <div class="article-layout">
+          <div class="article-main">
+            <div class="article-toc article-toc--inline">
+              <app-article-toc [items]="article.toc" [activeId]="activeId()" />
+            </div>
+
+            <div class="insights-markdown">
+              <markdown [data]="article.body" (ready)="onMarkdownReady()"></markdown>
+            </div>
+
+            @if (article.tags.length) {
+              <ul class="article-tags" aria-label="Tags">
+                @for (tag of article.tags; track tag) {
+                  <li>{{ tag }}</li>
+                }
+              </ul>
+            }
+
+            <footer class="article-end">
+              <a class="article-end__back" routerLink="/insights">
+                <i class="bi bi-arrow-left" aria-hidden="true"></i>
+                Back to insights
+              </a>
+            </footer>
+          </div>
+
+          <aside class="article-toc article-toc--sidebar">
+            <app-article-toc [items]="article.toc" [activeId]="activeId()" />
+          </aside>
+        </div>
+
+        @if (related().length) {
+          <section class="article-related" aria-labelledby="related-heading">
+            <h2 id="related-heading">Related articles</h2>
+            <div class="article-related__grid">
+              @for (item of related(); track item.slug) {
+                <app-article-card [article]="item" variant="compact" />
+              }
+            </div>
+          </section>
+        }
+
+        <nav class="article-pager" aria-label="Previous and next articles">
+          @if (neighbors().previous; as previous) {
+            <a class="article-pager__link" [routerLink]="['/insights', previous.slug]" rel="prev">
+              <span>Previous</span>
+              <strong>{{ previous.title }}</strong>
+            </a>
+          }
+          @if (neighbors().next; as next) {
+            <a class="article-pager__link article-pager__link--next" [routerLink]="['/insights', next.slug]" rel="next">
+              <span>Next</span>
+              <strong>{{ next.title }}</strong>
+            </a>
+          }
+        </nav>
+      </article>
+      }
+    }
+  </div>
+
+  @if (showBackToTop()) {
+    <button type="button" class="back-to-top" (click)="scrollToTop()">
+      <i class="bi bi-arrow-up" aria-hidden="true"></i>
+      Back to top
+    </button>
+  }
+
+  <app-footer />
+</div>

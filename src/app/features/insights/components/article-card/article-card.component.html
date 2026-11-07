@@ -1,0 +1,47 @@
+<article class="article-card" [class.article-card--feature]="variant() === 'feature'" [class.article-card--compact]="variant() === 'compact'">
+  <a class="article-card__media" [routerLink]="['/insights', article().slug]" [attr.aria-hidden]="variant() === 'compact' ? true : null" [attr.tabindex]="variant() === 'compact' ? -1 : null">
+    <img
+      [src]="article().featuredImage"
+      [alt]="variant() === 'compact' ? '' : article().featuredImageAlt"
+      [attr.loading]="variant() === 'feature' ? 'eager' : 'lazy'"
+      width="1200"
+      height="675"
+    />
+  </a>
+
+  <div class="article-card__body">
+    <div class="article-card__kicker">
+      <span class="article-card__category">{{ article().category }}</span>
+      @if (article().featured) {
+        <span class="article-card__badge">Featured</span>
+      }
+    </div>
+
+    @if (variant() === 'compact') {
+      <h3 class="article-card__title">
+        <a [routerLink]="['/insights', article().slug]">{{ article().title }}</a>
+      </h3>
+    } @else {
+      <h2 class="article-card__title">
+        <a [routerLink]="['/insights', article().slug]">{{ article().title }}</a>
+      </h2>
+    }
+
+    @if (variant() !== 'compact') {
+      <p class="article-card__description">{{ article().description }}</p>
+    }
+
+    <div class="article-card__meta">
+      <span>{{ formatDate(article().publicationDate) }}</span>
+      <span class="article-card__dot" aria-hidden="true"></span>
+      <span>{{ article().readingTime }} min read</span>
+    </div>
+
+    @if (variant() !== 'compact') {
+      <a class="article-card__more" [routerLink]="['/insights', article().slug]">
+        Read article
+        <i class="bi bi-arrow-right" aria-hidden="true"></i>
+      </a>
+    }
+  </div>
+</article>

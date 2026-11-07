@@ -1,0 +1,93 @@
+<div class="mkt-page insights-page">
+  <app-home-navbar />
+
+  <header class="insights-hero">
+    <div class="container">
+      <p class="mkt-eyebrow">
+        <i class="bi bi-journal-richtext" aria-hidden="true"></i>
+        Insights
+      </p>
+      <h1>BusinessOS Insights</h1>
+      <p class="insights-hero__lead">
+        Practical insights on building smarter businesses with AI, automation, and modern business technology.
+      </p>
+    </div>
+  </header>
+
+  <div class="container insights-body">
+    @if (loading()) {
+      <p class="insights-status" role="status">Loading articles…</p>
+    } @else if (loadFailed()) {
+      <div class="insights-empty" role="alert">
+        <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
+        <h2>Articles could not be loaded</h2>
+        <p>Check your connection and try again. The articles are static files shipped with this site.</p>
+        <button type="button" class="mkt-btn mkt-btn--primary" (click)="retry()">Try again</button>
+      </div>
+    } @else {
+      @if (hero(); as hero) {
+        <section class="insights-feature" aria-label="Featured article">
+          <app-article-card [article]="hero" variant="feature" />
+        </section>
+      }
+
+      <div class="insights-toolbar">
+        <div class="insights-search">
+          <label class="visually-hidden" for="insights-search">Search articles</label>
+          <i class="bi bi-search" aria-hidden="true"></i>
+          <input
+            id="insights-search"
+            type="search"
+            placeholder="Search by title, description, or tag"
+            [value]="query()"
+            (input)="onSearch($event)"
+            autocomplete="off"
+          />
+        </div>
+        <p class="insights-count">{{ resultLabel() }}</p>
+      </div>
+
+      <div class="insights-filters" role="toolbar" aria-label="Filter by category">
+        <button
+          type="button"
+          class="insights-filter"
+          [class.is-active]="category() === allCategories"
+          [attr.aria-pressed]="category() === allCategories"
+          (click)="selectCategory(allCategories)"
+        >
+          All
+        </button>
+        @for (item of categories; track item) {
+          <button
+            type="button"
+            class="insights-filter"
+            [class.is-active]="category() === item"
+            [attr.aria-pressed]="category() === item"
+            (click)="selectCategory(item)"
+          >
+            {{ item }}
+          </button>
+        }
+      </div>
+
+      @if (visibleArticles().length === 0 && !hero()) {
+        <div class="insights-empty">
+          <i class="bi bi-search" aria-hidden="true"></i>
+          <h2>No articles match that search</h2>
+          <p>Try another title, description, tag, or category.</p>
+          <button type="button" class="mkt-btn mkt-btn--ghost" (click)="clearSearch()">Clear search</button>
+        </div>
+      } @else if (visibleArticles().length) {
+        <section class="row g-4 insights-grid" aria-label="Articles">
+          @for (article of visibleArticles(); track article.slug) {
+            <div class="col-md-6 col-lg-4">
+              <app-article-card [article]="article" />
+            </div>
+          }
+        </section>
+      }
+    }
+  </div>
+
+  <app-footer />
+</div>

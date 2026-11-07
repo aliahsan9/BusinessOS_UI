@@ -11,9 +11,10 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const token = tokenService.getToken();
   const tenantId = tokenService.tenantId();
   const isAuthCall = req.url.includes('/auth/');
+  const isStaticAsset = req.url.includes('assets/blog/');
 
-  let outbound = req.clone({ withCredentials: true });
-  if (token && !isAuthCall) {
+  let outbound = isStaticAsset ? req : req.clone({ withCredentials: true });
+  if (token && !isAuthCall && !isStaticAsset) {
     const headers: Record<string, string> = {
       [HTTP_HEADERS.authorization]: `Bearer ${token}`,
     };
@@ -25,7 +26,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(outbound).pipe(
     catchError((error: HttpErrorResponse) => {
-      if (error.status !== 401 || isAuthCall || outbound.headers.has('X-Retry')) {
+      if (error.status !== 401 || isAuthCall || isStaticAsset || outbound.headers.has('X-Retry')) {
         return throwError(() => error);
       }
 

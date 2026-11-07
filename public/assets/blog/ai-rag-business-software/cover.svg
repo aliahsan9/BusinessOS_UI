@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" fill="none" role="img" aria-label="Connected nodes suggesting retrieval across business documents">
+  <rect width="1200" height="675" fill="#0B1F33"/>
+  <circle cx="220" cy="180" r="70" fill="#0D6E6E"/>
+  <circle cx="520" cy="140" r="48" fill="#149191"/>
+  <circle cx="860" cy="220" r="90" fill="#12324A" stroke="#8FD0C8" stroke-width="8"/>
+  <circle cx="340" cy="420" r="56" fill="#18445A"/>
+  <circle cx="680" cy="460" r="40" fill="#0D6E6E"/>
+  <circle cx="980" cy="480" r="64" fill="#0A5555"/>
+  <path d="M280 210 L480 165" stroke="#8FD0C8" stroke-width="6"/>
+  <path d="M560 175 L780 230" stroke="#D8EFEF" stroke-width="6"/>
+  <path d="M270 230 L360 380" stroke="#7E93A6" stroke-width="6"/>
+  <path d="M390 430 L650 460" stroke="#8FD0C8" stroke-width="6"/>
+  <path d="M720 450 L930 470" stroke="#D8EFEF" stroke-width="6"/>
+  <path d="M820 290 L700 420" stroke="#7E93A6" stroke-width="6"/>
+  <rect x="90" y="80" width="220" height="16" rx="8" fill="#8FD0C8"/>
+  <rect x="90" y="112" width="360" height="12" rx="6" fill="#9FB3C4"/>
+</svg>

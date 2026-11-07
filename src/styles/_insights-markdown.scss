@@ -1,0 +1,381 @@
+// Article typography adapted from Portfolio_UI blog-detail.
+// One shared surface for every Insights article. Do not style articles individually.
+.insights-markdown {
+  min-width: 0;
+  color: #243746;
+  font-family: Inter, 'Segoe UI', Arial, sans-serif;
+  font-size: 1.04rem;
+  font-weight: 400;
+  line-height: 1.9;
+  overflow-wrap: break-word;
+  word-break: normal;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.insights-markdown ::ng-deep > :first-child {
+  margin-top: 0;
+}
+
+.insights-markdown ::ng-deep > :last-child {
+  margin-bottom: 0;
+}
+
+.insights-markdown ::ng-deep h1,
+.insights-markdown ::ng-deep h2,
+.insights-markdown ::ng-deep h3,
+.insights-markdown ::ng-deep h4,
+.insights-markdown ::ng-deep h5,
+.insights-markdown ::ng-deep h6 {
+  color: var(--mkt-ink, #0b1f33);
+  font-family: Inter, 'Segoe UI', Arial, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.027em;
+  line-height: 1.35;
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+  scroll-margin-top: 6.5rem;
+}
+
+.insights-markdown ::ng-deep h1 {
+  margin: 0 0 1.4rem;
+  font-size: clamp(2rem, 4.5vw, 2.8rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.2;
+}
+
+.insights-markdown ::ng-deep h2 {
+  margin: 3.1rem 0 1.15rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid var(--mkt-border, #d5dde6);
+  font-size: clamp(1.55rem, 3vw, 2rem);
+}
+
+.insights-markdown ::ng-deep h3 {
+  margin: 2.3rem 0 0.9rem;
+  font-size: clamp(1.25rem, 2.5vw, 1.5rem);
+}
+
+.insights-markdown ::ng-deep h4 {
+  margin: 1.9rem 0 0.75rem;
+  font-size: 1.13rem;
+}
+
+.insights-markdown ::ng-deep h5,
+.insights-markdown ::ng-deep h6 {
+  margin: 1.5rem 0 0.7rem;
+  font-size: 1rem;
+}
+
+.insights-markdown ::ng-deep p {
+  margin: 0 0 1.5rem;
+  color: #243746;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.insights-markdown ::ng-deep strong,
+.insights-markdown ::ng-deep b {
+  color: var(--mkt-ink, #0b1f33);
+  font-weight: 700;
+}
+
+.insights-markdown ::ng-deep em {
+  color: #1a3348;
+}
+
+.insights-markdown ::ng-deep a {
+  color: var(--mkt-accent, #0d6e6e);
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: rgba(13, 110, 110, 0.4);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  overflow-wrap: anywhere;
+  transition: color 180ms ease, text-decoration-color 180ms ease;
+}
+
+.insights-markdown ::ng-deep a:hover {
+  color: var(--mkt-accent-hover, #0a5555);
+  text-decoration-color: currentColor;
+}
+
+.insights-markdown ::ng-deep a:focus-visible {
+  outline: 2px solid var(--mkt-accent, #0d6e6e);
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+
+.insights-markdown ::ng-deep ul,
+.insights-markdown ::ng-deep ol {
+  margin: 0 0 1.65rem;
+  padding-left: 1.65rem;
+}
+
+.insights-markdown ::ng-deep ul {
+  list-style-type: disc;
+}
+
+.insights-markdown ::ng-deep ul ul {
+  list-style-type: circle;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.insights-markdown ::ng-deep ol {
+  list-style-type: decimal;
+}
+
+.insights-markdown ::ng-deep li {
+  padding-left: 0.25rem;
+  margin-bottom: 0.55rem;
+  color: #243746;
+  line-height: 1.85;
+}
+
+.insights-markdown ::ng-deep li::marker {
+  color: var(--mkt-accent, #0d6e6e);
+}
+
+.insights-markdown ::ng-deep li > p {
+  margin-bottom: 0.65rem;
+}
+
+.insights-markdown ::ng-deep li > ul,
+.insights-markdown ::ng-deep li > ol {
+  margin-top: 0.65rem;
+}
+
+.insights-markdown ::ng-deep blockquote {
+  margin: 2rem 0;
+  padding: 1.2rem 1.45rem;
+  border: 1px solid var(--mkt-border, #d5dde6);
+  border-left: 3px solid var(--mkt-accent, #0d6e6e);
+  border-radius: 0 10px 10px 0;
+  background: #f4fbfb;
+}
+
+.insights-markdown ::ng-deep blockquote p {
+  margin-bottom: 0.65rem;
+  color: #243746;
+}
+
+.insights-markdown ::ng-deep blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+.insights-markdown ::ng-deep :not(pre) > code {
+  padding: 0.17rem 0.42rem;
+  border: 1px solid var(--mkt-border, #d5dde6);
+  border-radius: 5px;
+  background: #f3f7f7;
+  color: #0a5555;
+  font-family: 'Cascadia Code', Consolas, 'Courier New', monospace;
+  font-size: 0.86em;
+  font-weight: 500;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.insights-markdown ::ng-deep pre,
+.insights-markdown ::ng-deep pre[class*='language-'] {
+  max-width: 100%;
+  margin: 1.8rem 0 2rem;
+  padding: 2.6rem 1.35rem 1.35rem;
+  overflow-x: auto;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 12px;
+  background: #0f172a !important;
+  color: #e2e8f0;
+  font-family: 'Cascadia Code', 'Fira Code', Consolas, 'Courier New', monospace;
+  font-size: 0.85rem;
+  line-height: 1.85;
+  tab-size: 4;
+  white-space: pre;
+  scrollbar-width: thin;
+  scrollbar-color: #475569 transparent;
+}
+
+.insights-markdown ::ng-deep pre code,
+.insights-markdown ::ng-deep pre code[class*='language-'] {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent !important;
+  color: inherit;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 400;
+  line-height: inherit;
+  white-space: pre;
+  text-shadow: none;
+}
+
+.insights-markdown ::ng-deep pre::-webkit-scrollbar {
+  height: 7px;
+}
+
+.insights-markdown ::ng-deep pre::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  background: #475569;
+}
+
+.insights-markdown ::ng-deep .code-toolbar {
+  position: relative;
+  margin: 1.8rem 0 2rem;
+}
+
+.insights-markdown ::ng-deep .code-toolbar pre {
+  margin: 0;
+}
+
+.insights-markdown ::ng-deep .code-toolbar > .toolbar {
+  opacity: 1;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+}
+
+.insights-markdown ::ng-deep .code-toolbar > .toolbar .toolbar-item button {
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  background: #1e293b;
+  color: #fff;
+  font-family: Inter, 'Segoe UI', sans-serif;
+  font-size: 12px;
+  line-height: 1.4;
+  cursor: pointer;
+  transition: background-color 180ms ease;
+}
+
+.insights-markdown ::ng-deep .code-toolbar > .toolbar .toolbar-item button:hover {
+  background: #334155;
+}
+
+.insights-markdown ::ng-deep .code-toolbar > .toolbar .toolbar-item button:focus-visible {
+  outline: 2px solid #7dcec8;
+  outline-offset: 2px;
+}
+
+.insights-markdown ::ng-deep table {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin: 2rem 0;
+  overflow-x: auto;
+  border: 1px solid var(--mkt-border, #d5dde6);
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 0.92rem;
+  line-height: 1.7;
+  scrollbar-width: thin;
+}
+
+.insights-markdown ::ng-deep th,
+.insights-markdown ::ng-deep td {
+  min-width: 115px;
+  padding: 0.85rem 1rem;
+  border-right: 1px solid #e5edf2;
+  border-bottom: 1px solid #e5edf2;
+  text-align: left;
+  vertical-align: top;
+}
+
+.insights-markdown ::ng-deep th:last-child,
+.insights-markdown ::ng-deep td:last-child {
+  border-right: 0;
+}
+
+.insights-markdown ::ng-deep tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.insights-markdown ::ng-deep th {
+  background: #f4f7f8;
+  color: var(--mkt-ink, #0b1f33);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.insights-markdown ::ng-deep td {
+  color: #243746;
+}
+
+.insights-markdown ::ng-deep img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  max-height: 680px;
+  margin: 2.2rem auto;
+  border: 1px solid var(--mkt-border, #d5dde6);
+  border-radius: 12px;
+  background: #fff;
+  object-fit: contain;
+}
+
+.insights-markdown ::ng-deep hr {
+  height: 1px;
+  margin: 2.8rem 0;
+  border: 0;
+  background: var(--mkt-border, #d5dde6);
+}
+
+@media (max-width: 767.98px) {
+  .insights-markdown {
+    font-size: 1rem;
+    line-height: 1.85;
+  }
+
+  .insights-markdown ::ng-deep h2 {
+    margin-top: 2.5rem;
+  }
+
+  .insights-markdown ::ng-deep h3 {
+    margin-top: 2rem;
+  }
+
+  .insights-markdown ::ng-deep pre,
+  .insights-markdown ::ng-deep pre[class*='language-'] {
+    padding: 2.4rem 1rem 1rem;
+    border-radius: 9px;
+    font-size: 0.79rem;
+  }
+
+  .insights-markdown ::ng-deep blockquote {
+    padding: 1rem 1.05rem;
+  }
+
+  .insights-markdown ::ng-deep th,
+  .insights-markdown ::ng-deep td {
+    padding: 0.7rem 0.8rem;
+  }
+
+  .insights-markdown ::ng-deep img {
+    margin: 1.7rem auto;
+    border-radius: 9px;
+  }
+}
+
+@media (max-width: 420px) {
+  .insights-markdown {
+    font-size: 0.97rem;
+  }
+
+  .insights-markdown ::ng-deep pre,
+  .insights-markdown ::ng-deep pre[class*='language-'] {
+    font-size: 0.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .insights-markdown ::ng-deep a,
+  .insights-markdown ::ng-deep .code-toolbar > .toolbar .toolbar-item button {
+    transition: none;
+  }
+}

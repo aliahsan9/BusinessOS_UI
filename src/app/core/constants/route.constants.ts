@@ -183,6 +183,10 @@ export const ROUTES = {
   },
   forbidden: '/forbidden',
   notFound: '/not-found',
+  insights: {
+    base: '/insights',
+    article: '/insights/:slug',
+  },
 } as const;
 
 export type AppRoute = (typeof ROUTES)[keyof typeof ROUTES];

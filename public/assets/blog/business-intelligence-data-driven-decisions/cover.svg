@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" fill="none" role="img" aria-label="A rising chart over a data grid">
+  <rect width="1200" height="675" fill="#0B1F33"/>
+  <path d="M140 500 H1040" stroke="#234456" stroke-width="2"/>
+  <path d="M140 400 H1040" stroke="#234456" stroke-width="2"/>
+  <path d="M140 300 H1040" stroke="#234456" stroke-width="2"/>
+  <path d="M180 470 L340 430 L500 450 L680 320 L860 280 L1020 180" stroke="#8FD0C8" stroke-width="8" fill="none"/>
+  <circle cx="180" cy="470" r="10" fill="#D8EFEF"/>
+  <circle cx="340" cy="430" r="10" fill="#D8EFEF"/>
+  <circle cx="500" cy="450" r="10" fill="#0D6E6E"/>
+  <circle cx="680" cy="320" r="10" fill="#0D6E6E"/>
+  <circle cx="860" cy="280" r="10" fill="#149191"/>
+  <circle cx="1020" cy="180" r="12" fill="#8FD0C8"/>
+  <rect x="120" y="100" width="300" height="16" rx="8" fill="#8FD0C8"/>
+  <rect x="120" y="136" width="460" height="12" rx="6" fill="#7E93A6"/>
+</svg>

@@ -13,6 +13,9 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
       const apiError = fromHttpError(error);
+      if (req.url.includes('assets/blog/')) {
+        return throwError(() => apiError);
+      }
 
       const isAuthEndpoint =
         req.url.includes('/auth/login') ||

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" fill="none" role="img" aria-label="Stacked inventory bars on a navy field">
+  <rect width="1200" height="675" fill="#0B1F33"/>
+  <rect x="120" y="390" width="140" height="160" rx="12" fill="#18445A"/>
+  <rect x="300" y="300" width="140" height="250" rx="12" fill="#0D6E6E"/>
+  <rect x="480" y="220" width="140" height="330" rx="12" fill="#149191"/>
+  <rect x="660" y="280" width="140" height="270" rx="12" fill="#0A5555"/>
+  <rect x="840" y="160" width="140" height="390" rx="12" fill="#8FD0C8"/>
+  <rect x="120" y="120" width="280" height="16" rx="8" fill="#D8EFEF"/>
+  <rect x="120" y="156" width="420" height="12" rx="6" fill="#7E93A6"/>
+</svg>

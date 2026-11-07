@@ -1,0 +1,44 @@
+<header class="article-header">
+  <a class="article-header__back" routerLink="/insights">
+    <i class="bi bi-arrow-left" aria-hidden="true"></i>
+    <span>All insights</span>
+  </a>
+
+  <div class="article-header__rule"></div>
+
+  <div class="article-header__kicker">
+    <span class="article-header__dot" aria-hidden="true"></span>
+    {{ article().category }}
+    @if (article().featured) {
+      <span class="article-header__badge">Featured</span>
+    }
+  </div>
+
+  <h1>{{ article().title }}</h1>
+  <p class="article-header__description">{{ article().description }}</p>
+
+  <div class="article-header__meta">
+    <span>
+      <i class="bi bi-person" aria-hidden="true"></i>
+      {{ article().author }}
+    </span>
+    <span class="article-header__separator" aria-hidden="true"></span>
+    <span>
+      <i class="bi bi-calendar3" aria-hidden="true"></i>
+      <time [attr.datetime]="article().publicationDate">{{ formatDate(article().publicationDate) }}</time>
+    </span>
+    @if (article().updatedDate !== article().publicationDate) {
+      <span class="article-header__separator" aria-hidden="true"></span>
+      <span>
+        <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+        Updated
+        <time [attr.datetime]="article().updatedDate">{{ formatDate(article().updatedDate) }}</time>
+      </span>
+    }
+    <span class="article-header__separator" aria-hidden="true"></span>
+    <span>
+      <i class="bi bi-clock" aria-hidden="true"></i>
+      {{ article().readingTime }} min read
+    </span>
+  </div>
+</header>

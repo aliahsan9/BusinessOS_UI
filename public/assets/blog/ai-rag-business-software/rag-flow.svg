@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="220" viewBox="0 0 960 220" fill="none" role="img" aria-label="Four stages from documents to an answer">
+  <rect width="960" height="220" fill="#F7F8FA"/>
+  <rect x="24" y="50" width="180" height="120" rx="16" fill="#0B1F33"/>
+  <rect x="268" y="50" width="180" height="120" rx="16" fill="#12324A"/>
+  <rect x="512" y="50" width="180" height="120" rx="16" fill="#0D6E6E"/>
+  <rect x="756" y="50" width="180" height="120" rx="16" fill="#0A5555"/>
+  <path d="M204 110 H268" stroke="#5C6B7A" stroke-width="4"/>
+  <path d="M448 110 H512" stroke="#5C6B7A" stroke-width="4"/>
+  <path d="M692 110 H756" stroke="#5C6B7A" stroke-width="4"/>
+  <rect x="48" y="96" width="110" height="12" rx="6" fill="#D8EFEF"/>
+  <rect x="292" y="96" width="110" height="12" rx="6" fill="#9FB3C4"/>
+  <rect x="536" y="96" width="110" height="12" rx="6" fill="#FFFFFF"/>
+  <rect x="780" y="96" width="110" height="12" rx="6" fill="#D8EFEF"/>
+</svg>

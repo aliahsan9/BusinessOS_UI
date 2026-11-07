@@ -17,6 +17,10 @@ export const routes: Routes = [
   { path: 'faq', component: FaqComponent, title: 'FAQ | BusinessOS' },
   { path: 'privacy', component: PrivacyComponent, title: 'Privacy | BusinessOS' },
   {
+    path: 'insights',
+    loadChildren: () => import('./features/insights/insights.routes').then((m) => m.INSIGHTS_ROUTES),
+  },
+  {
     path: '',
     loadComponent: () =>
       import('./features/home/home.component').then((m) => m.HomeComponent),

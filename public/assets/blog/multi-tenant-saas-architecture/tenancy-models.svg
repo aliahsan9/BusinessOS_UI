@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="420" viewBox="0 0 960 420" fill="none" role="img" aria-label="Shared database beside a database per tenant">
+  <rect width="960" height="420" fill="#F7F8FA"/>
+  <rect x="40" y="36" width="420" height="348" rx="18" fill="#FFFFFF" stroke="#D5DDE6"/>
+  <rect x="500" y="36" width="420" height="348" rx="18" fill="#FFFFFF" stroke="#D5DDE6"/>
+  <rect x="64" y="60" width="180" height="14" rx="7" fill="#0D6E6E"/>
+  <rect x="524" y="60" width="220" height="14" rx="7" fill="#0B1F33"/>
+  <rect x="90" y="120" width="320" height="220" rx="14" fill="#0B1F33"/>
+  <rect x="114" y="148" width="272" height="28" rx="6" fill="#12324A"/>
+  <rect x="114" y="188" width="272" height="28" rx="6" fill="#0D6E6E"/>
+  <rect x="114" y="228" width="272" height="28" rx="6" fill="#18445A"/>
+  <rect x="114" y="268" width="272" height="28" rx="6" fill="#12324A"/>
+  <rect x="540" y="110" width="150" height="90" rx="12" fill="#0B1F33"/>
+  <rect x="710" y="110" width="150" height="90" rx="12" fill="#0D6E6E"/>
+  <rect x="540" y="230" width="150" height="90" rx="12" fill="#18445A"/>
+  <rect x="710" y="230" width="150" height="90" rx="12" fill="#0A5555"/>
+</svg>

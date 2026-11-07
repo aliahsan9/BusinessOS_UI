@@ -1,0 +1,19 @@
+@if (items().length) {
+  <nav class="article-toc" [attr.aria-label]="label()">
+    <p class="article-toc__label">{{ label() }}</p>
+    <ol>
+      @for (item of items(); track item.id) {
+        <li [class.article-toc__nested]="item.level > 2" [class.article-toc__deep]="item.level > 3">
+          <a
+            [href]="'#' + item.id"
+            [class.is-active]="item.id === activeId()"
+            [attr.aria-current]="item.id === activeId() ? 'location' : null"
+            (click)="scrollTo($event, item.id)"
+          >
+            {{ item.text }}
+          </a>
+        </li>
+      }
+    </ol>
+  </nav>
+}

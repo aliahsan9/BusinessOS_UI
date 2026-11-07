@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" fill="none" role="img" aria-label="A workflow of connected steps">
+  <rect width="1200" height="675" fill="#0B1F33"/>
+  <rect x="90" y="250" width="220" height="120" rx="18" fill="#12324A" stroke="#8FD0C8" stroke-width="4"/>
+  <rect x="420" y="250" width="220" height="120" rx="18" fill="#0D6E6E"/>
+  <rect x="750" y="250" width="220" height="120" rx="18" fill="#18445A" stroke="#D8EFEF" stroke-width="4"/>
+  <path d="M310 310 H420" stroke="#8FD0C8" stroke-width="8"/>
+  <path d="M640 310 H750" stroke="#D8EFEF" stroke-width="8"/>
+  <path d="M530 370 V470 H860 V390" stroke="#7E93A6" stroke-width="6" fill="none"/>
+  <rect x="90" y="120" width="260" height="16" rx="8" fill="#8FD0C8"/>
+  <rect x="90" y="156" width="480" height="12" rx="6" fill="#9FB3C4"/>
+</svg>

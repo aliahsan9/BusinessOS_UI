@@ -25,6 +25,9 @@
             ],
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
+            "allowedCommonJsDependencies": [
+              "prismjs"
+            ],
             "assets": [
               {
                 "glob": "**/*",
@@ -34,6 +37,8 @@
             "styles": [
               "node_modules/bootstrap-icons/font/bootstrap-icons.css",
               "node_modules/bootstrap/dist/css/bootstrap.min.css",
+              "node_modules/prismjs/themes/prism-tomorrow.css",
+              "node_modules/prismjs/plugins/toolbar/prism-toolbar.css",
               "src/styles.scss"
             ],
             "stylePreprocessorOptions": {

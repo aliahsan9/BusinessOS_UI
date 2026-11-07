@@ -23,6 +23,7 @@ export class NavbarComponent {
     { label: 'Home', route: '/', icon: 'bi-house' },
     { label: 'About', route: '/about', icon: 'bi-building' },
     { label: 'Services', route: '/services', icon: 'bi-layers' },
+    { label: 'Insights', route: '/insights', icon: 'bi-journal-richtext' },
     { label: 'FAQ', route: '/faq', icon: 'bi-question-circle' },
     { label: 'Privacy', route: '/privacy', icon: 'bi-shield-check' },
     { label: 'Contact', route: '/contact', icon: 'bi-envelope' },
