@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { catchError, forkJoin, of } from 'rxjs';
 import { AppCurrencyPipe } from '../../shared/pipes/app-currency.pipe';
 import { DashboardStateService } from '../../state/dashboard.state';
 import { ActivityService } from '../../core/services/activity.service';
@@ -19,6 +20,8 @@ import { AiAssistantStateService } from '../../state/ai-assistant.state';
 import { AuthService } from '../../core/services/auth.service';
 import { CurrencyService } from '../../core/services/currency.service';
 import { FinanceService } from '../../core/services/finance.service';
+import { DashboardService } from '../../core/services/dashboard.service';
+import { FinancialDashboard, TrendPoint } from '../../core/models/finance.model';
 import { ActivityDto } from '../../core/models/activity.model';
 import { OrderSummaryDto } from '../../core/models/order.model';
 import {
@@ -79,7 +82,13 @@ export class DashboardComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly currencyService = inject(CurrencyService);
   private readonly financeService = inject(FinanceService);
-  readonly netProfit = signal<number | null>(null);
+  private readonly dashboardService = inject(DashboardService);
+  private readonly financeReport = signal<FinancialDashboard | null>(null);
+  private readonly customerSparkValues = signal<number[]>([]);
+  readonly netProfit = computed(() => {
+    const report = this.financeReport();
+    return report ? report.netProfit : null;
+  });
 
   readonly recentActivities = signal<ActivityDto[]>([]);
   readonly recentOrders = signal<OrderSummaryDto[]>([]);
@@ -168,24 +177,32 @@ export class DashboardComponent implements OnInit {
   readonly customersTrend = computed((): number | null => this.customers()?.customerGrowthRate ?? null);
 
   readonly sparkRevenue = computed(() =>
-    this.buildSpark(
-      this.sales()?.revenueTrends?.map((t) => t.revenue) ?? [],
-      this.overview()?.totalRevenue ?? 0,
-    ),
+    this.buildSpark(this.salesSeries((point) => point.revenue).values, this.overview()?.totalRevenue ?? 0),
   );
   readonly sparkOrders = computed(() =>
-    this.buildSpark(
-      this.sales()?.revenueTrends?.map((t) => t.orderCount) ?? [],
-      this.overview()?.totalOrders ?? 0,
-    ),
+    this.buildSpark(this.salesSeries((point) => point.orderCount).values, this.overview()?.totalOrders ?? 0),
   );
   readonly sparkProfit = computed(() => {
-    const profit = this.netProfit();
-    return this.buildSpark(profit == null ? [] : [profit], profit ?? 0);
+    const report = this.financeReport();
+    const fromFinance = report
+      ? this.profitSeries(
+          report.revenueTrend ?? [],
+          report.expenseTrend ?? [],
+          report.startDate,
+          report.endDate,
+        )
+      : [];
+    if (this.hasShape(fromFinance)) return this.buildSpark(fromFinance, report?.netProfit ?? 0);
+    const salesShape = this.salesSeries((point) => point.revenue).values;
+    if (this.hasShape(salesShape) && (report?.totalExpenses ?? 0) === 0) {
+      return this.buildSpark(salesShape, report?.netProfit ?? 0);
+    }
+    return this.buildSpark(fromFinance, report?.netProfit ?? 0);
   });
   readonly sparkCustomers = computed(() => {
+    const series = this.customerSparkValues();
     const total = this.overview()?.totalCustomers ?? 0;
-    return this.buildSpark(total > 0 ? [total] : [], total);
+    return this.buildSpark(series, total);
   });
 
   /** Sales area chart. Sparse periods (today, this month) are drawn as a full curve so the panel matches All Time. */
@@ -199,15 +216,23 @@ export class DashboardComponent implements OnInit {
 
     if (!values.length) return null;
     const range = source?.dateRange ?? this.overview()?.dateRange;
+    const labels = source?.labels?.length ? source.labels : values.map((_, index) => `${index + 1}`);
+    const spread = this.spreadSeries(
+      labels.map((label, index) => ({ at: label, value: values[index] ?? 0 })),
+      range?.startDate,
+      range?.endDate,
+    );
+    const chartValues = this.hasShape(spread.values) ? spread.values : values;
+    const chartLabels = this.hasShape(spread.values) ? spread.labels : labels;
 
     return {
       chartType: 'line',
       title: source?.title || 'Sales Overview',
-      labels: source?.labels?.length ? source.labels : values.map((_, index) => `${index + 1}`),
+      labels: chartLabels,
       datasets: [
         {
           label: revenue?.label || 'Revenue',
-          data: values,
+          data: chartValues,
           chartStyle: 'line',
         },
       ],
@@ -410,10 +435,216 @@ export class DashboardComponent implements OnInit {
   }
 
   private loadFinance(): void {
-    this.financeService.getDashboard({ period: this.period() }).subscribe({
-      next: (report) => this.netProfit.set(report.netProfit),
-      error: () => this.netProfit.set(null),
+    const period = this.period();
+    forkJoin({
+      finance: this.financeService.getDashboard({ period }).pipe(catchError(() => of(null))),
+      customers: this.dashboardService.getCustomersChart({ period }).pipe(catchError(() => of(null))),
+    }).subscribe(({ finance, customers }) => {
+      this.financeReport.set(finance);
+      const growth =
+        customers?.datasets?.find((dataset) => /customer/i.test(dataset.label ?? '')) ??
+        customers?.datasets?.[0];
+      const values = (growth?.data ?? []).map((value) => Number(value) || 0);
+      const spread = this.spreadSeries(
+        (customers?.labels ?? []).map((label, index) => ({ at: label, value: values[index] ?? 0 })),
+        customers?.dateRange?.startDate ?? this.overview()?.dateRange?.startDate,
+        customers?.dateRange?.endDate ?? this.overview()?.dateRange?.endDate,
+      );
+      this.customerSparkValues.set(this.hasShape(spread.values) ? spread.values : values);
     });
+  }
+
+  /** Profit at the same grain as the selected filter. Quiet buckets stay at zero. */
+  private profitSeries(
+    revenue: TrendPoint[],
+    expenses: TrendPoint[],
+    start?: string,
+    end?: string,
+  ): number[] {
+    const revenueByKey = new Map(revenue.map((point) => [this.trendKey(point.period), Number(point.amount) || 0]));
+    const expenseByKey = new Map(expenses.map((point) => [this.trendKey(point.period), Number(point.amount) || 0]));
+    const keys = [...new Set([...revenueByKey.keys(), ...expenseByKey.keys()])].filter(Boolean).sort();
+    if (!keys.length) return [];
+    if (keys.every((key) => /^\d{4}-\d{2}$/.test(key))) {
+      return this.monthsOnAxis(keys, start, end).map(
+        (month) => (revenueByKey.get(month) ?? 0) - (expenseByKey.get(month) ?? 0),
+      );
+    }
+    return keys.map((key) => (revenueByKey.get(key) ?? 0) - (expenseByKey.get(key) ?? 0));
+  }
+
+  private trendKey(period: string): string {
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}/.test(period)) return period.slice(0, 13);
+    if (/^\d{4}-\d{2}-\d{2}/.test(period)) return period.slice(0, 10);
+    return period.slice(0, 7);
+  }
+
+  private salesSeries(pick: (point: { revenue: number; orderCount: number; date: string }) => number): {
+    labels: string[];
+    values: number[];
+  } {
+    const trends = this.sales()?.revenueTrends ?? [];
+    const range = this.sales()?.dateRange ?? this.overview()?.dateRange;
+    return this.spreadSeries(
+      trends.map((point) => ({ at: point.date, value: Number(pick(point)) || 0 })),
+      range?.startDate,
+      range?.endDate,
+    );
+  }
+
+  /**
+   * Lay real figures across the selected filter.
+   * Today is hourly, week and month are daily, year is monthly.
+   * Buckets with no sales or signups stay at zero so the line can rise and fall.
+   */
+  private spreadSeries(
+    points: Array<{ at: string; value: number }>,
+    start?: string,
+    end?: string,
+  ): { labels: string[]; values: number[] } {
+    const parsed = points
+      .map((point) => ({ at: point.at, date: this.parseTrendDate(point.at), value: Number(point.value) || 0 }))
+      .filter((point): point is { at: string; date: Date; value: number } => point.date !== null)
+      .sort((a, b) => a.date.getTime() - b.date.getTime());
+    if (!parsed.length) return { labels: [], values: [] };
+
+    const period = this.period();
+    if (period === DashboardPeriod.All) {
+      return { labels: parsed.map((point) => point.at), values: parsed.map((point) => point.value) };
+    }
+
+    const grain: 'hour' | 'day' | 'month' =
+      period === DashboardPeriod.Today ? 'hour' : period === DashboardPeriod.Year ? 'month' : 'day';
+    const rangeStart = this.parseTrendDate(start ?? '') ?? parsed[0].date;
+    const rangeEnd = this.parseTrendDate(end ?? '') ?? parsed[parsed.length - 1].date;
+    return this.fillBuckets(parsed, rangeStart, rangeEnd, grain);
+  }
+
+  private fillBuckets(
+    points: Array<{ date: Date; value: number }>,
+    start: Date,
+    end: Date,
+    grain: 'hour' | 'day' | 'month',
+  ): { labels: string[]; values: number[] } {
+    const totals = new Map<string, number>();
+    for (const point of points) {
+      const key = this.bucketKey(point.date, grain);
+      totals.set(key, (totals.get(key) ?? 0) + point.value);
+    }
+
+    const labels: string[] = [];
+    const values: number[] = [];
+    let cursor = this.alignBucket(start, grain);
+    let last = this.alignBucket(end, grain);
+    for (const point of points) {
+      const aligned = this.alignBucket(point.date, grain);
+      if (aligned.getTime() < cursor.getTime()) cursor = aligned;
+      if (aligned.getTime() > last.getTime()) last = new Date(aligned.getTime());
+    }
+    const limit = grain === 'hour' ? 36 : grain === 'day' ? 62 : 18;
+    while (cursor.getTime() <= last.getTime() && values.length < limit) {
+      labels.push(this.formatBucket(cursor, grain));
+      values.push(totals.get(this.bucketKey(cursor, grain)) ?? 0);
+      this.advanceBucket(cursor, grain);
+    }
+
+    if (!this.hasShape(values) && this.hasShape(points.map((point) => point.value))) {
+      return {
+        labels: points.map((point) => this.formatBucket(point.date, grain)),
+        values: points.map((point) => point.value),
+      };
+    }
+    return { labels, values };
+  }
+
+  private parseTrendDate(value: string): Date | null {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    const normalized = /^\d{4}-\d{2}$/.test(trimmed)
+      ? `${trimmed}-01`
+      : /^\d{4}-\d{2}-\d{2}T\d{2}$/.test(trimmed)
+        ? `${trimmed}:00:00`
+        : trimmed;
+    const date = new Date(normalized);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  private bucketKey(date: Date, grain: 'hour' | 'day' | 'month'): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    if (grain === 'month') return `${year}-${month}`;
+    if (grain === 'day') return `${year}-${month}-${day}`;
+    return `${year}-${month}-${day}T${String(date.getHours()).padStart(2, '0')}`;
+  }
+
+  private alignBucket(date: Date, grain: 'hour' | 'day' | 'month'): Date {
+    const aligned = new Date(date);
+    if (grain === 'month') aligned.setDate(1);
+    if (grain !== 'hour') aligned.setHours(0, 0, 0, 0);
+    else aligned.setMinutes(0, 0, 0);
+    return aligned;
+  }
+
+  private advanceBucket(date: Date, grain: 'hour' | 'day' | 'month'): void {
+    if (grain === 'hour') date.setHours(date.getHours() + 1);
+    else if (grain === 'day') date.setDate(date.getDate() + 1);
+    else date.setMonth(date.getMonth() + 1);
+  }
+
+  private formatBucket(date: Date, grain: 'hour' | 'day' | 'month'): string {
+    if (grain === 'hour') return new Intl.DateTimeFormat('en-US', { hour: 'numeric' }).format(date);
+    if (grain === 'month') return new Intl.DateTimeFormat('en-US', { month: 'short' }).format(date);
+    return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(date);
+  }
+
+  private hasShape(values: number[]): boolean {
+    return values.length > 1 && new Set(values).size > 1;
+  }
+
+  /**
+   * Months that should appear on the spark.
+   * All Time starts at 1970, so the axis follows the first and last months that
+   * actually have figures. Quiet months between them stay at zero.
+   */
+  private monthsOnAxis(known: string[], start?: string, end?: string): string[] {
+    const keys = [...new Set(known.filter((month) => /^\d{4}-\d{2}$/.test(month)))].sort();
+    if (keys.length < 2) return keys;
+
+    let first = keys[0];
+    let last = keys[keys.length - 1];
+    const startKey = start ? this.monthKey(start) : '';
+    const endKey = end ? this.monthKey(end) : '';
+    if (startKey && startKey < first && this.monthsBetween(`${startKey}-01`, `${first}-01`).length <= 3) {
+      first = startKey;
+    }
+    if (endKey && endKey > last && this.monthsBetween(`${last}-01`, `${endKey}-01`).length <= 3) {
+      last = endKey;
+    }
+    return this.monthsBetween(`${first}-01`, `${last}-01`);
+  }
+
+  private monthKey(iso: string): string {
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return '';
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+    return `${date.getUTCFullYear()}-${month}`;
+  }
+
+  private monthsBetween(startIso: string, endIso: string): string[] {
+    const start = new Date(startIso);
+    const end = new Date(endIso);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end < start) return [];
+
+    const cursor = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), 1));
+    const last = new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), 1));
+    const months: string[] = [];
+    while (cursor <= last && months.length < 120) {
+      const month = String(cursor.getUTCMonth() + 1).padStart(2, '0');
+      months.push(`${cursor.getUTCFullYear()}-${month}`);
+      cursor.setUTCMonth(cursor.getUTCMonth() + 1);
+    }
+    return months.length > 36 ? months.slice(-36) : months;
   }
 
   private buildCategoryRaw(): Array<{ name: string; value: number }> {
@@ -511,7 +742,8 @@ export class DashboardComponent implements OnInit {
   private buildSpark(values: number[], fallbackPeak = 0): { line: string; area: string } {
     const finite = values.filter((v) => Number.isFinite(v));
     const peak = finite.length ? Math.max(...finite) : 0;
-    const basis = peak > 0 ? finite : fallbackPeak > 0 ? [fallbackPeak] : finite;
+    const hasShape = finite.length > 1 && new Set(finite).size > 1;
+    const basis = hasShape || peak > 0 ? finite : fallbackPeak > 0 ? [fallbackPeak] : finite;
     const series = this.expandSeries(basis, 12);
     const width = 120;
     const height = 40;
