@@ -26,16 +26,16 @@ export class AiChatService extends BaseApiService {
 
   private streamAbort: AbortController | null = null;
 
-  chat(message: string, options?: { regenerate?: boolean }): Observable<AiChatResponse> {
-    const request = this.buildCopilotRequest(message, false);
+  chat(message: string, options?: { regenerate?: boolean; clientRequestId?: string }): Observable<AiChatResponse> {
+    const request = this.buildCopilotRequest(message, false, undefined, options?.clientRequestId);
     if (options?.regenerate) {
       request.regenerate = true;
     }
     return this.post<AiChatResponse>(API_ENDPOINTS.ai.chat, request);
   }
 
-  streamMessage(message: string, options?: { regenerate?: boolean }): AsyncGenerator<AiStreamChunk> {
-    const request = this.buildCopilotRequest(message, true);
+  streamMessage(message: string, options?: { regenerate?: boolean; clientRequestId?: string }): AsyncGenerator<AiStreamChunk> {
+    const request = this.buildCopilotRequest(message, true, undefined, options?.clientRequestId);
     if (options?.regenerate) {
       request.regenerate = true;
     }
@@ -48,12 +48,14 @@ export class AiChatService extends BaseApiService {
    */
   async *streamWithFallback(
     message: string,
-    options?: { regenerate?: boolean },
+    options?: { regenerate?: boolean; clientRequestId?: string },
   ): AsyncGenerator<AiStreamChunk> {
     let receivedUsefulChunk = false;
+    const clientRequestId = options?.clientRequestId ?? crypto.randomUUID();
+    const attempt = { ...options, clientRequestId };
 
     try {
-      for await (const chunk of this.streamMessage(message, options)) {
+      for await (const chunk of this.streamMessage(message, attempt)) {
         if (this.isUsefulChunk(chunk)) {
           receivedUsefulChunk = true;
         }
@@ -64,11 +66,11 @@ export class AiChatService extends BaseApiService {
         throw new AiStreamError('Streaming returned no content.', 502);
       }
     } catch (err) {
-      if (err instanceof AiStreamError && err.aborted) {
+      if (err instanceof AiStreamError && (err.aborted || err.status === 402)) {
         throw err;
       }
 
-      const response = await firstValueFrom(this.chat(message, options));
+      const response = await firstValueFrom(this.chat(message, attempt));
       const resolved = this.normalizeResponse(response);
       if (resolved.reply) {
         yield { type: 'token', content: resolved.reply };
@@ -132,14 +134,19 @@ export class AiChatService extends BaseApiService {
     this.streamAbort = null;
   }
 
-  buildCopilotRequest(message: string, stream = false, searchQuery?: string): AiCopilotChatRequest {
+  buildCopilotRequest(
+    message: string,
+    stream = false,
+    searchQuery?: string,
+    clientRequestId?: string,
+  ): AiCopilotChatRequest {
     const base = this.aiContext.buildChatRequest(message, searchQuery ?? null);
     const sessionId = this.getSessionId();
     return {
       ...base,
       sessionId,
       conversationId: sessionId,
-      clientRequestId: crypto.randomUUID(),
+      clientRequestId: clientRequestId || crypto.randomUUID(),
       stream,
     };
   }

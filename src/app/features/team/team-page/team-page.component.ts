@@ -28,6 +28,9 @@ import { AppAlertComponent } from '../../../shared/components/app-alert/app-aler
 import { AppConfirmDialogComponent } from '../../../shared/components/app-confirm-dialog/app-confirm-dialog.component';
 import { AppCardComponent } from '../../../shared/components/app-card/app-card.component';
 import { AppInputComponent } from '../../../shared/components/app-input/app-input.component';
+import { PlanCapacityComponent } from '../../../shared/components/plan-capacity/plan-capacity.component';
+import { EntitlementService } from '../../../core/services/entitlement.service';
+import { isPlanLimitError } from '../../../core/models/api-error.model';
 import { ROUTES } from '../../../core/constants/route.constants';
 
 @Component({
@@ -48,6 +51,7 @@ import { ROUTES } from '../../../core/constants/route.constants';
     AppConfirmDialogComponent,
     AppCardComponent,
     AppInputComponent,
+    PlanCapacityComponent,
   ],
   templateUrl: './team-page.component.html',
   styleUrl: './team-page.component.scss',
@@ -59,6 +63,8 @@ export class TeamPageComponent implements OnInit {
   private readonly roleService = inject(RoleService);
   private readonly notification = inject(NotificationService);
   private readonly tokenService = inject(TokenService);
+  private readonly entitlements = inject(EntitlementService);
+  readonly creationBlocked = signal(false);
 
   readonly dashboard = signal<TeamDashboardDto | null>(null);
   readonly members = signal<TeamMemberDto[]>([]);
@@ -92,11 +98,17 @@ export class TeamPageComponent implements OnInit {
   readonly canInvite = this.tokenService.hasPermission(PermissionCodes.team.invite);
   readonly canManage = this.tokenService.hasPermission(PermissionCodes.team.manage);
   readonly breadcrumbs = [{ label: 'Team', route: ROUTES.team.list }, { label: 'Management' }];
-  readonly headerActions = this.canInvite
-    ? [{ label: 'Invite Member', icon: 'bi-envelope', action: () => this.openInviteModal() }]
-    : [];
+  get headerActions() {
+    if (!this.canInvite) return [];
+    const blocked = this.creationBlocked();
+    return [{ label: 'Invite Member', icon: 'bi-envelope', disabled: blocked, action: () => this.openInviteModal() }];
+  }
 
   ngOnInit(): void {
+    this.entitlements.refresh(true).subscribe({
+      next: () => this.creationBlocked.set(this.entitlements.isBlocked('users')),
+      error: () => undefined,
+    });
     this.loadDashboard();
     this.loadMembers();
     this.loadInvitations();
@@ -171,7 +183,7 @@ export class TeamPageComponent implements OnInit {
   }
 
   submitInvite(): void {
-    if (!this.inviteEmail.trim() || !this.inviteRoleId) return;
+    if (this.creationBlocked() || !this.inviteEmail.trim() || !this.inviteRoleId) return;
     this.saving.set(true);
     this.teamService
       .invite({ email: this.inviteEmail.trim(), roleId: this.inviteRoleId })
@@ -182,12 +194,34 @@ export class TeamPageComponent implements OnInit {
           this.saving.set(false);
           this.loadInvitations();
           this.loadDashboard();
+          this.entitlements.refresh(true).subscribe({
+            next: () => this.creationBlocked.set(this.entitlements.isBlocked('users')),
+            error: () => undefined,
+          });
         },
         error: (err) => {
-          this.notification.error(err?.message ?? 'Failed to send invitation.');
+          if (isPlanLimitError(err)) {
+            this.creationBlocked.set(true);
+          } else {
+            this.notification.error(err?.message ?? 'Failed to send invitation.');
+          }
           this.saving.set(false);
         },
       });
+  }
+
+  revokeInvitation(id: string): void {
+    this.teamService.revokeInvitation(id).subscribe({
+      next: () => {
+        this.notification.success('Invitation revoked. The reserved seat is available again.');
+        this.loadInvitations();
+        this.entitlements.refresh(true).subscribe({
+          next: () => this.creationBlocked.set(this.entitlements.isBlocked('users')),
+          error: () => undefined,
+        });
+      },
+      error: () => this.notification.error('Failed to revoke invitation.'),
+    });
   }
 
   openEditModal(member: TeamMemberDto): void {

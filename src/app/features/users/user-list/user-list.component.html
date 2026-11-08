@@ -1,6 +1,7 @@
 <app-breadcrumb [items]="breadcrumbs" />
 
 <app-page-header title="Users" subtitle="Manage user accounts and access." [actions]="headerActions" />
+<app-plan-capacity resource="users" />
 
 @if (error()) {
   <app-alert variant="danger" [message]="error()!" [dismissible]="false" />

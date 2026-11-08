@@ -13,7 +13,9 @@ import { AppButtonComponent } from '../../../shared/components/app-button/app-bu
 import { AppCardComponent } from '../../../shared/components/app-card/app-card.component';
 import { AppSkeletonComponent } from '../../../shared/components/app-skeleton/app-skeleton.component';
 import { getFieldError, strongPasswordValidator } from '../../../shared/validators/form.validators';
-import { ApiError } from '../../../core/models/api-error.model';
+import { ApiError, isPlanLimitError } from '../../../core/models/api-error.model';
+import { PlanCapacityComponent } from '../../../shared/components/plan-capacity/plan-capacity.component';
+import { EntitlementService } from '../../../core/services/entitlement.service';
 
 @Component({
   selector: 'app-user-form',
@@ -27,6 +29,7 @@ import { ApiError } from '../../../core/models/api-error.model';
     AppButtonComponent,
     AppCardComponent,
     AppSkeletonComponent,
+    PlanCapacityComponent,
   ],
   templateUrl: './user-form.component.html',
   styleUrl: './user-form.component.scss',
@@ -40,6 +43,8 @@ export class UserFormComponent implements OnInit {
   private readonly userService = inject(UserService);
   private readonly notification = inject(NotificationService);
   private readonly tokenService = inject(TokenService);
+  private readonly entitlements = inject(EntitlementService);
+  readonly creationBlocked = signal(false);
 
   readonly loading = signal(false);
   readonly saving = signal(false);
@@ -67,6 +72,13 @@ export class UserFormComponent implements OnInit {
       this.form.controls.password.setValidators([Validators.required, strongPasswordValidator()]);
     }
     this.form.controls.password.updateValueAndValidity();
+
+    if (!this.isEdit()) {
+      this.entitlements.refresh(true).subscribe({
+        next: () => this.creationBlocked.set(this.entitlements.isBlocked('users')),
+        error: () => undefined,
+      });
+    }
 
     if (this.isEdit() && id) {
       this.loading.set(true);
@@ -99,6 +111,10 @@ export class UserFormComponent implements OnInit {
 
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      return;
+    }
+
+    if (!this.isEdit() && this.creationBlocked()) {
       return;
     }
 
@@ -144,7 +160,10 @@ export class UserFormComponent implements OnInit {
             this.router.navigate([ROUTES.users.base, user.id]);
           },
           error: (error: ApiError) => {
-            this.notification.error('Failed to create user.', error.detail);
+            if (!isPlanLimitError(error)) {
+              this.notification.error('Failed to create user.', error.detail);
+            }
+            this.creationBlocked.set(true);
             this.saving.set(false);
           },
         });

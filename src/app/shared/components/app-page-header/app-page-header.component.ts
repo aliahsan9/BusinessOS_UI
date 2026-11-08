@@ -8,6 +8,7 @@ export interface PageHeaderAction {
   route?: string;
   icon?: string;
   variant?: ButtonVariant;
+  disabled?: boolean;
   action?: () => void;
 }
 

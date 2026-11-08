@@ -1,5 +1,9 @@
 import { HttpErrorResponse } from '@angular/common/http';
 
+export function isPlanLimitError(error: unknown): boolean {
+  return !!error && typeof error === 'object' && (error as ApiError).errorCode === 'PLAN_LIMIT_EXCEEDED';
+}
+
 export interface ApiError {
   type?: string;
   status: number;

@@ -18,6 +18,8 @@ import { AppSkeletonComponent } from '../../../shared/components/app-skeleton/ap
 import { AppEmptyStateComponent } from '../../../shared/components/app-empty-state/app-empty-state.component';
 import { AppAlertComponent } from '../../../shared/components/app-alert/app-alert.component';
 import { AppConfirmDialogComponent } from '../../../shared/components/app-confirm-dialog/app-confirm-dialog.component';
+import { PlanCapacityComponent } from '../../../shared/components/plan-capacity/plan-capacity.component';
+import { EntitlementService } from '../../../core/services/entitlement.service';
 
 @Component({
   selector: 'app-customer-list',
@@ -35,6 +37,7 @@ import { AppConfirmDialogComponent } from '../../../shared/components/app-confir
     AppEmptyStateComponent,
     AppAlertComponent,
     AppConfirmDialogComponent,
+    PlanCapacityComponent,
   ],
   templateUrl: './customer-list.component.html',
   styleUrl: './customer-list.component.scss',
@@ -45,6 +48,8 @@ export class CustomerListComponent implements OnInit {
   private readonly customerService = inject(CustomerService);
   private readonly notification = inject(NotificationService);
   private readonly tokenService = inject(TokenService);
+  private readonly entitlements = inject(EntitlementService);
+  readonly creationBlocked = signal(false);
 
   readonly items = signal<CustomerSummaryDto[]>([]);
   readonly page = signal(1);
@@ -68,11 +73,17 @@ export class CustomerListComponent implements OnInit {
   readonly canDelete = this.tokenService.hasPermission(PermissionCodes.customer.delete);
 
   readonly breadcrumbs = [{ label: 'Customers', route: ROUTES.customers.list }, { label: 'Directory' }];
-  readonly headerActions = this.canCreate
-    ? [{ label: 'Add Customer', route: ROUTES.customers.create, icon: 'bi-plus-lg' }]
-    : [];
+  get headerActions() {
+    if (!this.canCreate) return [];
+    const blocked = this.creationBlocked();
+    return [{ label: 'Add Customer', route: blocked ? undefined : ROUTES.customers.create, icon: 'bi-plus-lg', disabled: blocked }];
+  }
 
   ngOnInit(): void {
+    this.entitlements.refresh(true).subscribe({
+      next: () => this.creationBlocked.set(this.entitlements.isBlocked('customers')),
+      error: () => undefined,
+    });
     this.load();
   }
 

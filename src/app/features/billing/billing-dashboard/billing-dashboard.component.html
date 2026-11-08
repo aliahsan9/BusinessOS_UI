@@ -132,13 +132,17 @@
             <div class="usage-item__top">
               <span><i class="bi" [class]="item.icon" aria-hidden="true"></i>{{ item.label }}</span>
               <strong>
-                {{ item.current }} / {{ limitLabel(item.max, item.custom) }}
+                {{ item.storage ? item.current : item.current }} {{ item.storage ? 'MB' : '' }} / {{ limitLabel(item.max, item.custom) }}{{ item.storage ? ' MB' : '' }}
               </strong>
             </div>
-            <div class="meter" [class.meter--unlimited]="item.max === -1" [class.meter--warn]="usageTone(item.current, item.max) === 'warn'" [class.meter--high]="usageTone(item.current, item.max) === 'high' || usageTone(item.current, item.max) === 'full'">
+            <div class="meter" [class.meter--unlimited]="item.max === -1" [class.meter--warn]="usageTone(item.current, item.max) === 'warn'" [class.meter--high]="usageTone(item.current, item.max) === 'high' || usageTone(item.current, item.max) === 'full'" [class.meter--over]="usageTone(item.current, item.max) === 'over'">
               <div class="meter__fill" [style.width.%]="item.max === -1 ? 100 : usagePercent(item.current, item.max)"></div>
             </div>
-            @if (item.max !== -1 && usageTone(item.current, item.max) !== 'ok') {
+            @if (usageExplanation(item.label, item.current, item.max); as note) {
+              <p class="usage-item__alert">{{ note }}</p>
+            } @else if (item.detail) {
+              <p class="usage-item__note">{{ item.detail }}</p>
+            } @else if (item.max !== -1 && usageTone(item.current, item.max) !== 'ok') {
               <p class="usage-item__alert">{{ item.label }} is at {{ usagePercent(item.current, item.max) }}% of the plan allowance.</p>
             }
           </div>

@@ -5,6 +5,7 @@
   subtitle="Manage your product catalog, pricing, and stock levels."
   [actions]="headerActions"
 />
+<app-plan-capacity resource="products" />
 
 @if (error()) {
   <app-alert variant="danger" [message]="error()!" [dismissible]="false" />

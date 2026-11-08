@@ -8,7 +8,7 @@
   @if (actions().length) {
     <div class="page-header__actions">
       @for (action of actions(); track action.label) {
-        @if (action.route) {
+        @if (action.route && !action.disabled) {
           <a [routerLink]="action.route">
             <app-button
               [label]="action.label"
@@ -22,6 +22,7 @@
             [label]="action.label"
             [icon]="action.icon"
             [variant]="action.variant ?? ButtonVariant.Primary"
+            [disabled]="action.disabled ?? false"
             (clicked)="onAction(action)"
           />
         }

@@ -12,6 +12,9 @@ import { AppButtonComponent } from '../../../shared/components/app-button/app-bu
 import { AppCardComponent } from '../../../shared/components/app-card/app-card.component';
 import { AppSkeletonComponent } from '../../../shared/components/app-skeleton/app-skeleton.component';
 import { getFieldError } from '../../../shared/validators/form.validators';
+import { PlanCapacityComponent } from '../../../shared/components/plan-capacity/plan-capacity.component';
+import { EntitlementService } from '../../../core/services/entitlement.service';
+import { isPlanLimitError } from '../../../core/models/api-error.model';
 
 @Component({
   selector: 'app-customer-form',
@@ -25,6 +28,7 @@ import { getFieldError } from '../../../shared/validators/form.validators';
     AppButtonComponent,
     AppCardComponent,
     AppSkeletonComponent,
+    PlanCapacityComponent,
   ],
   templateUrl: './customer-form.component.html',
   styleUrl: './customer-form.component.scss',
@@ -35,6 +39,8 @@ export class CustomerFormComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly entitlements = inject(EntitlementService);
+  readonly creationBlocked = signal(false);
   private readonly customerService = inject(CustomerService);
   private readonly notification = inject(NotificationService);
 
@@ -61,6 +67,13 @@ export class CustomerFormComponent implements OnInit {
     const id = this.route.snapshot.paramMap.get('id');
     this.isEdit.set(mode === 'edit' && !!id);
     if (id) this.customerId.set(id);
+
+    if (!this.isEdit()) {
+      this.entitlements.refresh(true).subscribe({
+        next: () => this.creationBlocked.set(this.entitlements.isBlocked('customers')),
+        error: () => undefined,
+      });
+    }
 
     if (this.isEdit() && id) {
       this.loading.set(true);
@@ -97,6 +110,10 @@ export class CustomerFormComponent implements OnInit {
       return;
     }
 
+    if (!this.isEdit() && this.creationBlocked()) {
+      return;
+    }
+
     this.saving.set(true);
     const value = this.form.getRawValue();
 
@@ -118,8 +135,11 @@ export class CustomerFormComponent implements OnInit {
           this.notification.success('Customer created.');
           this.router.navigate([ROUTES.customers.base, res.id]);
         },
-        error: () => {
-          this.notification.error('Failed to create customer.');
+        error: (error) => {
+          if (!isPlanLimitError(error)) {
+            this.notification.error('Failed to create customer.');
+          }
+          this.creationBlocked.set(true);
           this.saving.set(false);
         },
       });

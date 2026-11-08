@@ -2,7 +2,7 @@ import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { BillingService } from '../../../core/services/billing.service';
-import { BillingUsageDto, limitLabel, usagePercent, usageTone } from '../../../core/models/billing.model';
+import { BillingUsageDto, limitLabel, usageExplanation, usagePercent, usageTone } from '../../../core/models/billing.model';
 import { ROUTES } from '../../../core/constants/route.constants';
 import { AppBreadcrumbComponent } from '../../../shared/components/app-breadcrumb/app-breadcrumb.component';
 import { AppPageHeaderComponent } from '../../../shared/components/app-page-header/app-page-header.component';
@@ -29,6 +29,7 @@ export class UsagePageComponent implements OnInit {
   readonly limitLabel = limitLabel;
   readonly usagePercent = usagePercent;
   readonly usageTone = usageTone;
+  readonly usageExplanation = usageExplanation;
 
   private readonly billingService = inject(BillingService);
 

@@ -13,11 +13,11 @@ import {
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
 import { AiChatService } from '../../../core/services/ai-chat.service';
 import { SophiaVoiceService } from '../../../core/services/sophia-voice.service';
 import { AiRetrievalService } from '../../../core/services/ai-retrieval.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { EntitlementService } from '../../../core/services/entitlement.service';
 import {
   AiChatMessage,
   AiChatResponse,
@@ -98,6 +98,10 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
   private readonly aiChat = inject(AiChatService);
   private readonly aiRetrieval = inject(AiRetrievalService);
   private readonly notification = inject(NotificationService);
+  private readonly entitlements = inject(EntitlementService);
+  readonly routes = ROUTES;
+  readonly aiQuotaReached = signal(false);
+  readonly aiUsageLabel = computed(() => this.entitlements.summary('ai'));
   private readonly sanitizer = inject(DomSanitizer);
   private readonly voice = inject(SophiaVoiceService);
   /** True when this page started the shared playback, so leaving it does not cut off another screen. */
@@ -107,7 +111,6 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
   private readonly messagesEl = viewChild<ElementRef<HTMLDivElement>>('messagesEl');
   private readonly composerEl = viewChild<ElementRef<HTMLTextAreaElement>>('composerEl');
 
-  readonly routes = ROUTES;
   readonly messages = signal<AiWorkspaceMessage[]>([]);
   readonly sessions = signal<AiConversationSession[]>([]);
   readonly activeSessionId = signal<string | null>(null);
@@ -210,6 +213,10 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
   private lastInputWasVoice = false;
 
   ngOnInit(): void {
+    this.entitlements.refresh().subscribe({
+      next: () => this.aiQuotaReached.set(this.entitlements.isBlocked('ai')),
+      error: () => undefined,
+    });
     this.refreshSessions();
     this.setupSpeechRecognition();
     this.voiceOutputSupported.set(typeof window !== 'undefined');
@@ -614,6 +621,14 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
   }
 
   private async sendStreaming(message: string, regenerate = false): Promise<void> {
+    if (this.aiQuotaReached()) {
+      this.notification.error(
+        'Plan limit reached',
+        'Your AI request allowance is used up. Upgrade your plan to continue.',
+      );
+      return;
+    }
+
     const streamMsg: AiWorkspaceMessage = {
       role: 'assistant',
       content: '',
@@ -695,23 +710,29 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
         return;
       }
 
-      try {
-        const response = await firstValueFrom(this.aiChat.chat(message, { regenerate }));
-        this.applyFinalResponse(this.aiChat.normalizeResponse(response), msgIndex, true);
-      } catch (fallbackErr) {
-        this.loading.set(false);
-        this.streaming.set(false);
-        this.messages.update((msgs) => {
-          const copy = [...msgs];
-          copy[msgIndex] = {
-            ...copy[msgIndex],
-            content: 'Unable to reach Navla. Please try again in a moment.',
-            displayContent: 'Unable to reach Navla. Please try again in a moment.',
-            isStreaming: false,
-          };
-          return copy;
-        });
-        this.notifyError(fallbackErr);
+      this.loading.set(false);
+      this.streaming.set(false);
+      const planLimited = this.isPlanLimit(err);
+      const detail = this.errorDetail(err);
+      const text = planLimited
+        ? detail
+        : 'Unable to reach Navla. Please try again in a moment.';
+      this.messages.update((msgs) => {
+        const copy = [...msgs];
+        copy[msgIndex] = {
+          ...copy[msgIndex],
+          content: text,
+          displayContent: text,
+          isStreaming: false,
+        };
+        return copy;
+      });
+      if (planLimited) {
+        this.aiQuotaReached.set(true);
+        this.notification.error('Plan limit reached', detail);
+        this.entitlements.refresh(true).subscribe({ error: () => undefined });
+      } else {
+        this.notifyError(err);
       }
     } finally {
       this.loading.set(false);
@@ -778,7 +799,26 @@ export class AiWorkspaceComponent implements OnInit, OnDestroy {
 
     this.suggestions.set(response.suggestions.length ? response.suggestions : this.suggestions());
     this.refreshSessions();
+    this.entitlements.refresh(true).subscribe({
+      next: () => this.aiQuotaReached.set(this.entitlements.isBlocked('ai')),
+      error: () => undefined,
+    });
     this.scrollToBottom();
+  }
+
+  private isPlanLimit(err: unknown): boolean {
+    if (err instanceof AiStreamError) {
+      return err.status === 402;
+    }
+    return !!err && typeof err === 'object' && (err as ApiError).errorCode === 'PLAN_LIMIT_EXCEEDED';
+  }
+
+  private errorDetail(err: unknown): string {
+    if (err instanceof AiStreamError) {
+      return err.message || 'Your plan allows a maximum number of AI requests. Upgrade your plan to continue.';
+    }
+    const api = err as ApiError;
+    return api.detail || api.title || 'Your plan allows a maximum number of AI requests. Upgrade your plan to continue.';
   }
 
   private mergeCitations(response: AiChatResponse): AiCitation[] {

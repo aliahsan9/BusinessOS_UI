@@ -89,6 +89,23 @@ export interface BillingUsageDto {
   aiRequestsAreCustom: boolean;
   resetDate?: string;
   lastCalculatedAt: string;
+  pendingInvitationCount?: number;
+  activeUserCount?: number;
+  usersRemaining?: number;
+  customersRemaining?: number;
+  productsRemaining?: number;
+  projectsRemaining?: number;
+  tasksRemaining?: number;
+  storageUsedBytes?: number;
+  storageRemainingMb?: number;
+  usersOverLimit?: boolean;
+  customersOverLimit?: boolean;
+  productsOverLimit?: boolean;
+  projectsOverLimit?: boolean;
+  tasksOverLimit?: boolean;
+  storageOverLimit?: boolean;
+  aiRequestsOverLimit?: boolean;
+  subscriptionStatus?: string;
 }
 
 export interface BillingInvoiceDto {
@@ -238,13 +255,39 @@ export function limitLabel(value: number, custom = false): string {
   return formatLimit(value);
 }
 
-export function usageTone(current: number, max: number): 'ok' | 'warn' | 'high' | 'full' {
-  if (max === -1 || max <= 0) return 'ok';
+export function usageTone(current: number, max: number): 'ok' | 'warn' | 'high' | 'full' | 'over' {
+  if (max === -1) return 'ok';
+  if (current > max) return 'over';
+  if (max <= 0) return current > 0 ? 'over' : 'full';
   const percent = (current / max) * 100;
   if (percent >= 100) return 'full';
   if (percent >= 90) return 'high';
   if (percent >= 80) return 'warn';
   return 'ok';
+}
+
+export function isOverLimit(current: number, max: number): boolean {
+  return max !== -1 && current > max;
+}
+
+export function isAtLimit(current: number, max: number): boolean {
+  return max !== -1 && current >= max;
+}
+
+export function remainingAllowance(current: number, max: number): number {
+  if (max === -1) return Number.POSITIVE_INFINITY;
+  return Math.max(0, max - current);
+}
+
+export function usageExplanation(label: string, current: number, max: number): string | null {
+  if (max === -1) return null;
+  if (current > max) {
+    return `${label} is over the plan allowance (${current.toLocaleString()} of ${max.toLocaleString()}). Existing records stay available. New items are blocked until you upgrade or reduce usage.`;
+  }
+  if (current >= max) {
+    return `${label} has reached the plan allowance. Upgrade to add more.`;
+  }
+  return null;
 }
 
 export function formatLimit(value: number): string {

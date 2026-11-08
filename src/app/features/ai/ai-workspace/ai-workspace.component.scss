@@ -1115,3 +1115,13 @@
     padding: 1.5rem 1rem;
   }
 }
+
+.composer__quota {
+  margin: 0 0 0.5rem;
+  color: var(--bs-secondary-color, #5c6b7a);
+}
+
+.composer__quota a {
+  margin-left: 0.5rem;
+  font-weight: 600;
+}

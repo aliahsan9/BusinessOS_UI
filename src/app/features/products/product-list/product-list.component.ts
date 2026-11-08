@@ -24,6 +24,8 @@ import { AppSkeletonComponent } from '../../../shared/components/app-skeleton/ap
 import { AppEmptyStateComponent } from '../../../shared/components/app-empty-state/app-empty-state.component';
 import { AppAlertComponent } from '../../../shared/components/app-alert/app-alert.component';
 import { AppConfirmDialogComponent } from '../../../shared/components/app-confirm-dialog/app-confirm-dialog.component';
+import { PlanCapacityComponent } from '../../../shared/components/plan-capacity/plan-capacity.component';
+import { EntitlementService } from '../../../core/services/entitlement.service';
 import { ButtonVariant } from '../../../core/enums';
 
 @Component({
@@ -44,6 +46,7 @@ import { ButtonVariant } from '../../../core/enums';
     AppEmptyStateComponent,
     AppAlertComponent,
     AppConfirmDialogComponent,
+    PlanCapacityComponent,
   ],
   templateUrl: './product-list.component.html',
   styleUrl: './product-list.component.scss',
@@ -56,6 +59,8 @@ export class ProductListComponent implements OnInit {
   private readonly productService = inject(ProductService);
   private readonly notification = inject(NotificationService);
   private readonly tokenService = inject(TokenService);
+  private readonly entitlements = inject(EntitlementService);
+  readonly creationBlocked = signal(false);
 
   readonly items = this.productState.items;
   readonly page = this.productState.page;
@@ -86,12 +91,21 @@ export class ProductListComponent implements OnInit {
     { label: 'Catalog' },
   ];
 
-  readonly headerActions = [
-    { label: 'Categories', route: ROUTES.products.categories.list, icon: 'bi-tags', variant: ButtonVariant.Outline },
-    ...(this.canCreate ? [{ label: 'Add Product', route: ROUTES.products.create, icon: 'bi-plus-lg' }] : []),
-  ];
+  get headerActions() {
+    const blocked = this.creationBlocked();
+    return [
+      { label: 'Categories', route: ROUTES.products.categories.list, icon: 'bi-tags', variant: ButtonVariant.Outline },
+      ...(this.canCreate
+        ? [{ label: 'Add Product', route: blocked ? undefined : ROUTES.products.create, icon: 'bi-plus-lg', disabled: blocked }]
+        : []),
+    ];
+  }
 
   ngOnInit(): void {
+    this.entitlements.refresh(true).subscribe({
+      next: () => this.creationBlocked.set(this.entitlements.isBlocked('products')),
+      error: () => undefined,
+    });
     this.productState.load();
     this.categoryService.getAllForSelect().subscribe({
       next: (cats) => this.categories.set(cats),

@@ -17,6 +17,9 @@ import { AppButtonComponent } from '../../../shared/components/app-button/app-bu
 import { AppCardComponent } from '../../../shared/components/app-card/app-card.component';
 import { AppSkeletonComponent } from '../../../shared/components/app-skeleton/app-skeleton.component';
 import { getFieldError } from '../../../shared/validators/form.validators';
+import { PlanCapacityComponent } from '../../../shared/components/plan-capacity/plan-capacity.component';
+import { EntitlementService } from '../../../core/services/entitlement.service';
+import { isPlanLimitError } from '../../../core/models/api-error.model';
 
 @Component({
   selector: 'app-product-form',
@@ -32,6 +35,7 @@ import { getFieldError } from '../../../shared/validators/form.validators';
     AppButtonComponent,
     AppCardComponent,
     AppSkeletonComponent,
+    PlanCapacityComponent,
   ],
   templateUrl: './product-form.component.html',
   styleUrl: './product-form.component.scss',
@@ -42,6 +46,8 @@ export class ProductFormComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly entitlements = inject(EntitlementService);
+  readonly creationBlocked = signal(false);
   private readonly productService = inject(ProductService);
   private readonly categoryService = inject(CategoryService);
   private readonly notification = inject(NotificationService);
@@ -66,6 +72,12 @@ export class ProductFormComponent implements OnInit {
 
   ngOnInit(): void {
     const mode = this.route.snapshot.data['mode'] as string;
+    if (mode !== 'edit') {
+      this.entitlements.refresh(true).subscribe({
+        next: () => this.creationBlocked.set(this.entitlements.isBlocked('products')),
+        error: () => undefined,
+      });
+    }
     const id = this.route.snapshot.paramMap.get('id');
     this.isEdit.set(mode === 'edit' && !!id);
     if (id) this.productId.set(id);
@@ -112,6 +124,10 @@ export class ProductFormComponent implements OnInit {
       return;
     }
 
+    if (!this.isEdit() && this.creationBlocked()) {
+      return;
+    }
+
     this.saving.set(true);
     const value = this.form.getRawValue();
 
@@ -132,8 +148,11 @@ export class ProductFormComponent implements OnInit {
           this.notification.success('Product created.');
           this.router.navigate([ROUTES.products.base, res.id]);
         },
-        error: () => {
-          this.notification.error('Failed to create product.');
+        error: (error) => {
+          if (!isPlanLimitError(error)) {
+            this.notification.error('Failed to create product.');
+          }
+          this.creationBlocked.set(true);
           this.saving.set(false);
         },
       });

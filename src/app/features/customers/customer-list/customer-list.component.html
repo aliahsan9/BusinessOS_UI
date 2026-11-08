@@ -5,6 +5,7 @@
   subtitle="Manage customer records and relationships."
   [actions]="headerActions"
 />
+<app-plan-capacity resource="customers" />
 
 @if (error()) {
   <app-alert variant="danger" [message]="error()!" [dismissible]="false" />

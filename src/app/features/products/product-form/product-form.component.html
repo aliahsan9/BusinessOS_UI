@@ -9,6 +9,9 @@
   [title]="isEdit() ? 'Edit Product' : 'Create Product'"
   subtitle="Fields align with your product catalog API."
 />
+@if (!isEdit()) {
+  <app-plan-capacity resource="products" />
+}
 
 @if (loading()) {
   <app-skeleton height="20rem" variant="rect" />
@@ -58,7 +61,7 @@
 
     <div class="product-form__actions">
       <a [routerLink]="routes.products.list"><app-button label="Cancel" [variant]="ButtonVariant.Outline" type="button" /></a>
-      <app-button [label]="isEdit() ? 'Save Changes' : 'Create Product'" type="submit" [loading]="saving()" />
+      <app-button [label]="isEdit() ? 'Save Changes' : 'Create Product'" type="submit" [loading]="saving()" [disabled]="!isEdit() && creationBlocked()" />
     </div>
   </form>
 }

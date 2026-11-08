@@ -240,8 +240,14 @@
   background: var(--color-warning);
 }
 
-.meter--high .meter__fill {
+.meter--high .meter__fill,
+.meter--over .meter__fill {
   background: var(--color-danger);
+}
+
+.usage-item__note {
+  margin: 0.35rem 0 0;
+  color: var(--bs-secondary-color, #5c6b7a);
 }
 
 .usage-item__alert {

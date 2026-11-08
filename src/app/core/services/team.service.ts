@@ -36,6 +36,10 @@ export class TeamService extends BaseApiService {
     return this.post<TeamInvitationDto>(API_ENDPOINTS.team.invite, request);
   }
 
+  revokeInvitation(id: string): Observable<void> {
+    return this.delete<void>(`${API_ENDPOINTS.team.invitations}/${id}`);
+  }
+
   updateMember(id: string, request: UpdateTeamMemberRequest): Observable<TeamMemberDto> {
     return this.put<TeamMemberDto>(`${API_ENDPOINTS.team.member}/${id}`, request);
   }

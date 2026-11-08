@@ -19,9 +19,13 @@
               class="meter"
               [class.meter--unlimited]="item.max === -1"
               [class.meter--warn]="usageTone(item.current, item.max) === 'warn'"
-              [class.meter--high]="usageTone(item.current, item.max) === 'high' || usageTone(item.current, item.max) === 'full'">
+              [class.meter--high]="usageTone(item.current, item.max) === 'high' || usageTone(item.current, item.max) === 'full'"
+              [class.meter--over]="usageTone(item.current, item.max) === 'over'">
               <div class="meter__fill" [style.width.%]="item.max === -1 ? 100 : usagePercent(item.current, item.max)"></div>
             </div>
+            @if (usageExplanation(item.label, item.current, item.max); as note) {
+              <p class="usage-item__alert">{{ note }}</p>
+            }
           </div>
         }
       </div>

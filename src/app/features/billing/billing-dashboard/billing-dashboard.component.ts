@@ -6,6 +6,7 @@ import {
   BillingDashboardDto,
   formatIsoCurrency,
   limitLabel,
+  usageExplanation,
   usagePercent,
   usageTone,
 } from '../../../core/models/billing.model';
@@ -39,6 +40,7 @@ export class BillingDashboardComponent implements OnInit {
   readonly limitLabel = limitLabel;
   readonly usagePercent = usagePercent;
   readonly usageTone = usageTone;
+  readonly usageExplanation = usageExplanation;
 
   private readonly billingService = inject(BillingService);
   private readonly tokenService = inject(TokenService);
@@ -74,13 +76,13 @@ export class BillingDashboardComponent implements OnInit {
   usageRows(data: BillingDashboardDto) {
     const usage = data.usage;
     return [
-      { label: 'Users', icon: 'bi bi-people', current: usage.userCount, max: usage.maxUsers, custom: usage.usersAreCustom },
-      { label: 'Customers', icon: 'bi bi-person-badge', current: usage.customerCount, max: usage.maxCustomers, custom: false },
-      { label: 'Products', icon: 'bi bi-box', current: usage.productCount, max: usage.maxProducts, custom: false },
-      { label: 'Projects', icon: 'bi bi-folder', current: usage.projectCount, max: usage.maxProjects, custom: false },
-      { label: 'Tasks', icon: 'bi bi-check2-square', current: usage.taskCount, max: usage.maxTasks, custom: false },
-      { label: 'AI requests', icon: 'bi bi-stars', current: usage.aiRequestsUsed, max: usage.maxAiRequests, custom: usage.aiRequestsAreCustom },
-      { label: 'Storage (MB)', icon: 'bi bi-hdd', current: usage.storageUsedMb, max: usage.maxStorageMb, custom: false },
+      { label: 'Users', icon: 'bi bi-people', current: usage.userCount, max: usage.maxUsers, custom: usage.usersAreCustom, detail: usage.pendingInvitationCount ? `${usage.pendingInvitationCount} pending invitation${usage.pendingInvitationCount === 1 ? '' : 's'} reserve a seat` : null },
+      { label: 'Customers', icon: 'bi bi-person-badge', current: usage.customerCount, max: usage.maxCustomers, custom: false, detail: null },
+      { label: 'Products', icon: 'bi bi-box', current: usage.productCount, max: usage.maxProducts, custom: false, detail: null },
+      { label: 'Projects', icon: 'bi bi-folder', current: usage.projectCount, max: usage.maxProjects, custom: false, detail: null },
+      { label: 'Tasks', icon: 'bi bi-check2-square', current: usage.taskCount, max: usage.maxTasks, custom: false, detail: null },
+      { label: 'AI requests', icon: 'bi bi-stars', current: usage.aiRequestsUsed, max: usage.maxAiRequests, custom: usage.aiRequestsAreCustom, detail: usage.aiRequestsRemaining === -1 ? null : `${Math.max(0, usage.aiRequestsRemaining)} remaining this period` },
+      { label: 'Storage', icon: 'bi bi-hdd', current: usage.storageOverLimit ? usage.maxStorageMb + 1 : Number(((usage.storageUsedBytes ?? 0) / (1024 * 1024)).toFixed(2)), max: usage.maxStorageMb, custom: false, detail: null, storage: true },
     ];
   }
 

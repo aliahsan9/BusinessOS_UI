@@ -9,6 +9,9 @@
   [title]="isEdit() ? 'Edit Customer' : 'Create Customer'"
   subtitle="Maintain customer contact and address details."
 />
+@if (!isEdit()) {
+  <app-plan-capacity resource="customers" />
+}
 
 @if (loading()) {
   <app-skeleton height="20rem" variant="rect" />
@@ -43,7 +46,7 @@
 
     <div class="entity-form__actions">
       <a [routerLink]="routes.customers.list"><app-button label="Cancel" [variant]="ButtonVariant.Outline" type="button" /></a>
-      <app-button [label]="isEdit() ? 'Save Changes' : 'Create Customer'" type="submit" [loading]="saving()" />
+      <app-button [label]="isEdit() ? 'Save Changes' : 'Create Customer'" type="submit" [loading]="saving()" [disabled]="!isEdit() && creationBlocked()" />
     </div>
   </form>
 }

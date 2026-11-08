@@ -5,6 +5,7 @@
   subtitle="Invite members, manage roles, and track team activity."
   [actions]="headerActions"
 />
+<app-plan-capacity resource="users" />
 
 @if (error()) {
   <app-alert variant="danger" [message]="error()!" [dismissible]="false" />
@@ -141,6 +142,9 @@
             <strong>{{ inv.email }}</strong>
             <app-badge [label]="inv.roleName" variant="neutral" />
             <small>Expires {{ inv.expiresAt | date: 'mediumDate' }}</small>
+            @if (canManage) {
+              <app-button label="Revoke" [variant]="ButtonVariant.Outline" (clicked)="revokeInvitation(inv.id)" />
+            }
           </li>
         }
       </ul>

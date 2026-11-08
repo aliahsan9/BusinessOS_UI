@@ -274,6 +274,14 @@
       </div>
 
       <footer class="composer">
+        @if (aiUsageLabel()) {
+          <p class="composer__quota">
+            {{ aiUsageLabel() }}
+            @if (aiQuotaReached()) {
+              <a [routerLink]="routes.pricing.base">Upgrade Plan</a>
+            }
+          </p>
+        }
         @if (voiceError() || playbackError()) {
           <div class="voice-error" role="alert">
             <i class="bi bi-exclamation-triangle-fill"></i>
@@ -291,7 +299,7 @@
               [ngModel]="input()"
               (ngModelChange)="onComposerInput($event)"
               (keydown)="onComposerKeydown($event)"
-              [disabled]="loading() || isListening()"
+              [disabled]="loading() || isListening() || aiQuotaReached()"
             ></textarea>
           </div>
 

@@ -9,6 +9,9 @@
   [title]="isEdit() ? 'Edit User' : 'Create User'"
   subtitle="Manage user account details and status."
 />
+@if (!isEdit()) {
+  <app-plan-capacity resource="users" />
+}
 
 @if (loading()) {
   <app-skeleton height="20rem" variant="rect" />
@@ -41,7 +44,7 @@
 
     <div class="entity-form__actions">
       <a [routerLink]="routes.users.list"><app-button label="Cancel" [variant]="ButtonVariant.Outline" type="button" /></a>
-      <app-button [label]="isEdit() ? 'Save Changes' : 'Create User'" type="submit" [loading]="saving()" />
+      <app-button [label]="isEdit() ? 'Save Changes' : 'Create User'" type="submit" [loading]="saving()" [disabled]="!isEdit() && creationBlocked()" />
     </div>
   </form>
 }

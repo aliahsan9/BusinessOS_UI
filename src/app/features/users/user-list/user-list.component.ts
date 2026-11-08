@@ -17,6 +17,8 @@ import { AppBadgeComponent } from '../../../shared/components/app-badge/app-badg
 import { AppSkeletonComponent } from '../../../shared/components/app-skeleton/app-skeleton.component';
 import { AppEmptyStateComponent } from '../../../shared/components/app-empty-state/app-empty-state.component';
 import { AppAlertComponent } from '../../../shared/components/app-alert/app-alert.component';
+import { PlanCapacityComponent } from '../../../shared/components/plan-capacity/plan-capacity.component';
+import { EntitlementService } from '../../../core/services/entitlement.service';
 
 @Component({
   selector: 'app-user-list',
@@ -33,6 +35,7 @@ import { AppAlertComponent } from '../../../shared/components/app-alert/app-aler
     AppSkeletonComponent,
     AppEmptyStateComponent,
     AppAlertComponent,
+    PlanCapacityComponent,
   ],
   templateUrl: './user-list.component.html',
   styleUrl: './user-list.component.scss',
@@ -43,6 +46,8 @@ export class UserListComponent implements OnInit {
   private readonly userService = inject(UserService);
   private readonly notification = inject(NotificationService);
   private readonly tokenService = inject(TokenService);
+  private readonly entitlements = inject(EntitlementService);
+  readonly creationBlocked = signal(false);
 
   readonly items = signal<UserSummaryDto[]>([]);
   readonly page = signal(1);
@@ -58,9 +63,17 @@ export class UserListComponent implements OnInit {
   readonly canCreate = this.tokenService.hasPermission(PermissionCodes.user.create);
   readonly canUpdate = this.tokenService.hasPermission(PermissionCodes.user.update);
   readonly breadcrumbs = [{ label: 'Users', route: ROUTES.users.list }, { label: 'Directory' }];
-  readonly headerActions = this.canCreate ? [{ label: 'Add User', route: ROUTES.users.create, icon: 'bi-plus-lg' }] : [];
+  get headerActions() {
+    if (!this.canCreate) return [];
+    const blocked = this.creationBlocked();
+    return [{ label: 'Add User', route: blocked ? undefined : ROUTES.users.create, icon: 'bi-plus-lg', disabled: blocked }];
+  }
 
   ngOnInit(): void {
+    this.entitlements.refresh(true).subscribe({
+      next: () => this.creationBlocked.set(this.entitlements.isBlocked('users')),
+      error: () => undefined,
+    });
     this.load();
   }
 
