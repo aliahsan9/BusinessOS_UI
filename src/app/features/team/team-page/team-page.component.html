@@ -74,15 +74,15 @@
     } @else if (members().length === 0) {
       <app-empty-state icon="bi-people" title="No team members" description="Invite your first team member to get started." />
     } @else {
-      <div class="bos-table-wrapper">
+      <div class="bos-table-wrapper members-table">
         <table class="bos-table bos-table--striped bos-table--hover bos-table--compact">
           <thead>
             <tr>
               <th>Member</th>
               <th>Email</th>
               <th>Role</th>
-              <th>Joined</th>
-              <th>Last Active</th>
+              <th class="col-joined">Joined</th>
+              <th class="col-last-active">Last Active</th>
               <th>Status</th>
               <th></th>
             </tr>
@@ -97,17 +97,19 @@
                     } @else {
                       <span class="avatar">{{ initials(member.fullName) }}</span>
                     }
-                    <span>{{ member.fullName }}</span>
+                    <span class="member-name">{{ member.fullName }}</span>
                   </div>
                 </td>
                 <td>{{ member.email }}</td>
                 <td>
-                  @for (role of member.roles; track role) {
-                    <app-badge [label]="role" [variant]="roleBadgeVariant(role)" />
-                  }
+                  <div class="role-badges role-badges--compact">
+                    @for (role of member.roles; track role) {
+                      <app-badge [label]="role" [variant]="roleBadgeVariant(role)" />
+                    }
+                  </div>
                 </td>
-                <td>{{ member.joinedAt | date: 'mediumDate' }}</td>
-                <td>{{ member.lastActiveAt ? (member.lastActiveAt | date: 'short') : '—' }}</td>
+                <td class="col-joined">{{ member.joinedAt | date: 'mediumDate' }}</td>
+                <td class="col-last-active">{{ member.lastActiveAt ? (member.lastActiveAt | date: 'short') : '—' }}</td>
                 <td>
                   <app-badge [label]="member.isActive ? 'Active' : 'Inactive'" [variant]="member.isActive ? 'success' : 'neutral'" />
                 </td>
@@ -122,6 +124,53 @@
           </tbody>
         </table>
       </div>
+
+      <ul class="member-cards">
+        @for (member of members(); track member.id) {
+          <li class="member-card">
+            <div class="member-card__head">
+              <div class="member-cell">
+                @if (member.avatarUrl) {
+                  <img [src]="member.avatarUrl" [alt]="member.fullName" class="avatar avatar--img" />
+                } @else {
+                  <span class="avatar">{{ initials(member.fullName) }}</span>
+                }
+                <div class="member-card__identity">
+                  <span class="member-card__name">{{ member.fullName }}</span>
+                  <span class="member-card__email">{{ member.email }}</span>
+                </div>
+              </div>
+              <app-badge [label]="member.isActive ? 'Active' : 'Inactive'" [variant]="member.isActive ? 'success' : 'neutral'" />
+            </div>
+
+            @if (member.roles.length) {
+              <div class="role-badges role-badges--compact">
+                @for (role of member.roles; track role) {
+                  <app-badge [label]="role" [variant]="roleBadgeVariant(role)" />
+                }
+              </div>
+            }
+
+            <dl class="member-card__meta">
+              <div>
+                <dt>Joined</dt>
+                <dd>{{ member.joinedAt | date: 'mediumDate' }}</dd>
+              </div>
+              <div>
+                <dt>Last active</dt>
+                <dd>{{ member.lastActiveAt ? (member.lastActiveAt | date: 'short') : '—' }}</dd>
+              </div>
+            </dl>
+
+            @if (canManage) {
+              <div class="member-card__actions">
+                <button type="button" (click)="openEditModal(member)">Edit</button>
+                <button type="button" class="member-card__remove" (click)="confirmRemove(member)">Remove</button>
+              </div>
+            }
+          </li>
+        }
+      </ul>
 
       <app-pagination
         [page]="page()"
@@ -184,8 +233,8 @@
     <div class="modal-panel" (click)="$event.stopPropagation()">
       <h3>Invite Team Member</h3>
       <app-input label="Email" type="email" [(ngModel)]="inviteEmail" placeholder="colleague@company.com" />
-      <label class="form-label">Role</label>
-      <select class="form-select" [(ngModel)]="inviteRoleId">
+      <label class="form-label" for="invite-role">Role</label>
+      <select id="invite-role" class="form-select" [(ngModel)]="inviteRoleId">
         @for (role of roles(); track role.id) {
           <option [value]="role.id">{{ role.name }}</option>
         }
@@ -205,8 +254,8 @@
       <app-input label="First Name" [(ngModel)]="editFirstName" />
       <app-input label="Last Name" [(ngModel)]="editLastName" />
       <app-input label="Avatar URL" [(ngModel)]="editAvatarUrl" placeholder="https://..." />
-      <label class="form-label">Role</label>
-      <select class="form-select" [(ngModel)]="editRoleId">
+      <label class="form-label" for="edit-role">Role</label>
+      <select id="edit-role" class="form-select" [(ngModel)]="editRoleId">
         @for (role of roles(); track role.id) {
           <option [value]="role.id">{{ role.name }}</option>
         }
