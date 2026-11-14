@@ -171,9 +171,23 @@
     }
 
     &__meta {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: var(--space-1, 0.375rem);
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.5rem;
+      align-items: stretch;
+    }
+
+    &__type,
+    &__meta > span {
+      grid-column: 1 / -1;
+    }
+
+    &__meta button {
+      justify-content: center;
+      min-height: 2.5rem;
+      padding: 0.35rem 0.5rem;
+      border: 1px solid var(--color-border);
+      border-radius: 10px;
     }
   }
 }

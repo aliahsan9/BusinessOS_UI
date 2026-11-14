@@ -42,13 +42,13 @@
       <tbody>
         @for (supplier of items(); track supplier.id) {
           <tr>
-            <td>
+            <td data-label="Name">
               <a [routerLink]="[routes.suppliers.base, supplier.id]" class="link-primary">{{ supplier.name }}</a>
             </td>
-            <td>{{ supplier.contactPerson || '—' }}</td>
-            <td>{{ supplier.email }}</td>
-            <td>{{ supplier.phone }}</td>
-            <td class="bos-table__actions">
+            <td data-label="Contact Person">{{ supplier.contactPerson || '—' }}</td>
+            <td data-label="Email">{{ supplier.email }}</td>
+            <td data-label="Phone">{{ supplier.phone }}</td>
+            <td data-label="" class="bos-table__actions">
               <a [routerLink]="[routes.suppliers.base, supplier.id]">View</a>
               @if (canUpdate) {
                 <a [routerLink]="[routes.suppliers.base, supplier.id, 'edit']">Edit</a>

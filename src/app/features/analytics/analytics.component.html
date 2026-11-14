@@ -219,10 +219,10 @@
               <tbody>
                 @for (customer of topCustomers()!.customers; track customer.customerId) {
                   <tr>
-                    <td>{{ customer.customerName }}</td>
-                    <td>{{ customer.revenueGenerated | appCurrency }}</td>
-                    <td>{{ customer.projectsCount | number }}</td>
-                    <td>{{ customer.invoicesCount | number }}</td>
+                    <td data-label="Customer Name">{{ customer.customerName }}</td>
+                    <td data-label="Revenue Generated">{{ customer.revenueGenerated | appCurrency }}</td>
+                    <td data-label="Projects Count">{{ customer.projectsCount | number }}</td>
+                    <td data-label="Invoices Count">{{ customer.invoicesCount | number }}</td>
                   </tr>
                 }
               </tbody>

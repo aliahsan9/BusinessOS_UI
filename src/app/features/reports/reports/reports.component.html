@@ -95,10 +95,10 @@
                 <tbody>
                   @for (row of customers(); track row.id) {
                     <tr>
-                      <td>{{ row.fullName }}</td>
-                      <td>{{ row.email }}</td>
-                      <td>{{ row.phoneNumber }}</td>
-                      <td>{{ row.city || '—' }}</td>
+                      <td data-label="Name">{{ row.fullName }}</td>
+                      <td data-label="Email">{{ row.email }}</td>
+                      <td data-label="Phone">{{ row.phoneNumber }}</td>
+                      <td data-label="City">{{ row.city || '—' }}</td>
                     </tr>
                   }
                 </tbody>
@@ -124,11 +124,11 @@
                 <tbody>
                   @for (row of orders(); track row.id) {
                     <tr>
-                      <td>{{ row.orderNumber }}</td>
-                      <td>{{ row.customerName }}</td>
-                      <td>{{ row.orderDate | date: 'mediumDate' }}</td>
-                      <td>{{ row.status }}</td>
-                      <td class="text-end">{{ row.grandTotal | appCurrency }}</td>
+                      <td data-label="Order #">{{ row.orderNumber }}</td>
+                      <td data-label="Customer">{{ row.customerName }}</td>
+                      <td data-label="Date">{{ row.orderDate | date: 'mediumDate' }}</td>
+                      <td data-label="Status">{{ row.status }}</td>
+                      <td data-label="Total" class="text-end">{{ row.grandTotal | appCurrency }}</td>
                     </tr>
                   }
                 </tbody>
@@ -155,12 +155,12 @@
                 <tbody>
                   @for (row of invoices(); track row.id) {
                     <tr>
-                      <td>{{ row.invoiceNumber }}</td>
-                      <td>{{ row.customerName }}</td>
-                      <td>{{ row.orderNumber }}</td>
-                      <td>{{ row.status }}</td>
-                      <td class="text-end">{{ row.grandTotal | appCurrency }}</td>
-                      <td class="text-end">{{ row.outstandingAmount | appCurrency }}</td>
+                      <td data-label="Invoice #">{{ row.invoiceNumber }}</td>
+                      <td data-label="Customer">{{ row.customerName }}</td>
+                      <td data-label="Order">{{ row.orderNumber }}</td>
+                      <td data-label="Status">{{ row.status }}</td>
+                      <td data-label="Total" class="text-end">{{ row.grandTotal | appCurrency }}</td>
+                      <td data-label="Outstanding" class="text-end">{{ row.outstandingAmount | appCurrency }}</td>
                     </tr>
                   }
                 </tbody>
@@ -187,12 +187,12 @@
                 <tbody>
                   @for (row of payments(); track row.id) {
                     <tr>
-                      <td>{{ row.paymentDate | date: 'mediumDate' }}</td>
-                      <td>{{ row.customerName }}</td>
-                      <td>{{ row.orderNumber }}</td>
-                      <td>{{ row.paymentMethod }}</td>
-                      <td>{{ row.referenceNo || '—' }}</td>
-                      <td class="text-end">{{ row.amount | appCurrency }}</td>
+                      <td data-label="Date">{{ row.paymentDate | date: 'mediumDate' }}</td>
+                      <td data-label="Customer">{{ row.customerName }}</td>
+                      <td data-label="Order">{{ row.orderNumber }}</td>
+                      <td data-label="Method">{{ row.paymentMethod }}</td>
+                      <td data-label="Reference">{{ row.referenceNo || '—' }}</td>
+                      <td data-label="Amount" class="text-end">{{ row.amount | appCurrency }}</td>
                     </tr>
                   }
                 </tbody>
@@ -230,9 +230,9 @@
                 <tbody>
                   @for (row of revenueTrends(); track row.date) {
                     <tr>
-                      <td>{{ row.date | date: 'mediumDate' }}</td>
-                      <td class="text-end">{{ row.revenue | appCurrency }}</td>
-                      <td class="text-end">{{ row.orderCount | number }}</td>
+                      <td data-label="Date">{{ row.date | date: 'mediumDate' }}</td>
+                      <td data-label="Revenue" class="text-end">{{ row.revenue | appCurrency }}</td>
+                      <td data-label="Orders" class="text-end">{{ row.orderCount | number }}</td>
                     </tr>
                   }
                 </tbody>
@@ -259,12 +259,12 @@
                 <tbody>
                   @for (row of outstanding(); track row.id) {
                     <tr [class.row-overdue]="isOverdueStatus(row.status)">
-                      <td>{{ row.invoiceNumber }}</td>
-                      <td>{{ row.customerName }}</td>
-                      <td>{{ row.dueDate | date: 'mediumDate' }}</td>
-                      <td>{{ row.status }}</td>
-                      <td class="text-end">{{ row.grandTotal | appCurrency }}</td>
-                      <td class="text-end">{{ row.outstandingAmount | appCurrency }}</td>
+                      <td data-label="Invoice #">{{ row.invoiceNumber }}</td>
+                      <td data-label="Customer">{{ row.customerName }}</td>
+                      <td data-label="Due Date">{{ row.dueDate | date: 'mediumDate' }}</td>
+                      <td data-label="Status">{{ row.status }}</td>
+                      <td data-label="Total" class="text-end">{{ row.grandTotal | appCurrency }}</td>
+                      <td data-label="Outstanding" class="text-end">{{ row.outstandingAmount | appCurrency }}</td>
                     </tr>
                   }
                 </tbody>
@@ -290,11 +290,11 @@
                 <tbody>
                   @for (row of expenses(); track row.id) {
                     <tr>
-                      <td>{{ row.title }}</td>
-                      <td>{{ row.categoryName }}</td>
-                      <td>{{ row.expenseDate | date: 'mediumDate' }}</td>
-                      <td>{{ row.status }}</td>
-                      <td class="text-end">{{ row.amount | appCurrency }}</td>
+                      <td data-label="Title">{{ row.title }}</td>
+                      <td data-label="Category">{{ row.categoryName }}</td>
+                      <td data-label="Date">{{ row.expenseDate | date: 'mediumDate' }}</td>
+                      <td data-label="Status">{{ row.status }}</td>
+                      <td data-label="Amount" class="text-end">{{ row.amount | appCurrency }}</td>
                     </tr>
                   }
                 </tbody>
@@ -319,10 +319,10 @@
                 <tbody>
                   @for (row of suppliers(); track row.id) {
                     <tr>
-                      <td>{{ row.name }}</td>
-                      <td>{{ row.email }}</td>
-                      <td>{{ row.phone }}</td>
-                      <td>{{ row.contactPerson || '—' }}</td>
+                      <td data-label="Name">{{ row.name }}</td>
+                      <td data-label="Email">{{ row.email }}</td>
+                      <td data-label="Phone">{{ row.phone }}</td>
+                      <td data-label="Contact">{{ row.contactPerson || '—' }}</td>
                     </tr>
                   }
                 </tbody>
@@ -348,11 +348,11 @@
                 <tbody>
                   @for (row of inventory(); track row.id) {
                     <tr>
-                      <td>{{ row.productName }}</td>
-                      <td>{{ row.productSku }}</td>
-                      <td class="text-end">{{ row.currentStock | number }}</td>
-                      <td class="text-end">{{ row.reorderLevel | number }}</td>
-                      <td>{{ row.isLowStock ? 'Yes' : 'No' }}</td>
+                      <td data-label="Product">{{ row.productName }}</td>
+                      <td data-label="SKU">{{ row.productSku }}</td>
+                      <td data-label="Stock" class="text-end">{{ row.currentStock | number }}</td>
+                      <td data-label="Reorder Level" class="text-end">{{ row.reorderLevel | number }}</td>
+                      <td data-label="Low Stock">{{ row.isLowStock ? 'Yes' : 'No' }}</td>
                     </tr>
                   }
                 </tbody>
@@ -378,11 +378,11 @@
                 <tbody>
                   @for (row of auditLogs(); track row.id) {
                     <tr>
-                      <td>{{ row.createdAt | date: 'medium' }}</td>
-                      <td>{{ row.action }}</td>
-                      <td>{{ row.entityType }}</td>
-                      <td>{{ row.entityId }}</td>
-                      <td>{{ row.actorUserId }}</td>
+                      <td data-label="Timestamp">{{ row.createdAt | date: 'medium' }}</td>
+                      <td data-label="Action">{{ row.action }}</td>
+                      <td data-label="Entity Type">{{ row.entityType }}</td>
+                      <td data-label="Entity ID">{{ row.entityId }}</td>
+                      <td data-label="User ID">{{ row.actorUserId }}</td>
                     </tr>
                   }
                 </tbody>
@@ -407,10 +407,10 @@
                 <tbody>
                   @for (row of users(); track row.id) {
                     <tr>
-                      <td>{{ row.fullName }}</td>
-                      <td>{{ row.email }}</td>
-                      <td>{{ row.roles.join(', ') || '—' }}</td>
-                      <td>{{ row.isActive ? 'Active' : 'Inactive' }}</td>
+                      <td data-label="Name">{{ row.fullName }}</td>
+                      <td data-label="Email">{{ row.email }}</td>
+                      <td data-label="Roles">{{ row.roles.join(', ') || '—' }}</td>
+                      <td data-label="Status">{{ row.isActive ? 'Active' : 'Inactive' }}</td>
                     </tr>
                   }
                 </tbody>

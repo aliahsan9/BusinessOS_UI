@@ -27,14 +27,14 @@
           }
           @for (inv of invoices(); track inv.id) {
             <tr>
-              <td>{{ inv.invoiceNumber }}</td>
-              <td>{{ inv.planName }}</td>
-              <td>{{ money(inv.totalAmount, inv.currency) }}</td>
-              <td>{{ money(inv.taxAmount, inv.currency) }}</td>
-              <td><span class="badge bg-secondary-subtle">{{ inv.status }}</span></td>
-              <td class="small">{{ inv.periodStart | date:'shortDate' }} – {{ inv.periodEnd | date:'shortDate' }}</td>
-              <td>{{ inv.paidAt ? (inv.paidAt | date:'medium') : '—' }}</td>
-              <td><button type="button" class="btn btn-link btn-sm" (click)="download(inv.id)">Download</button></td>
+              <td data-label="Invoice #">{{ inv.invoiceNumber }}</td>
+              <td data-label="Plan">{{ inv.planName }}</td>
+              <td data-label="Amount">{{ money(inv.totalAmount, inv.currency) }}</td>
+              <td data-label="Tax">{{ money(inv.taxAmount, inv.currency) }}</td>
+              <td data-label="Status"><span class="badge bg-secondary-subtle">{{ inv.status }}</span></td>
+              <td data-label="Period" class="small">{{ inv.periodStart | date:'shortDate' }} – {{ inv.periodEnd | date:'shortDate' }}</td>
+              <td data-label="Paid">{{ inv.paidAt ? (inv.paidAt | date:'medium') : '—' }}</td>
+              <td data-label=""><button type="button" class="btn btn-link btn-sm" (click)="download(inv.id)">Download</button></td>
             </tr>
           }
         </tbody>

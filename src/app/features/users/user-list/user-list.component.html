@@ -40,15 +40,15 @@
       <tbody>
         @for (user of items(); track user.id) {
           <tr>
-            <td>
+            <td data-label="Name">
               <a [routerLink]="[routes.users.base, user.id]" class="link-primary">{{ user.fullName }}</a>
             </td>
-            <td>{{ user.email }}</td>
-            <td>{{ user.roles.join(', ') || '—' }}</td>
-            <td>
+            <td data-label="Email">{{ user.email }}</td>
+            <td data-label="Roles">{{ user.roles.join(', ') || '—' }}</td>
+            <td data-label="Status">
               <app-badge [label]="user.isActive ? 'Active' : 'Inactive'" [variant]="user.isActive ? 'success' : 'neutral'" />
             </td>
-            <td class="bos-table__actions">
+            <td data-label="" class="bos-table__actions">
               <a [routerLink]="[routes.users.base, user.id]">View</a>
               @if (canUpdate) {
                 <a [routerLink]="[routes.users.base, user.id, 'edit']">Edit</a>

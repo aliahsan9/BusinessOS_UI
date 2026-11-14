@@ -87,7 +87,7 @@
         @for (product of filteredItems(); track product.id) {
           <tr>
             @if (canDelete || canUpdate) {
-              <td class="col-check">
+              <td data-label="" class="col-check">
                 <input
                   type="checkbox"
                   [checked]="selectedIds().has(product.id)"
@@ -96,24 +96,24 @@
                 />
               </td>
             }
-            <td class="col-name">
+            <td data-label="Name" class="col-name">
               <a [routerLink]="[routes.products.base, product.id]" class="link-primary">{{ product.name }}</a>
             </td>
-            <td class="col-sku">{{ product.sku }}</td>
-            <td class="col-category">{{ getCategoryName(product.categoryId) }}</td>
-            <td class="col-cost">{{ product.costPrice | appCurrency }}</td>
-            <td class="col-price">{{ product.salePrice | appCurrency }}</td>
-            <td class="col-margin">{{ profitMargin(product) | number: '1.1-1' }}%</td>
-            <td class="col-stock">
+            <td data-label="SKU" class="col-sku">{{ product.sku }}</td>
+            <td data-label="Category" class="col-category">{{ getCategoryName(product.categoryId) }}</td>
+            <td data-label="Cost" class="col-cost">{{ product.costPrice | appCurrency }}</td>
+            <td data-label="Price" class="col-price">{{ product.salePrice | appCurrency }}</td>
+            <td data-label="Margin" class="col-margin">{{ profitMargin(product) | number: '1.1-1' }}%</td>
+            <td data-label="Stock" class="col-stock">
               <span [attr.data-tone]="stockTone(product)">
                 {{ product.currentStock | number: '1.0-2' }}
               </span>
             </td>
-            <td class="col-reorder">{{ product.reorderLevel | number: '1.0-2' }}</td>
-            <td class="col-status">
+            <td data-label="Reorder" class="col-reorder">{{ product.reorderLevel | number: '1.0-2' }}</td>
+            <td data-label="Status" class="col-status">
               <app-badge [label]="product.isActive ? 'Active' : 'Inactive'" [variant]="product.isActive ? 'success' : 'neutral'" />
             </td>
-            <td class="bos-table__actions col-actions">
+            <td data-label="" class="bos-table__actions col-actions">
               <a [routerLink]="[routes.products.base, product.id]">View</a>
               @if (canUpdate) {
                 <a [routerLink]="[routes.products.base, product.id, 'edit']">Edit</a>

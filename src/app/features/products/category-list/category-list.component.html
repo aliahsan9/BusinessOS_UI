@@ -37,9 +37,9 @@
       <tbody>
         @for (cat of items(); track cat.id) {
           <tr>
-            <td>{{ cat.name }}</td>
-            <td>{{ cat.description || '—' }}</td>
-            <td class="bos-table__actions">
+            <td data-label="Name">{{ cat.name }}</td>
+            <td data-label="Description">{{ cat.description || '—' }}</td>
+            <td data-label="" class="bos-table__actions">
               @if (canUpdate) {
                 <a [routerLink]="['/products/categories', cat.id, 'edit']">Edit</a>
               }

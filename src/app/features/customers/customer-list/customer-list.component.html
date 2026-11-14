@@ -48,17 +48,17 @@
       <tbody>
         @for (customer of items(); track customer.id) {
           <tr>
-            <td>
+            <td data-label="Name">
               <a [routerLink]="[routes.customers.base, customer.id]" class="link-primary">{{ customer.fullName }}</a>
             </td>
-            <td>{{ customer.email }}</td>
-            <td>{{ customer.phoneNumber }}</td>
-            <td>{{ customer.city }}</td>
-            <td>{{ customer.country }}</td>
-            <td>
+            <td data-label="Email">{{ customer.email }}</td>
+            <td data-label="Phone">{{ customer.phoneNumber }}</td>
+            <td data-label="City">{{ customer.city }}</td>
+            <td data-label="Country">{{ customer.country }}</td>
+            <td data-label="Status">
               <app-badge [label]="customer.isActive ? 'Active' : 'Inactive'" [variant]="customer.isActive ? 'success' : 'neutral'" />
             </td>
-            <td class="bos-table__actions">
+            <td data-label="" class="bos-table__actions">
               <a [routerLink]="[routes.customers.base, customer.id]">View</a>
               @if (canUpdate) {
                 <a [routerLink]="[routes.customers.base, customer.id, 'edit']">Edit</a>

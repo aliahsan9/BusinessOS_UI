@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { AppCurrencyPipe } from '../../../shared/pipes/app-currency.pipe';
 import { FormsModule } from '@angular/forms';
@@ -9,6 +9,7 @@ import { TokenService } from '../../../core/services/token.service';
 import { OrderSummaryDto } from '../../../core/models/order.model';
 import { ButtonVariant, OrderStatus } from '../../../core/enums';
 import { ROUTES } from '../../../core/constants/route.constants';
+import { followSearchQuery, readSearchQuery } from '../../../core/helpers/search-query';
 import { PermissionCodes } from '../../../core/constants/permission.constants';
 import { AppBreadcrumbComponent } from '../../../shared/components/app-breadcrumb/app-breadcrumb.component';
 import { AppPageHeaderComponent } from '../../../shared/components/app-page-header/app-page-header.component';
@@ -49,6 +50,8 @@ export class OrderListComponent implements OnInit {
   private readonly orderService = inject(OrderService);
   private readonly notification = inject(NotificationService);
   private readonly tokenService = inject(TokenService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly items = signal<OrderSummaryDto[]>([]);
   readonly page = signal(1);
@@ -76,7 +79,10 @@ export class OrderListComponent implements OnInit {
     : [];
 
   ngOnInit(): void {
+    const search = readSearchQuery(this.route);
+    if (search) this.searchTerm.set(search);
     this.load();
+    followSearchQuery(this.route, this.destroyRef, (term) => this.onSearch(term));
   }
 
   load(page = this.page()): void {

@@ -95,6 +95,13 @@
       />
     </div>
 
+    <p class="auth-legal">
+      By creating an account, you agree to the
+      <a routerLink="/terms">Terms of Service</a>,
+      <a routerLink="/privacy">Privacy Policy</a>, and
+      <a routerLink="/refunds">Refund Policy</a>.
+    </p>
+
     <button type="submit" class="mkt-btn mkt-btn--primary w-100" [disabled]="loading()">
       @if (loading()) {
         <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>

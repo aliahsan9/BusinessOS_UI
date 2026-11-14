@@ -57,31 +57,31 @@
       <tbody>
         @for (invoice of items(); track invoice.id) {
           <tr>
-            <td>
+            <td data-label="Invoice #">
               <a [routerLink]="[routes.invoices.base, invoice.id]" class="link-primary">
                 {{ invoice.invoiceNumber }}
               </a>
             </td>
-            <td>
+            <td data-label="Customer">
               <a [routerLink]="[routes.customers.base, invoice.customerId]" class="link-primary">
                 {{ invoice.customerName }}
               </a>
             </td>
-            <td>
+            <td data-label="Order">
               <a [routerLink]="[routes.orders.base, invoice.orderId]" class="link-primary">
                 {{ invoice.orderNumber }}
               </a>
             </td>
-            <td>{{ invoice.invoiceDate | date: 'mediumDate' }}</td>
-            <td>{{ invoice.dueDate | date: 'mediumDate' }}</td>
-            <td>
+            <td data-label="Date">{{ invoice.invoiceDate | date: 'mediumDate' }}</td>
+            <td data-label="Due">{{ invoice.dueDate | date: 'mediumDate' }}</td>
+            <td data-label="Status">
               <app-badge [label]="invoice.status" [variant]="statusVariant(invoice.status)" />
             </td>
-            <td>{{ invoice.grandTotal | appCurrency }}</td>
-            <td [class.text-danger]="invoice.outstandingAmount > 0">
+            <td data-label="Total">{{ invoice.grandTotal | appCurrency }}</td>
+            <td data-label="Outstanding" [class.text-danger]="invoice.outstandingAmount > 0">
               {{ invoice.outstandingAmount | appCurrency }}
             </td>
-            <td class="bos-table__actions">
+            <td data-label="" class="bos-table__actions">
               <a [routerLink]="[routes.invoices.base, invoice.id]">View</a>
             </td>
           </tr>

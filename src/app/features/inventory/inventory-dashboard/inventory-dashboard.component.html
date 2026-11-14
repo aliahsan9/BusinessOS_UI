@@ -67,15 +67,15 @@
           <tbody>
             @for (tx of recentMovements(); track tx.id) {
               <tr>
-                <td>{{ tx.createdAt | date: 'short' }}</td>
-                <td>{{ tx.productName }}</td>
-                <td>
+                <td data-label="Date">{{ tx.createdAt | date: 'short' }}</td>
+                <td data-label="Product">{{ tx.productName }}</td>
+                <td data-label="Type">
                   <app-badge [label]="tx.transactionType" [variant]="getTypeVariant(tx.transactionType)" />
                 </td>
-                <td [class.text-success]="tx.quantity > 0" [class.text-danger]="tx.quantity < 0">
+                <td data-label="Quantity" [class.text-success]="tx.quantity > 0" [class.text-danger]="tx.quantity < 0">
                   {{ tx.quantity > 0 ? '+' : '' }}{{ tx.quantity | number: '1.0-2' }}
                 </td>
-                <td>{{ tx.newStock | number: '1.0-2' }}</td>
+                <td data-label="New Stock">{{ tx.newStock | number: '1.0-2' }}</td>
               </tr>
             }
           </tbody>

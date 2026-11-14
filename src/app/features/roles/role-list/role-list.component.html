@@ -31,12 +31,12 @@
       <tbody>
         @for (role of items(); track role.id) {
           <tr>
-            <td><a [routerLink]="[routes.roles.base, role.id]" class="link-primary">{{ role.name }}</a></td>
-            <td>{{ role.description || '—' }}</td>
-            <td>{{ role.permissions.length }}</td>
-            <td><app-badge [label]="role.isActive ? 'Active' : 'Inactive'" [variant]="role.isActive ? 'success' : 'neutral'" /></td>
-            <td>{{ role.createdAt | date: 'mediumDate' }}</td>
-            <td class="bos-table__actions">
+            <td data-label="Name"><a [routerLink]="[routes.roles.base, role.id]" class="link-primary">{{ role.name }}</a></td>
+            <td data-label="Description">{{ role.description || '—' }}</td>
+            <td data-label="Permissions">{{ role.permissions.length }}</td>
+            <td data-label="Status"><app-badge [label]="role.isActive ? 'Active' : 'Inactive'" [variant]="role.isActive ? 'success' : 'neutral'" /></td>
+            <td data-label="Created">{{ role.createdAt | date: 'mediumDate' }}</td>
+            <td data-label="" class="bos-table__actions">
               <a [routerLink]="[routes.roles.base, role.id]">View</a>
               @if (canUpdate) {
                 <a [routerLink]="[routes.roles.base, role.id, 'edit']">Edit</a>

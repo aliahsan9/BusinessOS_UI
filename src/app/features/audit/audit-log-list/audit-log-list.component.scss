@@ -19,6 +19,7 @@
 
 code {
   font-size: var(--font-size-xs);
+  overflow-wrap: anywhere;
 }
 
 .audit-list {
@@ -85,5 +86,12 @@ code {
   .audit-list__diff-grid {
     grid-template-columns: 1fr;
     flex-direction: column;
+    min-width: 0;
+  }
+
+  .audit-list__summary > div,
+  .audit-list__diff-grid span {
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
 }

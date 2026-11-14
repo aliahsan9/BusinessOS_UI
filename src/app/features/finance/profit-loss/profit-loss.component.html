@@ -52,7 +52,7 @@
               <thead><tr><th>Period</th><th class="text-end">Amount</th><th class="text-end">Count</th></tr></thead>
               <tbody>
                 @for (row of report.periodBreakdown; track row.period) {
-                  <tr><td>{{ row.period }}</td><td class="text-end">{{ row.amount | appCurrency }}</td><td class="text-end">{{ row.count | number }}</td></tr>
+                  <tr><td data-label="Period">{{ row.period }}</td><td data-label="Amount" class="text-end">{{ row.amount | appCurrency }}</td><td data-label="Count" class="text-end">{{ row.count | number }}</td></tr>
                 }
               </tbody>
             </table>
@@ -70,7 +70,7 @@
               <thead><tr><th>Month</th><th class="text-end">Amount</th><th class="text-end">Count</th></tr></thead>
               <tbody>
                 @for (row of report.periodBreakdown; track row.period) {
-                  <tr><td>{{ row.period }}</td><td class="text-end">{{ row.amount | appCurrency }}</td><td class="text-end">{{ row.count | number }}</td></tr>
+                  <tr><td data-label="Month">{{ row.period }}</td><td data-label="Amount" class="text-end">{{ row.amount | appCurrency }}</td><td data-label="Count" class="text-end">{{ row.count | number }}</td></tr>
                 }
               </tbody>
             </table>
@@ -88,7 +88,7 @@
               <thead><tr><th>Year</th><th class="text-end">Amount</th><th class="text-end">Count</th></tr></thead>
               <tbody>
                 @for (row of report.periodBreakdown; track row.period) {
-                  <tr><td>{{ row.period }}</td><td class="text-end">{{ row.amount | appCurrency }}</td><td class="text-end">{{ row.count | number }}</td></tr>
+                  <tr><td data-label="Year">{{ row.period }}</td><td data-label="Amount" class="text-end">{{ row.amount | appCurrency }}</td><td data-label="Count" class="text-end">{{ row.count | number }}</td></tr>
                 }
               </tbody>
             </table>
@@ -110,7 +110,7 @@
               <thead><tr><th>Payment Method</th><th class="text-end">Amount</th><th class="text-end">Count</th></tr></thead>
               <tbody>
                 @for (row of report.byPaymentMethod; track row.category) {
-                  <tr><td>{{ row.category }}</td><td class="text-end">{{ row.amount | appCurrency }}</td><td class="text-end">{{ row.count | number }}</td></tr>
+                  <tr><td data-label="Payment Method">{{ row.category }}</td><td data-label="Amount" class="text-end">{{ row.amount | appCurrency }}</td><td data-label="Count" class="text-end">{{ row.count | number }}</td></tr>
                 }
               </tbody>
             </table>
@@ -132,7 +132,7 @@
               <thead><tr><th>Category</th><th class="text-end">Amount</th><th class="text-end">Count</th><th class="text-end">%</th></tr></thead>
               <tbody>
                 @for (row of report.byCategory; track row.categoryName) {
-                  <tr><td>{{ row.categoryName }}</td><td class="text-end">{{ row.amount | appCurrency }}</td><td class="text-end">{{ row.count | number }}</td><td class="text-end">{{ row.percentage | number: '1.1-1' }}%</td></tr>
+                  <tr><td data-label="Category">{{ row.categoryName }}</td><td data-label="Amount" class="text-end">{{ row.amount | appCurrency }}</td><td data-label="Count" class="text-end">{{ row.count | number }}</td><td data-label="%" class="text-end">{{ row.percentage | number: '1.1-1' }}%</td></tr>
                 }
               </tbody>
             </table>

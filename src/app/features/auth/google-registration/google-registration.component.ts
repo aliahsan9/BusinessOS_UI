@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, input, OnInit, output, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { GoogleRegistrationPending } from '../../../core/models/auth.model';
 import { ApiError } from '../../../core/models/api-error.model';
@@ -8,7 +9,7 @@ import { AppAlertComponent } from '../../../shared/components/app-alert/app-aler
 @Component({
   selector: 'app-google-registration',
   standalone: true,
-  imports: [ReactiveFormsModule, AppAlertComponent],
+  imports: [ReactiveFormsModule, RouterLink, AppAlertComponent],
   templateUrl: './google-registration.component.html',
   styleUrl: './google-registration.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

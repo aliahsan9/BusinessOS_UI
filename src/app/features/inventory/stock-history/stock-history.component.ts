@@ -1,8 +1,10 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { InventoryStateService } from '../../../state/inventory.state';
 import { ROUTES } from '../../../core/constants/route.constants';
+import { followSearchQuery, readSearchQuery } from '../../../core/helpers/search-query';
 import { StockTransactionType, ButtonVariant } from '../../../core/enums';
 import { AppBreadcrumbComponent } from '../../../shared/components/app-breadcrumb/app-breadcrumb.component';
 import { AppPageHeaderComponent } from '../../../shared/components/app-page-header/app-page-header.component';
@@ -37,6 +39,8 @@ import { AppAlertComponent } from '../../../shared/components/app-alert/app-aler
 })
 export class StockHistoryComponent implements OnInit {
   private readonly inventoryState = inject(InventoryStateService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly transactions = this.inventoryState.transactions;
   readonly page = this.inventoryState.historyPage;
@@ -60,7 +64,10 @@ export class StockHistoryComponent implements OnInit {
   ];
 
   ngOnInit(): void {
-    this.inventoryState.loadTransactions();
+    const search = readSearchQuery(this.route);
+    this.searchTerm.set(search);
+    this.inventoryState.loadTransactions(search ? { search, page: 1 } : { search: '' });
+    followSearchQuery(this.route, this.destroyRef, (term) => this.onSearch(term));
   }
 
   onSearch(term: string): void {

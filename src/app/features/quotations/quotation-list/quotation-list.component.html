@@ -64,23 +64,23 @@
       <tbody>
         @for (quotation of items(); track quotation.id) {
           <tr>
-            <td>
+            <td data-label="Number">
               <a [routerLink]="[routes.quotations.base, quotation.id]" class="link-primary">
                 {{ quotation.quotationNumber }}
               </a>
             </td>
-            <td>
+            <td data-label="Customer">
               <a [routerLink]="[routes.customers.base, quotation.customerId]" class="link-primary">
                 {{ quotation.customerName || '—' }}
               </a>
             </td>
-            <td>{{ quotation.quotationDate | date: 'mediumDate' }}</td>
-            <td>{{ quotation.expiryDate | date: 'mediumDate' }}</td>
-            <td>
+            <td data-label="Date">{{ quotation.quotationDate | date: 'mediumDate' }}</td>
+            <td data-label="Expiry">{{ quotation.expiryDate | date: 'mediumDate' }}</td>
+            <td data-label="Status">
               <app-badge [label]="quotation.status" [variant]="statusVariant(quotation.status)" />
             </td>
-            <td>{{ quotation.grandTotal | appCurrency }}</td>
-            <td class="bos-table__actions">
+            <td data-label="Total">{{ quotation.grandTotal | appCurrency }}</td>
+            <td data-label="" class="bos-table__actions">
               <a [routerLink]="[routes.quotations.base, quotation.id]">View</a>
               @if (canEditItem(quotation)) {
                 <a [routerLink]="[routes.quotations.base, quotation.id, 'edit']">Edit</a>

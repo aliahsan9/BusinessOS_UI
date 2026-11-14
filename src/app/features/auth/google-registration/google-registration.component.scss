@@ -11,3 +11,20 @@
     margin-bottom: 1rem;
   }
 }
+
+.auth-legal {
+  margin: 0 0 1rem;
+  color: var(--mkt-muted, var(--color-text-muted));
+  font-size: 0.82rem;
+  line-height: 1.5;
+
+  a {
+    color: var(--mkt-accent, var(--color-primary));
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}

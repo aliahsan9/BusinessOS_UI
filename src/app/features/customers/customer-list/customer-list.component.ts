@@ -1,11 +1,12 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CustomerService } from '../../../core/services/customer.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { TokenService } from '../../../core/services/token.service';
 import { CustomerSummaryDto } from '../../../core/models/customer.model';
 import { ROUTES } from '../../../core/constants/route.constants';
+import { followSearchQuery, readSearchQuery } from '../../../core/helpers/search-query';
 import { PermissionCodes } from '../../../core/constants/permission.constants';
 import { ButtonVariant } from '../../../core/enums';
 import { AppBreadcrumbComponent } from '../../../shared/components/app-breadcrumb/app-breadcrumb.component';
@@ -49,6 +50,8 @@ export class CustomerListComponent implements OnInit {
   private readonly notification = inject(NotificationService);
   private readonly tokenService = inject(TokenService);
   private readonly entitlements = inject(EntitlementService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly destroyRef = inject(DestroyRef);
   readonly creationBlocked = signal(false);
 
   readonly items = signal<CustomerSummaryDto[]>([]);
@@ -84,7 +87,10 @@ export class CustomerListComponent implements OnInit {
       next: () => this.creationBlocked.set(this.entitlements.isBlocked('customers')),
       error: () => undefined,
     });
+    const search = readSearchQuery(this.route);
+    if (search) this.searchTerm.set(search);
     this.load();
+    followSearchQuery(this.route, this.destroyRef, (term) => this.onSearch(term));
   }
 
   load(page = this.page()): void {

@@ -8,14 +8,31 @@ import { AboutComponent } from './features/about/about.component';
 import { ServicesComponent } from './features/services/services.component';
 import { ContactComponent } from './features/contact/contact.component';
 import { FaqComponent } from './features/faq/faq.component';
-import { PrivacyComponent } from './features/privacy/privacy.component';
+import { LegalPageComponent } from './features/legal/legal-page.component';
 
 export const routes: Routes = [
   { path: 'about', component: AboutComponent, title: 'About | BusinessOS' },
   { path: 'services', component: ServicesComponent, title: 'Services | BusinessOS' },
   { path: 'contact', component: ContactComponent, title: 'Contact | BusinessOS' },
   { path: 'faq', component: FaqComponent, title: 'FAQ | BusinessOS' },
-  { path: 'privacy', component: PrivacyComponent, title: 'Privacy | BusinessOS' },
+  {
+    path: 'privacy',
+    component: LegalPageComponent,
+    title: 'Privacy Policy | BusinessOS',
+    data: { document: 'privacy' },
+  },
+  {
+    path: 'terms',
+    component: LegalPageComponent,
+    title: 'Terms of Service | BusinessOS',
+    data: { document: 'terms' },
+  },
+  {
+    path: 'refunds',
+    component: LegalPageComponent,
+    title: 'Refund Policy | BusinessOS',
+    data: { document: 'refunds' },
+  },
   {
     path: 'insights',
     loadChildren: () => import('./features/insights/insights.routes').then((m) => m.INSIGHTS_ROUTES),

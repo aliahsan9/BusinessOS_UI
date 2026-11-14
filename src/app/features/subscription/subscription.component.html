@@ -43,11 +43,11 @@
         <tbody>
           @for (item of billingHistory(); track item.id) {
             <tr>
-              <td>{{ item.createdAt | date:'mediumDate' }}</td>
-              <td>{{ item.eventType }}</td>
-              <td>{{ item.planTier }}</td>
-              <td>{{ item.amount | appCurrency }}</td>
-              <td>{{ item.status }}</td>
+              <td data-label="Date">{{ item.createdAt | date:'mediumDate' }}</td>
+              <td data-label="Event">{{ item.eventType }}</td>
+              <td data-label="Plan">{{ item.planTier }}</td>
+              <td data-label="Amount">{{ item.amount | appCurrency }}</td>
+              <td data-label="Status">{{ item.status }}</td>
             </tr>
           }
         </tbody>

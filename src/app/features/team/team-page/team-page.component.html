@@ -90,7 +90,7 @@
           <tbody>
             @for (member of members(); track member.id) {
               <tr>
-                <td>
+                <td data-label="Member">
                   <div class="member-cell">
                     @if (member.avatarUrl) {
                       <img [src]="member.avatarUrl" [alt]="member.fullName" class="avatar avatar--img" />
@@ -100,20 +100,20 @@
                     <span class="member-name">{{ member.fullName }}</span>
                   </div>
                 </td>
-                <td>{{ member.email }}</td>
-                <td>
+                <td data-label="Email">{{ member.email }}</td>
+                <td data-label="Role">
                   <div class="role-badges role-badges--compact">
                     @for (role of member.roles; track role) {
                       <app-badge [label]="role" [variant]="roleBadgeVariant(role)" />
                     }
                   </div>
                 </td>
-                <td class="col-joined">{{ member.joinedAt | date: 'mediumDate' }}</td>
-                <td class="col-last-active">{{ member.lastActiveAt ? (member.lastActiveAt | date: 'short') : '—' }}</td>
-                <td>
+                <td data-label="Joined" class="col-joined">{{ member.joinedAt | date: 'mediumDate' }}</td>
+                <td data-label="Last Active" class="col-last-active">{{ member.lastActiveAt ? (member.lastActiveAt | date: 'short') : '—' }}</td>
+                <td data-label="Status">
                   <app-badge [label]="member.isActive ? 'Active' : 'Inactive'" [variant]="member.isActive ? 'success' : 'neutral'" />
                 </td>
-                <td class="bos-table__actions">
+                <td data-label="" class="bos-table__actions">
                   @if (canManage) {
                     <button type="button" class="btn-link" (click)="openEditModal(member)">Edit</button>
                     <button type="button" class="btn-link btn-link--danger" (click)="confirmRemove(member)">Remove</button>

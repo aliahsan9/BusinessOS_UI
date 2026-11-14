@@ -1,10 +1,11 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CategoryStateService } from '../../../state/category.state';
 import { CategoryService } from '../../../core/services/category.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { TokenService } from '../../../core/services/token.service';
 import { ROUTES } from '../../../core/constants/route.constants';
+import { followSearchQuery, readSearchQuery } from '../../../core/helpers/search-query';
 import { PermissionCodes } from '../../../core/constants/permission.constants';
 import { AppBreadcrumbComponent } from '../../../shared/components/app-breadcrumb/app-breadcrumb.component';
 import { AppPageHeaderComponent } from '../../../shared/components/app-page-header/app-page-header.component';
@@ -42,6 +43,8 @@ export class CategoryListComponent implements OnInit {
   private readonly categoryService = inject(CategoryService);
   private readonly notification = inject(NotificationService);
   private readonly tokenService = inject(TokenService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly items = this.categoryState.items;
   readonly page = this.categoryState.page;
@@ -65,7 +68,10 @@ export class CategoryListComponent implements OnInit {
     : [];
 
   ngOnInit(): void {
-    this.categoryState.load();
+    const search = readSearchQuery(this.route);
+    this.searchTerm.set(search);
+    this.categoryState.load(search ? { search, page: 1 } : { search: '' });
+    followSearchQuery(this.route, this.destroyRef, (term) => this.onSearch(term));
   }
 
   onSearch(term: string): void {

@@ -65,23 +65,23 @@
       <tbody>
         @for (payment of items(); track payment.id) {
           <tr>
-            <td>{{ payment.paymentDate | date: 'mediumDate' }}</td>
-            <td>
+            <td data-label="Date">{{ payment.paymentDate | date: 'mediumDate' }}</td>
+            <td data-label="Customer">
               <a [routerLink]="[routes.customers.base, payment.customerId]" class="link-primary">
                 {{ payment.customerName }}
               </a>
             </td>
-            <td>
+            <td data-label="Order">
               <a [routerLink]="[routes.orders.base, payment.orderId]" class="link-primary">
                 {{ payment.orderNumber }}
               </a>
             </td>
-            <td>
+            <td data-label="Method">
               <app-badge [label]="payment.paymentMethod" variant="info" />
             </td>
-            <td>{{ payment.referenceNo || '—' }}</td>
-            <td>{{ payment.amount | appCurrency }}</td>
-            <td class="bos-table__actions">
+            <td data-label="Reference">{{ payment.referenceNo || '—' }}</td>
+            <td data-label="Amount">{{ payment.amount | appCurrency }}</td>
+            <td data-label="" class="bos-table__actions">
               <a [routerLink]="[routes.payments.base, payment.id]">View</a>
               @if (canUpdate) {
                 <a [routerLink]="[routes.payments.base, payment.id, 'edit']">Edit</a>

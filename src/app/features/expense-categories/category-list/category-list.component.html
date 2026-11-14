@@ -44,14 +44,14 @@
       <tbody>
         @for (category of filteredItems(); track category.id) {
           <tr>
-            <td>{{ category.name }}</td>
-            <td>{{ category.description || '—' }}</td>
-            <td>{{ category.expenseCount }}</td>
-            <td>{{ category.totalAmount | appCurrency }}</td>
-            <td>
+            <td data-label="Name">{{ category.name }}</td>
+            <td data-label="Description">{{ category.description || '—' }}</td>
+            <td data-label="Expenses">{{ category.expenseCount }}</td>
+            <td data-label="Total Amount">{{ category.totalAmount | appCurrency }}</td>
+            <td data-label="Status">
               <app-badge [label]="category.isActive ? 'Active' : 'Inactive'" [variant]="category.isActive ? 'success' : 'neutral'" />
             </td>
-            <td class="bos-table__actions">
+            <td data-label="" class="bos-table__actions">
               @if (canUpdate) {
                 <a [routerLink]="[routes.expenseCategories.base, category.id, 'edit']">Edit</a>
               }

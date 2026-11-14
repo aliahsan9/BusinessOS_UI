@@ -79,22 +79,22 @@
         <tbody>
           @for (item of quotation()!.items; track item.id ?? item.productId) {
             <tr>
-              <td>
+              <td data-label="Product">
                 <a [routerLink]="[routes.products.base, item.productId]" class="link-primary">
                   {{ item.productName || '—' }}
                 </a>
               </td>
-              <td>{{ item.productSku || '—' }}</td>
-              <td>{{ item.quantity }}</td>
-              <td>{{ item.unitPrice | appCurrency }}</td>
-              <td>{{ item.total | appCurrency }}</td>
+              <td data-label="SKU">{{ item.productSku || '—' }}</td>
+              <td data-label="Qty">{{ item.quantity }}</td>
+              <td data-label="Unit Price">{{ item.unitPrice | appCurrency }}</td>
+              <td data-label="Total">{{ item.total | appCurrency }}</td>
             </tr>
           }
         </tbody>
         <tfoot>
           <tr>
             <td colspan="4" class="text-end"><strong>Grand Total</strong></td>
-            <td><strong>{{ quotation()!.grandTotal | appCurrency }}</strong></td>
+            <td data-label="Grand Total"><strong>{{ quotation()!.grandTotal | appCurrency }}</strong></td>
           </tr>
         </tfoot>
       </table>

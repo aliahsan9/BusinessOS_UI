@@ -58,23 +58,23 @@
       <tbody>
         @for (po of items(); track po.id) {
           <tr>
-            <td>
+            <td data-label="Reference">
               <a [routerLink]="[routes.purchaseOrders.base, po.id]" class="link-primary">
                 {{ po.referenceNumber || po.id.slice(0, 8) }}
               </a>
             </td>
-            <td>
+            <td data-label="Supplier">
               <a [routerLink]="[routes.suppliers.base, po.supplierId]" class="link-primary">
                 {{ po.supplierName || '—' }}
               </a>
             </td>
-            <td>{{ po.purchaseDate | date: 'mediumDate' }}</td>
-            <td>
+            <td data-label="Date">{{ po.purchaseDate | date: 'mediumDate' }}</td>
+            <td data-label="Status">
               <app-badge [label]="po.status" [variant]="statusVariant(po.status)" />
             </td>
-            <td>{{ po.items.length }}</td>
-            <td>{{ po.totalAmount | appCurrency }}</td>
-            <td class="bos-table__actions">
+            <td data-label="Items">{{ po.items.length }}</td>
+            <td data-label="Total">{{ po.totalAmount | appCurrency }}</td>
+            <td data-label="" class="bos-table__actions">
               <a [routerLink]="[routes.purchaseOrders.base, po.id]">View</a>
               @if (canEditItem(po)) {
                 <a [routerLink]="[routes.purchaseOrders.base, po.id, 'edit']">Edit</a>

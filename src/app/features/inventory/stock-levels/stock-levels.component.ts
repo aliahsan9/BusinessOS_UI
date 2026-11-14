@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { InventoryStateService } from '../../../state/inventory.state';
@@ -8,6 +8,7 @@ import { NotificationService } from '../../../core/services/notification.service
 import { TokenService } from '../../../core/services/token.service';
 import { InventorySummary } from '../../../core/models/inventory.model';
 import { ROUTES } from '../../../core/constants/route.constants';
+import { followSearchQuery, readSearchQuery } from '../../../core/helpers/search-query';
 import { PermissionCodes } from '../../../core/constants/permission.constants';
 import { StockTransactionType, ButtonVariant } from '../../../core/enums';
 import { AppBreadcrumbComponent } from '../../../shared/components/app-breadcrumb/app-breadcrumb.component';
@@ -47,6 +48,8 @@ export class StockLevelsComponent implements OnInit {
   private readonly inventoryService = inject(InventoryService);
   private readonly notification = inject(NotificationService);
   private readonly tokenService = inject(TokenService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly items = this.inventoryState.items;
   readonly page = this.inventoryState.page;
@@ -81,7 +84,10 @@ export class StockLevelsComponent implements OnInit {
   ];
 
   ngOnInit(): void {
-    this.inventoryState.loadInventory();
+    const search = readSearchQuery(this.route);
+    this.searchTerm.set(search);
+    this.inventoryState.loadInventory(search ? { search, page: 1 } : { search: '' });
+    followSearchQuery(this.route, this.destroyRef, (term) => this.onSearch(term));
   }
 
   onSearch(term: string): void {

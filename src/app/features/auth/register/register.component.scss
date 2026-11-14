@@ -105,6 +105,24 @@
   }
 }
 
+.auth-legal {
+  margin: 0 0 1rem;
+  text-align: center;
+  color: var(--mkt-muted);
+  font-size: 0.82rem;
+  line-height: 1.5;
+
+  a {
+    color: var(--mkt-accent);
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
 .password-hint {
   display: inline-flex;
   align-items: flex-start;

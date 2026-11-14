@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AppCurrencyPipe } from '../../../shared/pipes/app-currency.pipe';
 import { ExpenseCategoryService } from '../../../core/services/expense-category.service';
@@ -7,6 +7,7 @@ import { NotificationService } from '../../../core/services/notification.service
 import { TokenService } from '../../../core/services/token.service';
 import { ExpenseCategoryDto } from '../../../core/models/expense.model';
 import { ROUTES } from '../../../core/constants/route.constants';
+import { followSearchQuery, readSearchQuery } from '../../../core/helpers/search-query';
 import { PermissionCodes } from '../../../core/constants/permission.constants';
 import { ButtonVariant } from '../../../core/enums';
 import { AppBreadcrumbComponent } from '../../../shared/components/app-breadcrumb/app-breadcrumb.component';
@@ -45,6 +46,8 @@ export class CategoryListComponent implements OnInit {
   private readonly categoryService = inject(ExpenseCategoryService);
   private readonly notification = inject(NotificationService);
   private readonly tokenService = inject(TokenService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly items = signal<ExpenseCategoryDto[]>([]);
   readonly filteredItems = signal<ExpenseCategoryDto[]>([]);
@@ -65,7 +68,10 @@ export class CategoryListComponent implements OnInit {
     : [];
 
   ngOnInit(): void {
+    const search = readSearchQuery(this.route);
+    if (search) this.searchTerm.set(search);
     this.load();
+    followSearchQuery(this.route, this.destroyRef, (term) => this.onSearch(term));
   }
 
   load(): void {

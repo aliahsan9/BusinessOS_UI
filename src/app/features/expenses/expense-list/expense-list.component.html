@@ -47,13 +47,13 @@
       <tbody>
         @for (expense of items(); track expense.id) {
           <tr>
-            <td><a [routerLink]="[routes.expenses.base, expense.id]" class="link-primary">{{ expense.title }}</a></td>
-            <td>{{ expense.amount | appCurrency }}</td>
-            <td>{{ expense.expenseDate | date: 'mediumDate' }}</td>
-            <td>{{ expense.categoryName }}</td>
-            <td>{{ expense.vendor || '—' }}</td>
-            <td><app-badge [label]="expense.status" [variant]="statusVariant(expense.status)" /></td>
-            <td class="bos-table__actions">
+            <td data-label="Title"><a [routerLink]="[routes.expenses.base, expense.id]" class="link-primary">{{ expense.title }}</a></td>
+            <td data-label="Amount">{{ expense.amount | appCurrency }}</td>
+            <td data-label="Date">{{ expense.expenseDate | date: 'mediumDate' }}</td>
+            <td data-label="Category">{{ expense.categoryName }}</td>
+            <td data-label="Vendor">{{ expense.vendor || '—' }}</td>
+            <td data-label="Status"><app-badge [label]="expense.status" [variant]="statusVariant(expense.status)" /></td>
+            <td data-label="" class="bos-table__actions">
               <a [routerLink]="[routes.expenses.base, expense.id]">View</a>
               @if (canUpdate) { <a [routerLink]="[routes.expenses.base, expense.id, 'edit']">Edit</a> }
               @if (canDelete) { <button type="button" class="link-danger" (click)="confirmDelete(expense)">Delete</button> }

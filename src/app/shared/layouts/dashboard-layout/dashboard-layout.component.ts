@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, HostListener, OnDestroy, OnInit, effect, inject, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { RouterLink, RouterOutlet } from '@angular/router';
 import { AppSidebarComponent } from '../../components/app-sidebar/app-sidebar.component';
 import { AppNavbarComponent } from '../../components/app-navbar/app-navbar.component';
 import { AiAssistantWidgetComponent } from '../../components/ai-assistant/ai-assistant-widget/ai-assistant-widget.component';
@@ -9,7 +9,7 @@ import { TokenService } from '../../../core/services/token.service';
 @Component({
   selector: 'app-dashboard-layout',
   standalone: true,
-  imports: [RouterOutlet, AppSidebarComponent, AppNavbarComponent, AiAssistantWidgetComponent],
+  imports: [RouterLink, RouterOutlet, AppSidebarComponent, AppNavbarComponent, AiAssistantWidgetComponent],
   templateUrl: './dashboard-layout.component.html',
   styleUrl: './dashboard-layout.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

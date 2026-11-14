@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { AppCurrencyPipe } from '../../../shared/pipes/app-currency.pipe';
 import { FormsModule } from '@angular/forms';
@@ -7,6 +7,7 @@ import { InvoiceService } from '../../../core/services/invoice.service';
 import { InvoiceSummaryDto } from '../../../core/models/invoice.model';
 import { ButtonVariant, InvoiceStatus } from '../../../core/enums';
 import { ROUTES } from '../../../core/constants/route.constants';
+import { followSearchQuery, readSearchQuery } from '../../../core/helpers/search-query';
 import { AppBreadcrumbComponent } from '../../../shared/components/app-breadcrumb/app-breadcrumb.component';
 import { AppPageHeaderComponent } from '../../../shared/components/app-page-header/app-page-header.component';
 import { AppSearchBarComponent } from '../../../shared/components/app-search-bar/app-search-bar.component';
@@ -42,6 +43,8 @@ import { AppAlertComponent } from '../../../shared/components/app-alert/app-aler
 export class InvoiceListComponent implements OnInit {
   readonly ButtonVariant = ButtonVariant;
   private readonly invoiceService = inject(InvoiceService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly items = signal<InvoiceSummaryDto[]>([]);
   readonly page = signal(1);
@@ -60,7 +63,10 @@ export class InvoiceListComponent implements OnInit {
   readonly breadcrumbs = [{ label: 'Invoices', route: ROUTES.invoices.list }, { label: 'All Invoices' }];
 
   ngOnInit(): void {
+    const search = readSearchQuery(this.route);
+    if (search) this.searchTerm.set(search);
     this.load();
+    followSearchQuery(this.route, this.destroyRef, (term) => this.onSearch(term));
   }
 
   load(page = this.page()): void {

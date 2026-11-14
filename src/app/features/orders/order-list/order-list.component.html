@@ -56,21 +56,21 @@
       <tbody>
         @for (order of items(); track order.id) {
           <tr>
-            <td>
+            <td data-label="Order #">
               <a [routerLink]="[routes.orders.base, order.id]" class="link-primary">
                 {{ order.orderNumber }}
               </a>
             </td>
-            <td>
+            <td data-label="Customer">
               <div>{{ order.customerName }}</div>
               <small class="text-muted">{{ order.customerEmail }}</small>
             </td>
-            <td>{{ order.orderDate | date: 'mediumDate' }}</td>
-            <td>
+            <td data-label="Date">{{ order.orderDate | date: 'mediumDate' }}</td>
+            <td data-label="Status">
               <app-badge [label]="order.status" [variant]="statusVariant(order.status)" />
             </td>
-            <td>{{ order.grandTotal | appCurrency }}</td>
-            <td class="bos-table__actions">
+            <td data-label="Total">{{ order.grandTotal | appCurrency }}</td>
+            <td data-label="" class="bos-table__actions">
               <a [routerLink]="[routes.orders.base, order.id]">View</a>
               @if (canEditItem(order)) {
                 <a [routerLink]="[routes.orders.base, order.id, 'edit']">Edit</a>

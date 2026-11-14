@@ -21,6 +21,13 @@
       <label class="form-label" for="googleBusinessName">Business name</label>
       <input id="googleBusinessName" class="form-control auth-input" formControlName="businessName" autocomplete="organization" />
     </div>
+    <p class="auth-legal">
+      By creating a workspace, you agree to the
+      <a routerLink="/terms">Terms of Service</a>,
+      <a routerLink="/privacy">Privacy Policy</a>, and
+      <a routerLink="/refunds">Refund Policy</a>.
+    </p>
+
     <button type="submit" class="mkt-btn mkt-btn--primary w-100" [disabled]="submitting()">
       @if (submitting()) {
         <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>

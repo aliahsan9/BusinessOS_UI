@@ -25,12 +25,12 @@
           }
           @for (tx of transactions(); track tx.id) {
             <tr>
-              <td><code class="small">{{ tx.transactionId }}</code></td>
-              <td>{{ money(tx.amount, tx.currency) }}</td>
-              <td><span class="badge bg-secondary-subtle">{{ tx.status }}</span></td>
-              <td>{{ tx.provider }}</td>
-              <td>{{ tx.paymentMethod || '—' }}</td>
-              <td>{{ tx.completedAt ?? tx.createdAt | date:'medium' }}</td>
+              <td data-label="Transaction ID"><code class="small">{{ tx.transactionId }}</code></td>
+              <td data-label="Amount">{{ money(tx.amount, tx.currency) }}</td>
+              <td data-label="Status"><span class="badge bg-secondary-subtle">{{ tx.status }}</span></td>
+              <td data-label="Provider">{{ tx.provider }}</td>
+              <td data-label="Method">{{ tx.paymentMethod || '—' }}</td>
+              <td data-label="Date">{{ tx.completedAt ?? tx.createdAt | date:'medium' }}</td>
             </tr>
           }
         </tbody>

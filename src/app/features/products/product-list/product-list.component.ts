@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
 import { AppCurrencyPipe } from '../../../shared/pipes/app-currency.pipe';
 import { FormsModule } from '@angular/forms';
@@ -12,6 +12,7 @@ import { CategoryDto } from '../../../core/models/category.model';
 import { ProductDto } from '../../../core/models/product.model';
 import { ProductHelper } from '../../../core/helpers/product.helper';
 import { ExportHelper } from '../../../core/helpers/export.helper';
+import { followSearchQuery, readSearchQuery } from '../../../core/helpers/search-query';
 import { ROUTES } from '../../../core/constants/route.constants';
 import { PermissionCodes } from '../../../core/constants/permission.constants';
 import { AppBreadcrumbComponent } from '../../../shared/components/app-breadcrumb/app-breadcrumb.component';
@@ -60,6 +61,8 @@ export class ProductListComponent implements OnInit {
   private readonly notification = inject(NotificationService);
   private readonly tokenService = inject(TokenService);
   private readonly entitlements = inject(EntitlementService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly destroyRef = inject(DestroyRef);
   readonly creationBlocked = signal(false);
 
   readonly items = this.productState.items;
@@ -106,7 +109,10 @@ export class ProductListComponent implements OnInit {
       next: () => this.creationBlocked.set(this.entitlements.isBlocked('products')),
       error: () => undefined,
     });
-    this.productState.load();
+    const search = readSearchQuery(this.route);
+    this.searchTerm.set(search);
+    this.productState.load(search ? { search, page: 1 } : { search: '' });
+    followSearchQuery(this.route, this.destroyRef, (term) => this.onSearch(term));
     this.categoryService.getAllForSelect().subscribe({
       next: (cats) => this.categories.set(cats),
     });

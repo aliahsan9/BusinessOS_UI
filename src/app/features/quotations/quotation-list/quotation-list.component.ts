@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { AppCurrencyPipe } from '../../../shared/pipes/app-currency.pipe';
 import { FormsModule } from '@angular/forms';
@@ -11,6 +11,7 @@ import { QuotationSummaryDto } from '../../../core/models/quotation.model';
 import { CustomerSummaryDto } from '../../../core/models/customer.model';
 import { ButtonVariant, QuotationStatus } from '../../../core/enums';
 import { ROUTES } from '../../../core/constants/route.constants';
+import { followSearchQuery, readSearchQuery } from '../../../core/helpers/search-query';
 import { PermissionCodes } from '../../../core/constants/permission.constants';
 import { AppBreadcrumbComponent } from '../../../shared/components/app-breadcrumb/app-breadcrumb.component';
 import { AppPageHeaderComponent } from '../../../shared/components/app-page-header/app-page-header.component';
@@ -52,6 +53,8 @@ export class QuotationListComponent implements OnInit {
   private readonly customerService = inject(CustomerService);
   private readonly notification = inject(NotificationService);
   private readonly tokenService = inject(TokenService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly items = signal<QuotationSummaryDto[]>([]);
   readonly customers = signal<CustomerSummaryDto[]>([]);
@@ -81,7 +84,10 @@ export class QuotationListComponent implements OnInit {
     : [];
 
   ngOnInit(): void {
+    const search = readSearchQuery(this.route);
+    if (search) this.searchTerm.set(search);
     this.load();
+    followSearchQuery(this.route, this.destroyRef, (term) => this.onSearch(term));
     this.customerService.getAll({ pageSize: 100 }).subscribe({
       next: (result) => this.customers.set(result.items),
     });

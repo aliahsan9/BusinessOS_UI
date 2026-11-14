@@ -1,0 +1,90 @@
+<div class="mkt-page legal-page">
+  <app-home-navbar />
+
+  <section class="legal-hero">
+    <div class="container">
+      <span class="mkt-eyebrow">
+        <i class="bi bi-file-earmark-text"></i>
+        {{ doc().eyebrow }}
+      </span>
+      <h1>{{ doc().title }}</h1>
+      <p>{{ doc().lead }}</p>
+      <p class="legal-hero__updated">
+        <i class="bi bi-calendar3"></i>
+        Last updated {{ doc().updated }}
+      </p>
+    </div>
+  </section>
+
+  <section class="legal-body">
+    <div class="container">
+      <div class="row g-4 g-lg-5">
+        <div class="col-lg-8">
+          <div class="legal-sections">
+            @for (section of doc().sections; track section.id) {
+              <article class="legal-section" [id]="section.id">
+                <h2>{{ section.title }}</h2>
+                @for (block of section.blocks; track $index) {
+                  @if (block.type === 'p') {
+                    <p><app-legal-inline [parts]="parts(block.text)" /></p>
+                  } @else {
+                    <ul>
+                      @for (item of block.items; track item) {
+                        <li><app-legal-inline [parts]="parts(item)" /></li>
+                      }
+                    </ul>
+                  }
+                }
+              </article>
+            }
+          </div>
+        </div>
+
+        <div class="col-lg-4">
+          <aside class="legal-aside">
+            <div class="legal-aside__card">
+              <h2>
+                <i class="bi bi-bookmark-check"></i>
+                On this page
+              </h2>
+              <nav [attr.aria-label]="doc().label + ' sections'">
+                <ol>
+                  @for (section of doc().sections; track section.id) {
+                    <li>
+                      <a [href]="'#' + section.id">{{ section.title }}</a>
+                    </li>
+                  }
+                </ol>
+              </nav>
+            </div>
+
+            <div class="legal-aside__card">
+              <h2>
+                <i class="bi bi-files"></i>
+                Other policies
+              </h2>
+              <ul class="legal-aside__links">
+                @for (item of related(); track item.key) {
+                  <li>
+                    <a [routerLink]="item.path">{{ item.label }}</a>
+                  </li>
+                }
+              </ul>
+            </div>
+
+            <div class="legal-aside__card legal-aside__card--cta">
+              <span class="mkt-icon-box"><i class="bi bi-envelope"></i></span>
+              <h3>Questions about these terms?</h3>
+              <p>We will explain how an account, a charge, or a data request is handled.</p>
+              <a routerLink="/contact" class="mkt-btn mkt-btn--primary w-100">
+                Contact support
+              </a>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <app-footer />
+</div>

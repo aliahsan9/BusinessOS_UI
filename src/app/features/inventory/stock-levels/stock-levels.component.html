@@ -52,21 +52,21 @@
       <tbody>
         @for (item of items(); track item.id) {
           <tr>
-            <td>
+            <td data-label="Product">
               <a [routerLink]="[routes.products.base, item.productId]" class="link-primary">{{ item.productName }}</a>
             </td>
-            <td>{{ item.productSku }}</td>
-            <td>
+            <td data-label="SKU">{{ item.productSku }}</td>
+            <td data-label="Current Stock">
               <span [class.text-warning]="item.isLowStock" [class.text-danger]="item.isOutOfStock">
                 {{ item.currentStock | number: '1.0-2' }}
               </span>
             </td>
-            <td>{{ item.reorderLevel | number: '1.0-2' }}</td>
-            <td>{{ item.minimumStockLevel | number: '1.0-0' }} / {{ item.maximumStockLevel | number: '1.0-0' }}</td>
-            <td>
+            <td data-label="Reorder Level">{{ item.reorderLevel | number: '1.0-2' }}</td>
+            <td data-label="Min / Max">{{ item.minimumStockLevel | number: '1.0-0' }} / {{ item.maximumStockLevel | number: '1.0-0' }}</td>
+            <td data-label="Status">
               <app-badge [label]="getStockLabel(item)" [variant]="getStockVariant(item)" />
             </td>
-            <td class="bos-table__actions">
+            <td data-label="" class="bos-table__actions">
               @if (canAdjust) {
                 <button type="button" class="btn btn-link btn-sm p-0" (click)="openAdjustModal(item)">Adjust</button>
               }

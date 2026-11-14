@@ -105,7 +105,10 @@
       @if (confirmCancel()) {
         <div class="cancel-panel">
           <h3>Cancel subscription</h3>
-          <p>Choose whether access ends now or at the end of the paid period. Workspace data stays in place.</p>
+          <p>
+            Choose whether access ends now or at the end of the paid period. Workspace data stays in place.
+            Fees already charged follow the <a routerLink="/refunds">refund policy</a>.
+          </p>
           <div class="actions">
             <app-button label="Cancel at period end" [variant]="ButtonVariant.Outline" (clicked)="cancelSubscription(false)" />
             <app-button label="Cancel immediately" [variant]="ButtonVariant.Danger" (clicked)="cancelSubscription(true)" />

@@ -24,6 +24,7 @@ import { NotificationStateService } from '../../../state/notification.state';
 
 import { APP_ROUTE_PATHS } from '../../constants/nav.constants';
 import { ROUTES } from '../../../core/constants/route.constants';
+import { GlobalSearchHit, buildGlobalSearchResults } from '../../search/global-search';
 import { NotificationBellComponent } from '../notification-bell/notification-bell.component';
 
 @Component({
@@ -47,16 +48,48 @@ export class AppNavbarComponent implements OnInit, OnDestroy {
   readonly isMobileMenuOpen = signal(false);
   private readonly menuButton = viewChild<ElementRef<HTMLButtonElement>>('menuButton');
   private readonly profileMenu = viewChild<ElementRef<HTMLElement>>('profileMenu');
+  private readonly searchRoot = viewChild<ElementRef<HTMLElement>>('searchRoot');
+  private readonly searchInput = viewChild<ElementRef<HTMLInputElement>>('searchInput');
   private menuWasOpen = false;
   readonly searchQuery = signal('');
+  readonly searchOpen = signal(false);
+  readonly activeIndex = signal(0);
+  readonly searchShortcut = signal('Ctrl K');
   readonly isCompactNav = signal(false);
 
   readonly routes = APP_ROUTE_PATHS;
   readonly settingsRoutes = ROUTES;
 
   readonly searchPlaceholder = computed(() =>
-    this.isCompactNav() ? 'Search...' : 'Search products, orders, customers...',
+    this.isCompactNav() ? 'Search...' : 'Search pages, products, customers...',
   );
+
+  readonly searchHits = computed(() =>
+    buildGlobalSearchResults(this.searchQuery(), (permissions) => {
+      if (!permissions?.length) return true;
+      return this.tokenService.hasAnyPermission([...permissions]);
+    }),
+  );
+
+  readonly searchGroups = computed(() => {
+    const groups: { name: string; hits: (GlobalSearchHit & { index: number })[] }[] = [];
+    this.searchHits().forEach((hit, index) => {
+      let group = groups.find((item) => item.name === hit.group);
+      if (!group) {
+        group = { name: hit.group, hits: [] };
+        groups.push(group);
+      }
+      group.hits.push({ ...hit, index });
+    });
+    return groups;
+  });
+
+  readonly activeDescendant = computed(() => {
+    const hits = this.searchHits();
+    if (!this.searchOpen() || !hits.length) return null;
+    const index = Math.min(this.activeIndex(), hits.length - 1);
+    return `navbar-search-hit-${index}`;
+  });
 
   readonly resolvedAppearance = this.themeService.resolvedAppearance;
   readonly isDarkMode = computed(() => this.resolvedAppearance() === 'dark');
@@ -142,6 +175,9 @@ export class AppNavbarComponent implements OnInit, OnDestroy {
     document.addEventListener('pointerdown', this.dismissProfileOnOutsidePointer, true);
     this.notificationState.initialize();
     this.syncCompactNav();
+    if (typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.userAgent)) {
+      this.searchShortcut.set('⌘K');
+    }
   }
 
   ngOnDestroy(): void {
@@ -149,11 +185,19 @@ export class AppNavbarComponent implements OnInit, OnDestroy {
   }
 
   private readonly dismissProfileOnOutsidePointer = (event: Event): void => {
-    if (!this.showProfile()) return;
-    const root = this.profileMenu()?.nativeElement;
     const target = event.target;
-    if (root && target instanceof Node && root.contains(target)) return;
-    this.showProfile.set(false);
+    if (this.showProfile()) {
+      const root = this.profileMenu()?.nativeElement;
+      if (!(root && target instanceof Node && root.contains(target))) {
+        this.showProfile.set(false);
+      }
+    }
+    if (this.searchOpen()) {
+      const root = this.searchRoot()?.nativeElement;
+      if (!(root && target instanceof Node && root.contains(target))) {
+        this.searchOpen.set(false);
+      }
+    }
   };
 
   @HostListener('window:resize')
@@ -167,6 +211,11 @@ export class AppNavbarComponent implements OnInit, OnDestroy {
 
   @HostListener('document:keydown', ['$event'])
   onGlobalKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Escape' && this.searchOpen()) {
+      this.closeSearch();
+      return;
+    }
+
     if (event.key === 'Escape' && this.showProfile()) {
       this.showProfile.set(false);
       return;
@@ -174,32 +223,96 @@ export class AppNavbarComponent implements OnInit, OnDestroy {
 
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
       event.preventDefault();
-      const input = document.querySelector<HTMLInputElement>('.app-navbar__search input');
-      input?.focus();
+      this.openSearch();
     }
+  }
+
+  onSearchFocus(): void {
+    this.searchOpen.set(true);
+    this.showProfile.set(false);
+    this.notificationState.closePanel();
+  }
+
+  onSearchBlur(): void {
+    setTimeout(() => {
+      const root = this.searchRoot()?.nativeElement;
+      const active = document.activeElement;
+      if (root && active instanceof Node && root.contains(active)) return;
+      this.searchOpen.set(false);
+    }, 0);
   }
 
   onSearchInput(event: Event): void {
     this.searchQuery.set((event.target as HTMLInputElement).value);
+    this.activeIndex.set(0);
+    this.searchOpen.set(true);
   }
 
-  submitSearch(): void {
-    const q = this.searchQuery().trim().toLowerCase();
-    if (!q) return;
-
-    if (q.includes('order')) {
-      void this.router.navigateByUrl(ROUTES.orders.list);
-    } else if (q.includes('customer')) {
-      void this.router.navigateByUrl(ROUTES.customers.list);
-    } else if (q.includes('product') || q.includes('inventory') || q.includes('stock')) {
-      void this.router.navigateByUrl(ROUTES.products.list);
-    } else if (q.includes('invoice')) {
-      void this.router.navigateByUrl(ROUTES.invoices.list);
-    } else if (q.includes('report')) {
-      void this.router.navigateByUrl(ROUTES.reports);
-    } else {
-      void this.router.navigateByUrl(ROUTES.products.list);
+  onSearchKeydown(event: KeyboardEvent): void {
+    const hits = this.searchHits();
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      this.searchOpen.set(true);
+      if (!hits.length) return;
+      this.activeIndex.update((index) => (index + 1) % hits.length);
+      this.scrollActiveHitIntoView();
+      return;
     }
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      this.searchOpen.set(true);
+      if (!hits.length) return;
+      this.activeIndex.update((index) => (index - 1 + hits.length) % hits.length);
+      this.scrollActiveHitIntoView();
+      return;
+    }
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      event.stopPropagation();
+      const hit = hits[this.activeIndex()] ?? hits[0];
+      if (hit) this.activateSearchHit(hit);
+      return;
+    }
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
+      this.closeSearch();
+    }
+  }
+
+  clearSearch(): void {
+    this.searchQuery.set('');
+    this.activeIndex.set(0);
+    this.searchOpen.set(true);
+    this.searchInput()?.nativeElement.focus();
+  }
+
+  activateSearchHit(hit: GlobalSearchHit): void {
+    const extras = hit.kind === 'records' && hit.query ? { queryParams: { search: hit.query } } : undefined;
+    void this.router.navigate([hit.route], extras);
+    this.searchQuery.set('');
+    this.activeIndex.set(0);
+    this.closeSearch();
+    this.searchInput()?.nativeElement.blur();
+  }
+
+  private openSearch(): void {
+    this.searchOpen.set(true);
+    this.showProfile.set(false);
+    this.notificationState.closePanel();
+    const input = this.searchInput()?.nativeElement;
+    input?.focus();
+    input?.select();
+  }
+
+  private closeSearch(): void {
+    this.searchOpen.set(false);
+  }
+
+  private scrollActiveHitIntoView(): void {
+    const id = this.activeDescendant();
+    if (!id) return;
+    queueMicrotask(() => document.getElementById(id)?.scrollIntoView({ block: 'nearest' }));
   }
 
   openMobileMenu(): void {

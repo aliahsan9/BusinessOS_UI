@@ -54,13 +54,13 @@
           <tbody>
             @for (row of reportRows(); track row.productId) {
               <tr>
-                <td>{{ row.productName }}</td>
-                <td>{{ row.sku }}</td>
-                <td>{{ row.currentStock | number: '1.0-2' }}</td>
-                <td>{{ row.costPrice | appCurrency }}</td>
-                <td>{{ row.salePrice | appCurrency }}</td>
-                <td>{{ row.stockValue | appCurrency }}</td>
-                <td>{{ row.profitPotential | appCurrency }}</td>
+                <td data-label="Product">{{ row.productName }}</td>
+                <td data-label="SKU">{{ row.sku }}</td>
+                <td data-label="Stock">{{ row.currentStock | number: '1.0-2' }}</td>
+                <td data-label="Cost">{{ row.costPrice | appCurrency }}</td>
+                <td data-label="Sale Price">{{ row.salePrice | appCurrency }}</td>
+                <td data-label="Stock Value">{{ row.stockValue | appCurrency }}</td>
+                <td data-label="Profit Potential">{{ row.profitPotential | appCurrency }}</td>
               </tr>
             }
           </tbody>

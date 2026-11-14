@@ -1,11 +1,12 @@
 import { ButtonVariant } from '../../../core/enums';
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { SupplierService } from '../../../core/services/supplier.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { TokenService } from '../../../core/services/token.service';
 import { SupplierDto } from '../../../core/models/supplier.model';
 import { ROUTES } from '../../../core/constants/route.constants';
+import { followSearchQuery, readSearchQuery } from '../../../core/helpers/search-query';
 import { PermissionCodes } from '../../../core/constants/permission.constants';
 import { AppBreadcrumbComponent } from '../../../shared/components/app-breadcrumb/app-breadcrumb.component';
 import { AppPageHeaderComponent } from '../../../shared/components/app-page-header/app-page-header.component';
@@ -41,6 +42,8 @@ export class SupplierListComponent implements OnInit {
   private readonly supplierService = inject(SupplierService);
   private readonly notification = inject(NotificationService);
   private readonly tokenService = inject(TokenService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly items = signal<SupplierDto[]>([]);
   readonly page = signal(1);
@@ -65,7 +68,10 @@ export class SupplierListComponent implements OnInit {
     : [];
 
   ngOnInit(): void {
+    const search = readSearchQuery(this.route);
+    if (search) this.searchTerm.set(search);
     this.load();
+    followSearchQuery(this.route, this.destroyRef, (term) => this.onSearch(term));
   }
 
   load(page = this.page()): void {

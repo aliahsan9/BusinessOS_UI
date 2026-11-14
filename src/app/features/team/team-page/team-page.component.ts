@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TeamService } from '../../../core/services/team.service';
@@ -32,6 +33,7 @@ import { PlanCapacityComponent } from '../../../shared/components/plan-capacity/
 import { EntitlementService } from '../../../core/services/entitlement.service';
 import { isPlanLimitError } from '../../../core/models/api-error.model';
 import { ROUTES } from '../../../core/constants/route.constants';
+import { followSearchQuery, readSearchQuery } from '../../../core/helpers/search-query';
 
 @Component({
   selector: 'app-team-page',
@@ -64,6 +66,8 @@ export class TeamPageComponent implements OnInit {
   private readonly notification = inject(NotificationService);
   private readonly tokenService = inject(TokenService);
   private readonly entitlements = inject(EntitlementService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly destroyRef = inject(DestroyRef);
   readonly creationBlocked = signal(false);
 
   readonly dashboard = signal<TeamDashboardDto | null>(null);
@@ -109,8 +113,11 @@ export class TeamPageComponent implements OnInit {
       next: () => this.creationBlocked.set(this.entitlements.isBlocked('users')),
       error: () => undefined,
     });
+    const search = readSearchQuery(this.route);
+    if (search) this.searchTerm.set(search);
     this.loadDashboard();
     this.loadMembers();
+    followSearchQuery(this.route, this.destroyRef, (term) => this.onSearch(term));
     this.loadInvitations();
     if (this.canInvite || this.canManage) {
       this.roleService.getAll().subscribe({

@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { AppCurrencyPipe } from '../../../shared/pipes/app-currency.pipe';
@@ -9,6 +9,7 @@ import { NotificationService } from '../../../core/services/notification.service
 import { TokenService } from '../../../core/services/token.service';
 import { ExpenseCategoryDto, ExpenseSummaryDto } from '../../../core/models/expense.model';
 import { ROUTES } from '../../../core/constants/route.constants';
+import { followSearchQuery, readSearchQuery } from '../../../core/helpers/search-query';
 import { PermissionCodes } from '../../../core/constants/permission.constants';
 import { ButtonVariant, ExpenseStatus } from '../../../core/enums';
 import { AppBreadcrumbComponent } from '../../../shared/components/app-breadcrumb/app-breadcrumb.component';
@@ -52,6 +53,8 @@ export class ExpenseListComponent implements OnInit {
   private readonly categoryService = inject(ExpenseCategoryService);
   private readonly notification = inject(NotificationService);
   private readonly tokenService = inject(TokenService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly items = signal<ExpenseSummaryDto[]>([]);
   readonly categories = signal<ExpenseCategoryDto[]>([]);
@@ -80,7 +83,10 @@ export class ExpenseListComponent implements OnInit {
 
   ngOnInit(): void {
     this.categoryService.getAll().subscribe({ next: (c) => this.categories.set(c) });
+    const search = readSearchQuery(this.route);
+    if (search) this.searchTerm.set(search);
     this.load();
+    followSearchQuery(this.route, this.destroyRef, (term) => this.onSearch(term));
   }
 
   load(page = this.page()): void {
