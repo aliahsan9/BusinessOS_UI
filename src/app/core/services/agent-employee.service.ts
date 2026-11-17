@@ -50,7 +50,7 @@ export class AgentEmployeeService extends BaseApiService {
 
   /** Returns the actual tool catalog registered by the backend. */
   listToolCatalog(): Observable<AgentToolCatalogItem[]> {
-    return this.get<AgentToolCatalogItem[]>(`${API_ENDPOINTS.agents.employees.replace(/\/employees$/, '')}/tools`);
+    return this.get<AgentToolCatalogItem[]>(API_ENDPOINTS.agents.tools);
   }
 
   /** Activates or deactivates an employee for the current tenant (Owner/Admin API). */
