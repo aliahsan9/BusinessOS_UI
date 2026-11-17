@@ -19,6 +19,7 @@ The inbox currently uses list and decision operations. Detail retrieval is expos
 - Displays title, action type, summary, created/expiry/decision timestamps, and the JSON payload for inspection.
 - Supports optional reviewer comments (maximum 500 characters).
 - Supports approve, reject, and one-time execution of approved customer follow-up emails.
+- Provides a tenant-level toggle for Emma's `SendCustomerFollowUp` capability while preserving the employee's other allowed tools; only Owner/Admin can change it.
 - Shows execution states: Executing, Executed, and ExecutionFailed.
 - Warns reviewers that SMTP delivery attempts cannot be automatically retried.
 - Handles missing backend endpoint, authorization failures, not-found and conflict responses.
@@ -26,7 +27,7 @@ The inbox currently uses list and decision operations. Detail retrieval is expos
 
 ## Safety boundary
 
-The user must approve first, then explicitly click Execute. The backend revalidates the customer within the current tenant and claims the proposal once before sending a plain-text email. SMTP attempts are not automatically retried; failed or interrupted delivery requires manual reconciliation. No order, invoice, inventory, or customer data is mutated.
+The tenant Owner/Admin must first enable Emma's `SendCustomerFollowUp` capability. The user must then approve a proposal and explicitly click Execute. The backend revalidates the customer within the current tenant and claims the proposal once before sending a plain-text email. SMTP attempts are not automatically retried; failed or interrupted delivery requires manual reconciliation. No order, invoice, inventory, or customer data is mutated.
 
 ## Verification
 
