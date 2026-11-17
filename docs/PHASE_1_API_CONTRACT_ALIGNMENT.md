@@ -39,6 +39,16 @@ The Navla overview screen now composes two existing, authenticated backend reads
 
 The screen displays only values present in those responses: employee count, active employee count, recent workflow count, and workflow details. It intentionally no longer calls the unsupported `/nalva/overview` endpoint or displays token, cost, task-queue, or approval figures that are not supplied by these contracts. If either read fails, the overview reports an error rather than substituting zeroes.
 
+
+## Marketplace and employee detail integration
+
+The marketplace and employee detail screens now use the supported employee catalog API rather than the unimplemented `/nalva/marketplace`, `/nalva/agents`, and `/nalva/agents/{key}` routes.
+
+- Marketplace reads `GET /api/v1/agents/employees` and filters locally by specialty.
+- The "My agents" route explicitly warns that tenant-specific activation is not implemented; it does not present the shared catalog as tenant-activated agents.
+- Employee detail resolves the selected employee from the catalog and filters the latest 100 persisted execution workflow summaries by `agentKey`.
+- Unsupported activation/deactivation, autonomy configuration, direct run, memory, cost, health and detailed execution metrics have been removed from these screens. No unsupported write operation is presented as working.
+
 ## Contract rules
 
 1. Frontend URLs include the configured API base URL; backend business routes are grouped under `/api/v1`.
