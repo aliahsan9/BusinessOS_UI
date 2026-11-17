@@ -8,8 +8,31 @@
 
 <div class="nalva-panel mb-3" role="note">
   <strong>Human approval required.</strong>
-  Approval records your decision only. It does not send email or WhatsApp messages, create orders, or modify customer or inventory data.
+  Approval records consent. A separate Execute action sends the approved plain-text customer follow-up email. It does not create orders or modify customer or inventory data. Delivery attempts are one-time; failed or interrupted attempts require manual review.
 </div>
+
+<section class="nalva-panel mb-3" aria-labelledby="follow-up-capability-title">
+  <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+    <div>
+      <h3 id="follow-up-capability-title">Emma’s customer follow-up capability</h3>
+      <p class="muted mb-1">This tenant-level permission controls whether Emma may propose customer follow-up emails.</p>
+      <p class="muted small mb-0">It is separate from approval. Every email still requires a manager’s approval and a separate Execute action.</p>
+    </div>
+    <label class="d-flex align-items-center gap-2">
+      <input type="checkbox"
+        [checked]="followUpCapabilityEnabled()"
+        [disabled]="capabilityLoading() || capabilitySaving() || !capabilityAvailable()"
+        (change)="setFollowUpCapability($any($event.target).checked)" />
+      <span>{{ capabilitySaving() ? 'Saving…' : followUpCapabilityEnabled() ? 'Enabled' : 'Disabled' }}</span>
+    </label>
+  </div>
+  @if (capabilityLoading()) {
+    <p class="muted small mt-2 mb-0">Loading employee capability…</p>
+  }
+  @if (capabilityError()) {
+    <p class="muted small mt-2 mb-0" role="status">{{ capabilityError() }}</p>
+  }
+</section>
 
 <div class="d-flex flex-wrap align-items-center gap-2 mb-3" role="group" aria-label="Proposal filter">
   <button class="btn" type="button" [class.primary]="filter() === 'pending'"
@@ -54,6 +77,17 @@
 
         @if (row.decisionComment) {
           <p class="muted mt-2 mb-0">Reviewer comment: {{ row.decisionComment }}</p>
+        }
+
+        @if (status(row.status) === 'Approved') {
+          <div class="actions mt-3">
+            <button class="btn primary" type="button"
+              [disabled]="savingId() !== null"
+              (click)="execute(row)">
+              {{ savingId() === row.id ? 'Sending…' : 'Execute approved follow-up' }}
+            </button>
+          </div>
+          <p class="muted small mt-2 mb-0">This sends an email to the customer. The action cannot be automatically retried.</p>
         }
 
         @if (isPending(row)) {
