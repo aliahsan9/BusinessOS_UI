@@ -12,6 +12,17 @@
       <i class="bi" [class.bi-x-lg]="menuOpen()" [class.bi-list]="!menuOpen()" aria-hidden="true"></i>
     </button>
 
+    @if (companies().length > 1) {
+      <label class="app-navbar__company">
+        <span class="visually-hidden">Company</span>
+        <select [value]="currentCompanyId()" (change)="switchCompany($event)" aria-label="Switch company">
+          @for (company of companies(); track company.companyId) {
+            <option [value]="company.companyId">{{ company.companyName }}</option>
+          }
+        </select>
+      </label>
+    }
+
     <div class="app-navbar__search-wrap" #searchRoot [class.is-open]="searchOpen()">
       <label class="app-navbar__search">
         <i class="bi bi-search" aria-hidden="true"></i>
@@ -84,10 +95,10 @@
   <div class="app-navbar__actions">
     <a
       class="btn app-navbar__icon-btn"
-      [routerLink]="settingsRoutes.ai.workspace"
+      [routerLink]="settingsRoutes.nalva.command"
       routerLinkActive="active"
-      aria-label="Navla AI"
-      title="Navla AI"
+      aria-label="AI Command Center"
+      title="AI Command Center"
       (click)="onAiWorkspaceClick()"
     >
       <i class="bi bi-stars"></i>

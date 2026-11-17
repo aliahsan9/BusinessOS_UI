@@ -1,0 +1,112 @@
+<app-breadcrumb [items]="[{ label: 'Projects' }, { label: title() }]" />
+<app-page-header [title]="title()" subtitle="Project work, time, and client access for this company." />
+@if (error()) { <app-alert variant="danger" [message]="error()!" [dismissible]="false" /> }
+@if (notice()) { <app-alert variant="info" [message]="notice()!" [dismissible]="false" /> }
+@if (loading()) {
+  <div class="workspace-stack">@for (row of [1, 2, 3]; track row) { <app-skeleton height="2.5rem" /> }</div>
+} @else {
+  @switch (screen()) {
+    @case ('projects') {
+      <form class="workspace-form" (ngSubmit)="saveProject()">
+        <input class="form-control" placeholder="Project name" required [(ngModel)]="project.name" name="name" />
+        <input class="form-control" placeholder="Customer id" [(ngModel)]="project.customerId" name="customer" />
+        <input class="form-control" type="number" placeholder="Budget" [(ngModel)]="project.budget" name="budget" />
+        <input class="form-control" type="date" [(ngModel)]="project.deadline" name="deadline" />
+        <select class="form-select" [(ngModel)]="project.workflow" name="workflow"><option>General</option><option>Software</option></select>
+        <button class="btn btn-primary" type="submit" [disabled]="saving()">Create project</button>
+      </form>
+      @if (projects().length === 0) { <app-empty-state icon="bi-kanban" title="No projects" description="Create a project or convert a won deal." /> }
+      <div class="bos-table-wrapper">
+        <table class="bos-table bos-table--compact">
+          <thead><tr><th>Name</th><th>Status</th><th>Workflow</th><th>Budget</th><th></th></tr></thead>
+          <tbody>
+            @for (row of projects(); track row.id) {
+              <tr>
+                <td>{{ row.name }}</td><td>{{ row.status }}</td><td>{{ row.workflow }}</td><td>{{ row.budget | appCurrency }}</td>
+                <td><button type="button" class="btn btn-link" (click)="selectProject(row.id)">Open</button></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      @if (progress(); as report) {
+        <div class="metric-grid">
+          <article><span>Progress</span><strong>{{ report.progressPercent }}%</strong></article>
+          <article><span>Completed</span><strong>{{ report.completedTasks }} / {{ report.totalTasks }}</strong></article>
+          <article><span>Overdue</span><strong>{{ report.overdueTasks }}</strong></article>
+          <article><span>Hours</span><strong>{{ report.hoursLogged }}</strong></article>
+          <article><span>Billable</span><strong>{{ report.billableAmount | appCurrency }}</strong></article>
+          <article><span>Remaining budget</span><strong>{{ report.remainingBudget | appCurrency }}</strong></article>
+        </div>
+        <form class="workspace-form" (ngSubmit)="saveMilestone()">
+          <input class="form-control" placeholder="Milestone" required [(ngModel)]="milestone.name" name="milestone" />
+          <input class="form-control" type="date" [(ngModel)]="milestone.dueDate" name="due" />
+          <label class="form-check"><input type="checkbox" [(ngModel)]="milestone.isClientVisible" name="visible" /> Visible to client</label>
+          <button class="btn btn-outline-primary" type="submit" [disabled]="saving()">Add milestone</button>
+        </form>
+        @for (row of milestones(); track row.id) { <article class="workspace-card">{{ row.name }} · {{ row.status }} · {{ row.dueDate }}</article> }
+        <form class="workspace-form" (ngSubmit)="invite()">
+          <input class="form-control" type="email" placeholder="Client email" required [(ngModel)]="portalEmail" name="email" />
+          <button class="btn btn-outline-primary" type="submit" [disabled]="saving()">Create portal link</button>
+        </form>
+        <form class="workspace-form" (ngSubmit)="bill()">
+          <input class="form-control" type="date" [(ngModel)]="billDue" name="billDue" />
+          <button class="btn btn-primary" type="submit" [disabled]="saving()">Invoice approved billable time</button>
+        </form>
+      }
+    }
+    @case ('tasks') {
+      <select class="form-select workspace-form" [ngModel]="selectedId()" (ngModelChange)="selectProject($event)" name="project">
+        @for (row of projects(); track row.id) { <option [value]="row.id">{{ row.name }}</option> }
+      </select>
+      <form class="workspace-form" (ngSubmit)="saveTask()">
+        <input class="form-control" placeholder="Task" required [(ngModel)]="task.title" name="title" />
+        <select class="form-select" [(ngModel)]="task.stage" name="stage">
+          @for (stage of stages; track stage) { <option [value]="stage">{{ stage }}</option> }
+        </select>
+        <select class="form-select" [(ngModel)]="task.taskKind" name="kind"><option>Task</option><option>Bug</option><option>Feature</option></select>
+        <button class="btn btn-primary" type="submit" [disabled]="saving()">Add task</button>
+      </form>
+      <div class="kanban">
+        @for (stage of stages; track stage) {
+          <section class="kanban__col">
+            <h3>{{ stage }}</h3>
+            @for (task of tasksIn(stage); track task.id) {
+              <article class="kanban__card">
+                <strong>{{ task.title }}</strong>
+                <select class="form-select form-select-sm" [ngModel]="task.stage" (ngModelChange)="moveTask(task, $event)" [name]="'stage' + task.id">
+                  @for (option of stages; track option) { <option [value]="option">{{ option }}</option> }
+                </select>
+              </article>
+            }
+          </section>
+        }
+      </div>
+    }
+    @case ('time') {
+      <div class="workspace-form">
+        <button class="btn btn-primary" type="button" [disabled]="saving()" (click)="start()">Start timer</button>
+        <button class="btn btn-outline-primary" type="button" [disabled]="saving()" (click)="stop()">Stop timer</button>
+      </div>
+      <form class="workspace-form" (ngSubmit)="saveTime()">
+        <input class="form-control" type="number" min="0.01" [(ngModel)]="entry.hours" name="hours" />
+        <label class="form-check"><input type="checkbox" [(ngModel)]="entry.isBillable" name="billable" /> Billable</label>
+        <input class="form-control" placeholder="Notes" [(ngModel)]="entry.notes" name="notes" />
+        <button class="btn btn-primary" type="submit" [disabled]="saving()">Add time</button>
+      </form>
+      <div class="bos-table-wrapper">
+        <table class="bos-table bos-table--compact">
+          <thead><tr><th>User</th><th>Hours</th><th>Billable</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            @for (row of time(); track row.id) {
+              <tr>
+                <td>{{ row.userId }}</td><td>{{ row.hours }}</td><td>{{ row.isBillable ? 'Yes' : 'No' }}</td><td>{{ row.status }}</td>
+                <td>@if (row.status !== 'Approved') { <button type="button" class="btn btn-link" (click)="approve(row)">Approve</button> }</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+}

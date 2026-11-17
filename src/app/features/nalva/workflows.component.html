@@ -1,0 +1,27 @@
+@if (notice()) { <p class="nalva-panel">{{ notice() }}</p> }
+<section class="nalva-cards">
+  @for (row of workflows(); track row.id) {
+    <article class="nalva-card">
+      <h3>{{ row.name }}</h3>
+      <p>{{ row.description }}</p>
+      <p class="muted">{{ row.triggerKind }} · {{ row.isActive ? 'Active' : 'Inactive' }} · {{ row.steps.length }} steps</p>
+      <ol>@for (step of row.steps; track step.key) { <li>{{ step.agentKey }}: {{ step.objective }}</li> }</ol>
+      <div class="actions">
+        <button class="btn" type="button" (click)="toggle(row)">{{ row.isActive ? 'Deactivate' : 'Activate' }}</button>
+        <button class="btn primary" type="button" (click)="run(row)" [disabled]="!row.isActive">Run</button>
+      </div>
+    </article>
+  }
+</section>
+<form class="nalva-panel stack" style="margin-top: 16px" (submit)="$event.preventDefault(); create()">
+  <h3>New workflow</h3>
+  <label>Name <input [value]="name()" (input)="name.set($any($event.target).value)" /></label>
+  <label>Agent <input [value]="agentKey()" (input)="agentKey.set($any($event.target).value)" /></label>
+  <label>Tool <input [value]="tool()" (input)="tool.set($any($event.target).value)" /></label>
+  <label>Objective <input [value]="objective()" (input)="objective.set($any($event.target).value)" /></label>
+  <button class="btn primary" type="submit">Save workflow</button>
+</form>
+<section class="nalva-panel" style="margin-top: 16px">
+  <h3>Runs</h3>
+  @for (run of runs(); track run.id) { <p>{{ run.workflowName }} · {{ run.status }} · {{ run.summary }}</p> }
+</section>

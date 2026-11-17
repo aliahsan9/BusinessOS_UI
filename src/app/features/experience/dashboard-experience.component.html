@@ -1,0 +1,127 @@
+<section class="ux" aria-label="Business overview">
+  <div class="ux__bar">
+    <p>Widgets follow your role. Rearrange the ones you are allowed to see.</p>
+    <div class="ux__actions">
+      <button type="button" class="ux__btn" (click)="editing.set(!editing())" [attr.aria-expanded]="editing()">
+        {{ editing() ? 'Close layout' : 'Customize' }}
+      </button>
+      @if (editing()) {
+        <button type="button" class="ux__btn ux__btn--primary" (click)="save()" [disabled]="saving()">Save layout</button>
+        <button type="button" class="ux__btn" (click)="restore()" [disabled]="saving()">Restore default</button>
+      }
+    </div>
+  </div>
+
+  @if (error()) {
+    <p class="ux__error" role="alert">{{ error() }}</p>
+  }
+
+  @if (editing()) {
+    <ul class="ux__layout">
+      @for (widget of widgets(); track widget.id; let index = $index) {
+        <li>
+          <span>{{ widget.label }}</span>
+          <button type="button" (click)="move(index, -1)" [disabled]="index === 0" [attr.aria-label]="'Move ' + widget.label + ' up'">Up</button>
+          <button type="button" (click)="move(index, 1)" [disabled]="index === widgets().length - 1" [attr.aria-label]="'Move ' + widget.label + ' down'">Down</button>
+          <button type="button" (click)="resize(widget.id)">{{ widget.size }}</button>
+          <button type="button" (click)="toggle(widget.id)">{{ widget.visible ? 'Shown' : 'Hidden' }}</button>
+        </li>
+      }
+    </ul>
+  }
+
+  @if (data(); as snapshot) {
+    @if (visible('insights')) {
+      <article class="ux__panel">
+        <h2>Business insights</h2>
+        @if (!snapshot.insights.length) {
+          <p class="ux__empty">No recommendations yet. Insights appear only when company records support them.</p>
+        } @else {
+          <ul class="ux__insights">
+            @for (insight of snapshot.insights; track insight.code) {
+              <li>
+                @if (insight.route) {
+                  <a [routerLink]="insight.route">{{ insight.message }}</a>
+                } @else {
+                  <span>{{ insight.message }}</span>
+                }
+              </li>
+            }
+          </ul>
+        }
+      </article>
+    }
+
+    <div class="ux__grid">
+      @if (visible('orders') && snapshot.pendingOrders !== null && snapshot.pendingOrders !== undefined) {
+        <article [class]="sizeClass('orders')">
+          <h2>Orders</h2>
+          <dl>
+            <div><dt>Pending</dt><dd>{{ snapshot.pendingOrders }}</dd></div>
+            <div><dt>In progress</dt><dd>{{ snapshot.processingOrders }}</dd></div>
+            <div><dt>Completed</dt><dd>{{ snapshot.completedOrders }}</dd></div>
+            <div><dt>Cancelled</dt><dd>{{ snapshot.cancelledOrders }}</dd></div>
+          </dl>
+        </article>
+      }
+      @if (visible('performance') && snapshot.revenue !== null && snapshot.revenue !== undefined) {
+        <article [class]="sizeClass('performance')">
+          <h2>Last 30 days</h2>
+          <dl>
+            <div><dt>Revenue</dt><dd>{{ snapshot.revenue | appCurrency }}</dd></div>
+            <div><dt>Previous revenue</dt><dd>{{ snapshot.previousRevenue | appCurrency }}</dd></div>
+            <div><dt>Expenses</dt><dd>{{ snapshot.expenses | appCurrency }}</dd></div>
+            <div><dt>Previous expenses</dt><dd>{{ snapshot.previousExpenses | appCurrency }}</dd></div>
+          </dl>
+        </article>
+      }
+      @if (visible('projects') && snapshot.activeProjects !== null && snapshot.activeProjects !== undefined) {
+        <article [class]="sizeClass('projects')">
+          <h2>Projects</h2>
+          <dl>
+            <div><dt>Open</dt><dd>{{ snapshot.activeProjects }}</dd></div>
+            <div><dt>Completed</dt><dd>{{ snapshot.completedProjects }}</dd></div>
+            <div><dt>Overdue tasks</dt><dd>{{ snapshot.overdueTasks }}</dd></div>
+          </dl>
+        </article>
+      }
+      @if (visible('employees') && snapshot.totalEmployees !== null && snapshot.totalEmployees !== undefined) {
+        <article [class]="sizeClass('employees')">
+          <h2>People</h2>
+          <dl>
+            <div><dt>Employees</dt><dd>{{ snapshot.totalEmployees }}</dd></div>
+            <div><dt>Active</dt><dd>{{ snapshot.activeEmployees }}</dd></div>
+            @if (snapshot.pendingLeave !== null && snapshot.pendingLeave !== undefined) {
+              <div><dt>Pending leave</dt><dd>{{ snapshot.pendingLeave }}</dd></div>
+            }
+          </dl>
+        </article>
+      }
+      @if (visible('ai') && snapshot.activeAgents !== null && snapshot.activeAgents !== undefined) {
+        <article [class]="sizeClass('ai')">
+          <h2>AI workforce</h2>
+          <dl>
+            <div><dt>Active agents</dt><dd>{{ snapshot.activeAgents }}</dd></div>
+            <div><dt>Running</dt><dd>{{ snapshot.runningTasks }}</dd></div>
+            <div><dt>Completed</dt><dd>{{ snapshot.completedTasks }}</dd></div>
+            <div><dt>Failed</dt><dd>{{ snapshot.failedExecutions }}</dd></div>
+            <div><dt>Approvals</dt><dd>{{ snapshot.pendingApprovals }}</dd></div>
+            <div><dt>Estimated spend</dt><dd>{{ snapshot.estimatedAiCostUsd }} USD{{ snapshot.aiCostIsEstimate ? ' estimate' : '' }}</dd></div>
+          </dl>
+          <a routerLink="/nalva/command">Open command center</a>
+        </article>
+      }
+      @if (visible('automation') && snapshot.activeWorkflows !== null && snapshot.activeWorkflows !== undefined) {
+        <article [class]="sizeClass('automation')">
+          <h2>Automation</h2>
+          <dl>
+            <div><dt>Active workflows</dt><dd>{{ snapshot.activeWorkflows }}</dd></div>
+            <div><dt>Scheduled</dt><dd>{{ snapshot.scheduledWorkflows }}</dd></div>
+            <div><dt>Succeeded</dt><dd>{{ snapshot.successfulWorkflowRuns }}</dd></div>
+            <div><dt>Failed</dt><dd>{{ snapshot.failedWorkflowRuns }}</dd></div>
+          </dl>
+        </article>
+      }
+    </div>
+  }
+</section>

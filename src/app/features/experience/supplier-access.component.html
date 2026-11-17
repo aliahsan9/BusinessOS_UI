@@ -1,0 +1,27 @@
+<section class="sf">
+  <header>
+    <h1>Supplier access</h1>
+    <p>Create a temporary link. The supplier sees only purchase orders for the selected supplier.</p>
+  </header>
+  @if (error()) { <p class="ux__error" role="alert">{{ error() }}</p> }
+  <form class="sf__form" (submit)="$event.preventDefault(); create()">
+    <label for="supplier">Supplier</label>
+    <select id="supplier" [ngModel]="supplierId()" (ngModelChange)="supplierId.set($event)" name="supplier" required>
+      <option value="">Select</option>
+      @for (supplier of options(); track supplier.id) {
+        <option [value]="supplier.id">{{ supplier.name }}</option>
+      }
+    </select>
+    <label for="supplier-email">Email</label>
+    <input id="supplier-email" type="email" [ngModel]="email()" (ngModelChange)="email.set($event)" name="email" required />
+    <button type="submit" class="sf__btn sf__btn--primary">Create link</button>
+  </form>
+  @if (link(); as url) {
+    <article class="sf__card">
+      <h2>Link</h2>
+      <p>Copy this now. It is not shown again.</p>
+      <p><a [href]="url">{{ url }}</a></p>
+      <button type="button" class="sf__btn" (click)="revoke()">Revoke</button>
+    </article>
+  }
+</section>

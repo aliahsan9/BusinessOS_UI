@@ -1,0 +1,99 @@
+<app-breadcrumb [items]="[{ label: 'Finance' }, { label: title() }]" />
+<app-page-header [title]="title()" subtitle="Figures come from income, invoices, payments, and expenses." />
+@if (error()) { <app-alert variant="danger" [message]="error()!" [dismissible]="false" /> }
+@if (loading()) {
+  <div class="workspace-stack">@for (row of [1, 2, 3]; track row) { <app-skeleton height="2.5rem" /> }</div>
+} @else {
+  @switch (screen()) {
+    @case ('income') {
+      <form class="workspace-form" (ngSubmit)="saveIncome()">
+        <input class="form-control" placeholder="Category" required [(ngModel)]="incomeForm.category" name="category" />
+        <input class="form-control" type="number" required [(ngModel)]="incomeForm.amount" name="amount" />
+        <input class="form-control" type="date" required [(ngModel)]="incomeForm.occurredOn" name="date" />
+        <input class="form-control" [(ngModel)]="incomeForm.paymentMethod" name="method" />
+        <input class="form-control" placeholder="Reference" [(ngModel)]="incomeForm.reference" name="reference" />
+        <button class="btn btn-primary" type="submit" [disabled]="saving()">Record income</button>
+      </form>
+      <div class="bos-table-wrapper">
+        <table class="bos-table bos-table--compact">
+          <thead><tr><th>Category</th><th>Amount</th><th>Date</th><th>Method</th><th>Status</th></tr></thead>
+          <tbody>@for (row of income(); track row.id) { <tr><td>{{ row.category }}</td><td>{{ row.amount | appCurrency }}</td><td>{{ row.occurredOn }}</td><td>{{ row.paymentMethod }}</td><td>{{ row.status }}</td></tr> }</tbody>
+        </table>
+      </div>
+    }
+    @case ('purchase-invoices') {
+      <form class="workspace-form" (ngSubmit)="saveInvoice()">
+        <input class="form-control" placeholder="Invoice number" required [(ngModel)]="invoice.invoiceNumber" name="number" />
+        <input class="form-control" placeholder="Supplier id" required [(ngModel)]="invoice.supplierId" name="supplier" />
+        <input class="form-control" type="date" required [(ngModel)]="invoice.issueDate" name="issued" />
+        <input class="form-control" type="date" required [(ngModel)]="invoice.dueDate" name="due" />
+        <input class="form-control" type="number" placeholder="Subtotal" [(ngModel)]="invoice.subTotal" name="subtotal" />
+        <input class="form-control" type="number" placeholder="Tax" [(ngModel)]="invoice.tax" name="tax" />
+        <button class="btn btn-primary" type="submit" [disabled]="saving()">Save invoice</button>
+      </form>
+      <form class="workspace-form" (ngSubmit)="pay()">
+        <select class="form-select" required [(ngModel)]="payment.invoiceId" name="invoice">
+          <option value="">Invoice</option>
+          @for (row of invoices(); track row.id) { <option [value]="row.id">{{ row.invoiceNumber }}</option> }
+        </select>
+        <input class="form-control" type="number" [(ngModel)]="payment.amount" name="payAmount" />
+        <button class="btn btn-outline-primary" type="submit" [disabled]="saving()">Record supplier payment</button>
+      </form>
+      <div class="bos-table-wrapper">
+        <table class="bos-table bos-table--compact">
+          <thead><tr><th>Number</th><th>Total</th><th>Paid</th><th>Status</th><th>Due</th></tr></thead>
+          <tbody>@for (row of invoices(); track row.id) { <tr><td>{{ row.invoiceNumber }}</td><td>{{ row.total | appCurrency }}</td><td>{{ row.amountPaid | appCurrency }}</td><td>{{ row.status }}</td><td>{{ row.dueDate }}</td></tr> }</tbody>
+        </table>
+      </div>
+    }
+    @case ('cash-flow') {
+      <form class="workspace-form" (ngSubmit)="loadReports()">
+        <input class="form-control" type="date" [(ngModel)]="from" name="from" />
+        <input class="form-control" type="date" [(ngModel)]="to" name="to" />
+        <button class="btn btn-primary" type="submit">Refresh</button>
+      </form>
+      @if (cash(); as row) {
+        <div class="metric-grid">
+          <article><span>Opening</span><strong>{{ row.openingBalance | appCurrency }}</strong></article>
+          <article><span>Inflows</span><strong>{{ row.inflows | appCurrency }}</strong></article>
+          <article><span>Outflows</span><strong>{{ row.outflows | appCurrency }}</strong></article>
+          <article><span>Closing</span><strong>{{ row.closingBalance | appCurrency }}</strong></article>
+          <article><span>Receivables</span><strong>{{ row.outstandingReceivables | appCurrency }}</strong></article>
+          <article><span>Payables</span><strong>{{ row.outstandingPayables | appCurrency }}</strong></article>
+        </div>
+      }
+      @if (profit(); as row) {
+        <div class="metric-grid">
+          <article><span>Recognized revenue</span><strong>{{ row.recognizedRevenue | appCurrency }}</strong></article>
+          <article><span>Cash received</span><strong>{{ row.cashReceived | appCurrency }}</strong></article>
+          <article><span>COGS</span><strong>{{ row.costOfGoodsSold | appCurrency }}</strong></article>
+          <article><span>Gross profit</span><strong>{{ row.grossProfit | appCurrency }}</strong></article>
+          <article><span>Operating expenses</span><strong>{{ row.operatingExpenses | appCurrency }}</strong></article>
+          <article><span>Net profit</span><strong>{{ row.netProfit | appCurrency }}</strong></article>
+        </div>
+      }
+    }
+    @case ('tax') {
+      <form class="workspace-form" (ngSubmit)="saveTax()">
+        <input class="form-control" placeholder="Tax name" required [(ngModel)]="tax.name" name="name" />
+        <input class="form-control" type="number" [(ngModel)]="tax.ratePercent" name="rate" />
+        <label class="form-check"><input type="checkbox" [(ngModel)]="tax.isInclusive" name="inclusive" /> Inclusive</label>
+        <label class="form-check"><input type="checkbox" [(ngModel)]="tax.isDefault" name="default" /> Default</label>
+        <button class="btn btn-primary" type="submit" [disabled]="saving()">Save tax rate</button>
+      </form>
+      @for (row of taxes(); track row.id) { <article class="workspace-card">{{ row.name }} · {{ row.ratePercent }}% · {{ row.isInclusive ? 'Inclusive' : 'Exclusive' }}</article> }
+    }
+    @case ('subscriptions') {
+      <form class="workspace-form" (ngSubmit)="saveSubscription()">
+        <input class="form-control" placeholder="Provider" required [(ngModel)]="subscription.provider" name="provider" />
+        <input class="form-control" placeholder="Name" required [(ngModel)]="subscription.name" name="name" />
+        <select class="form-select" [(ngModel)]="subscription.billingCycle" name="cycle"><option>Monthly</option><option>Yearly</option></select>
+        <input class="form-control" type="number" [(ngModel)]="subscription.cost" name="cost" />
+        <input class="form-control" [(ngModel)]="subscription.currency" name="currency" />
+        <input class="form-control" type="date" required [(ngModel)]="subscription.renewalDate" name="renewal" />
+        <button class="btn btn-primary" type="submit" [disabled]="saving()">Track subscription</button>
+      </form>
+      @for (row of subscriptions(); track row.id) { <article class="workspace-card"><strong>{{ row.provider }} · {{ row.name }}</strong><div>{{ row.cost | appCurrency }} {{ row.currency }} · {{ row.billingCycle }} · renews {{ row.renewalDate }}</div></article> }
+    }
+  }
+}

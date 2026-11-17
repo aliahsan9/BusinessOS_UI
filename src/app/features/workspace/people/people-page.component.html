@@ -1,0 +1,207 @@
+<app-breadcrumb [items]="[{ label: 'People' }, { label: title() }]" />
+<app-page-header [title]="title()" subtitle="Company workforce records from the live workspace." />
+
+@if (error()) {
+  <app-alert variant="danger" [message]="error()!" [dismissible]="false" />
+}
+
+@if (loading()) {
+  <div class="workspace-stack">
+    @for (row of [1, 2, 3]; track row) {
+      <app-skeleton height="2.5rem" />
+    }
+  </div>
+} @else {
+  @switch (screen()) {
+    @case ('employees') {
+      <form class="workspace-form" (ngSubmit)="saveEmployee()">
+        <input class="form-control" placeholder="First name" required [(ngModel)]="employee.firstName" name="firstName" />
+        <input class="form-control" placeholder="Last name" required [(ngModel)]="employee.lastName" name="lastName" />
+        <input class="form-control" type="email" placeholder="Email" required [(ngModel)]="employee.email" name="email" />
+        <input class="form-control" placeholder="Phone" required [(ngModel)]="employee.phone" name="phone" />
+        <input class="form-control" placeholder="Job title" required [(ngModel)]="employee.jobTitle" name="jobTitle" />
+        <input class="form-control" type="date" required [(ngModel)]="employee.joiningDate" name="joiningDate" />
+        <input class="form-control" type="number" placeholder="Salary (restricted)" [(ngModel)]="employee.salary" name="salary" />
+        <button class="btn btn-primary" type="submit" [disabled]="saving()">Add employee</button>
+      </form>
+      @if (employees().length === 0) {
+        <app-empty-state icon="bi-people" title="No employees yet" description="Add an employee or accept an invitation to create a profile." />
+      } @else {
+        <div class="bos-table-wrapper">
+          <table class="bos-table bos-table--compact">
+            <thead><tr><th>Name</th><th>Email</th><th>Title</th><th>Status</th><th>Salary</th><th></th></tr></thead>
+            <tbody>
+              @for (employee of employees(); track employee.id) {
+                <tr>
+                  <td>{{ employee.firstName }} {{ employee.lastName }}</td>
+                  <td>{{ employee.email }}</td>
+                  <td>{{ employee.jobTitle }}</td>
+                  <td>{{ employee.employmentStatus }}</td>
+                  <td>{{ employee.salary ?? 'Restricted' }}</td>
+                  <td>@if (employee.isActive) { <button type="button" class="btn btn-link link-danger" (click)="confirmDeactivate(employee)">Deactivate</button> }</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+    @case ('departments') {
+      <form class="workspace-form" (ngSubmit)="saveDepartment()">
+        <input class="form-control" placeholder="Department name" required [(ngModel)]="department.name" name="departmentName" />
+        <input class="form-control" placeholder="Description" [(ngModel)]="department.description" name="departmentDescription" />
+        <button class="btn btn-primary" type="submit" [disabled]="saving()">Add department</button>
+      </form>
+      <form class="workspace-form" (ngSubmit)="saveTeam()">
+        <input class="form-control" placeholder="Team name" required [(ngModel)]="team.name" name="teamName" />
+        <select class="form-select" [(ngModel)]="team.departmentId" name="teamDepartment">
+          <option value="">No department</option>
+          @for (department of departments(); track department.id) { <option [value]="department.id">{{ department.name }}</option> }
+        </select>
+        <button class="btn btn-outline-primary" type="submit" [disabled]="saving()">Add team</button>
+      </form>
+      <div class="bos-table-wrapper">
+        <table class="bos-table bos-table--compact">
+          <thead><tr><th>Department</th><th>Description</th></tr></thead>
+          <tbody>
+            @for (department of departments(); track department.id) { <tr><td>{{ department.name }}</td><td>{{ department.description }}</td></tr> }
+          </tbody>
+        </table>
+      </div>
+      <div class="bos-table-wrapper">
+        <table class="bos-table bos-table--compact">
+          <thead><tr><th>Team</th><th>Members</th></tr></thead>
+          <tbody>
+            @for (team of teams(); track team.id) { <tr><td>{{ team.name }}</td><td>{{ team.memberCount }}</td></tr> }
+          </tbody>
+        </table>
+      </div>
+    }
+    @case ('attendance') {
+      <div class="workspace-form">
+        <button class="btn btn-primary" type="button" [disabled]="saving()" (click)="check('in')">Check in</button>
+        <button class="btn btn-outline-primary" type="button" [disabled]="saving()" (click)="check('out')">Check out</button>
+      </div>
+      @if (attendance().length === 0) {
+        <app-empty-state icon="bi-clock" title="No attendance records" description="Check in to start today's record." />
+      } @else {
+        <div class="bos-table-wrapper">
+          <table class="bos-table bos-table--compact">
+            <thead><tr><th>Employee</th><th>Date</th><th>In</th><th>Out</th><th>Hours</th><th>Late</th><th>Early</th></tr></thead>
+            <tbody>
+              @for (row of attendance(); track row.id) {
+                <tr>
+                  <td>{{ row.employeeName }}</td><td>{{ row.workDate }}</td><td>{{ row.checkInAt }}</td><td>{{ row.checkOutAt }}</td>
+                  <td>{{ row.workedHours }}</td><td>{{ row.isLate ? 'Yes' : 'No' }}</td><td>{{ row.isEarlyDeparture ? 'Yes' : 'No' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+    @case ('leave') {
+      <form class="workspace-form" (ngSubmit)="saveLeaveType()">
+        <input class="form-control" placeholder="Leave type" required [(ngModel)]="leaveType.name" name="leaveTypeName" />
+        <input class="form-control" type="number" [(ngModel)]="leaveType.defaultDays" name="defaultDays" />
+        <label class="form-check"><input type="checkbox" [(ngModel)]="leaveType.isPaid" name="isPaid" /> Paid</label>
+        <button class="btn btn-outline-primary" type="submit" [disabled]="saving()">Save leave type</button>
+      </form>
+      <form class="workspace-form" (ngSubmit)="applyLeave()">
+        <select class="form-select" required [(ngModel)]="leaveRequest.leaveTypeId" name="leaveTypeId">
+          <option value="">Leave type</option>
+          @for (type of leaveTypes(); track type.id) { <option [value]="type.id">{{ type.name }}</option> }
+        </select>
+        <input class="form-control" type="date" required [(ngModel)]="leaveRequest.startDate" name="startDate" />
+        <input class="form-control" type="date" required [(ngModel)]="leaveRequest.endDate" name="endDate" />
+        <input class="form-control" placeholder="Reason" [(ngModel)]="leaveRequest.reason" name="reason" />
+        <button class="btn btn-primary" type="submit" [disabled]="saving()">Apply</button>
+      </form>
+      <div class="bos-table-wrapper">
+        <table class="bos-table bos-table--compact">
+          <thead><tr><th>Employee</th><th>Type</th><th>Dates</th><th>Days</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            @for (row of leave(); track row.id) {
+              <tr>
+                <td>{{ row.employeeName }}</td><td>{{ row.leaveTypeName }}</td><td>{{ row.startDate }} – {{ row.endDate }}</td>
+                <td>{{ row.days }}</td><td>{{ row.status }}</td>
+                <td>
+                  @if (row.status === 'Pending') {
+                    <button type="button" class="btn btn-link" (click)="decide(row, true)">Approve</button>
+                    <input class="form-control d-inline-block w-auto" placeholder="Rejection reason" [(ngModel)]="rejectReason" [name]="'reject' + row.id" />
+                    <button type="button" class="btn btn-link link-danger" (click)="decide(row, false)">Reject</button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+    @case ('announcements') {
+      <form class="workspace-form" (ngSubmit)="saveAnnouncement()">
+        <input class="form-control" placeholder="Title" required [(ngModel)]="announcement.title" name="title" />
+        <input class="form-control" placeholder="Message" required [(ngModel)]="announcement.body" name="body" />
+        <select class="form-select" [(ngModel)]="announcement.audience" name="audience">
+          <option>Company</option><option>Department</option><option>Team</option>
+        </select>
+        <select class="form-select" [(ngModel)]="announcement.priority" name="priority">
+          <option>Low</option><option>Normal</option><option>High</option>
+        </select>
+        <button class="btn btn-primary" type="submit" [disabled]="saving()">Publish</button>
+      </form>
+      @for (row of announcements(); track row.id) {
+        <article class="workspace-card">
+          <h3>{{ row.title }}</h3>
+          <p>{{ row.body }}</p>
+          <small>{{ row.audience }} · {{ row.priority }} · {{ row.isRead ? 'Read' : 'Unread' }}</small>
+          @if (!row.isRead) { <button type="button" class="btn btn-link" (click)="markRead(row)">Mark read</button> }
+        </article>
+      }
+    }
+    @case ('performance') {
+      <form class="workspace-form" (ngSubmit)="saveGoal()">
+        <select class="form-select" required [(ngModel)]="goal.employeeId" name="goalEmployee">
+          <option value="">Employee</option>
+          @for (employee of employees(); track employee.id) { <option [value]="employee.id">{{ employee.firstName }} {{ employee.lastName }}</option> }
+        </select>
+        <input class="form-control" placeholder="Goal" required [(ngModel)]="goal.title" name="goalTitle" />
+        <input class="form-control" placeholder="KPI" [(ngModel)]="goal.kpiName" name="kpi" />
+        <input class="form-control" type="number" [(ngModel)]="goal.targetValue" name="target" />
+        <input class="form-control" type="number" [(ngModel)]="goal.currentValue" name="current" />
+        <button class="btn btn-primary" type="submit" [disabled]="saving()">Save goal</button>
+      </form>
+      <form class="workspace-form" (ngSubmit)="saveReview()">
+        <select class="form-select" required [(ngModel)]="review.employeeId" name="reviewEmployee">
+          <option value="">Employee</option>
+          @for (employee of employees(); track employee.id) { <option [value]="employee.id">{{ employee.firstName }} {{ employee.lastName }}</option> }
+        </select>
+        <input class="form-control" placeholder="Period" required [(ngModel)]="review.periodLabel" name="period" />
+        <input class="form-control" type="number" min="1" max="5" [(ngModel)]="review.rating" name="rating" />
+        <input class="form-control" placeholder="Feedback" [(ngModel)]="review.feedback" name="feedback" />
+        <button class="btn btn-outline-primary" type="submit" [disabled]="saving()">Save review</button>
+      </form>
+      <div class="bos-table-wrapper">
+        <table class="bos-table bos-table--compact">
+          <thead><tr><th>Goal</th><th>KPI</th><th>Progress</th><th>Status</th></tr></thead>
+          <tbody>
+            @for (goal of goals(); track goal.id) {
+              <tr><td>{{ goal.title }}</td><td>{{ goal.kpiName }}</td><td>{{ goal.currentValue }} / {{ goal.targetValue }}</td><td>{{ goal.status }}</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+}
+
+@if (pendingEmployee(); as employee) {
+  <app-confirm-dialog
+    title="Deactivate employee"
+    [message]="'Deactivate ' + employee.firstName + ' ' + employee.lastName + '?'"
+    confirmLabel="Deactivate"
+    [loading]="saving()"
+    (confirmed)="deactivate()"
+    (cancelled)="pendingEmployee.set(null)"
+  />
+}

@@ -1,0 +1,121 @@
+:host {
+  display: block;
+  color: var(--color-text);
+}
+
+.nalva-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.nalva-stat,
+.nalva-card,
+.nalva-panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.nalva-stat span,
+.muted {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.nalva-stat strong {
+  display: block;
+  font-size: 1.4rem;
+  margin-top: 4px;
+}
+
+.nalva-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.nalva-card h3,
+.nalva-panel h3 {
+  margin: 0 0 6px;
+}
+
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0;
+}
+
+.pill {
+  border-radius: 999px;
+  padding: 2px 8px;
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  font-size: 0.75rem;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+button,
+select,
+input,
+textarea {
+  font: inherit;
+}
+
+.btn {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.btn.primary {
+  background: var(--color-primary);
+  color: white;
+  border-color: transparent;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  text-align: left;
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: top;
+}
+
+.stack {
+  display: grid;
+  gap: 12px;
+}
+
+label {
+  display: grid;
+  gap: 4px;
+  font-size: 0.9rem;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 8px;
+  background: var(--color-bg);
+  color: var(--color-text);
+}

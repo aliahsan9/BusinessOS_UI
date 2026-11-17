@@ -1,0 +1,155 @@
+<section class="launch">
+  <header class="launch__header">
+    <p class="launch__kicker">Software agencies</p>
+    <h1>Set up your agency</h1>
+    @if (setup(); as current) {
+      <p>{{ current.notice.status }}</p>
+    }
+  </header>
+
+  @if (error()) {
+    <p class="launch__error" role="alert">{{ error() }}</p>
+  }
+
+  @if (setup(); as current) {
+    @if (current.invitationRequired && !current.invitationRedeemed) {
+      <form class="launch__card" (ngSubmit)="redeem()">
+        <h2>Early-access invitation</h2>
+        <p>This launch is invitation-only. Enter the code from CompanyOS.</p>
+        <label>Invitation code <input name="code" [(ngModel)]="invitationCode" required /></label>
+        <button type="submit" [disabled]="saving()">Redeem</button>
+      </form>
+    }
+
+    <ol class="launch__steps">
+      @for (label of steps; track label; let index = $index) {
+        <li [class.is-current]="step() === index + 1">{{ index + 1 }}. {{ label }}</li>
+      }
+    </ol>
+
+    @switch (step()) {
+      @case (1) {
+        <form class="launch__card" (ngSubmit)="saveCompany()">
+          <h2>Company information</h2>
+          <label>Agency name <input name="name" [(ngModel)]="company.name" required /></label>
+          <label>Logo URL <input name="logoUrl" [(ngModel)]="company.logoUrl" /></label>
+          <label>Website <input name="website" [(ngModel)]="company.website" placeholder="https://" /></label>
+          <label>Description <textarea name="description" [(ngModel)]="company.description"></textarea></label>
+          <label>Country <input name="country" [(ngModel)]="company.country" required /></label>
+          <label>Currency <input name="currency" [(ngModel)]="company.currency" required /></label>
+          <label>Timezone <input name="timezone" [(ngModel)]="company.timezone" required /></label>
+          <button type="submit" [disabled]="saving()">Continue</button>
+        </form>
+      }
+      @case (2) {
+        <form class="launch__card" (ngSubmit)="saveProfile()">
+          <h2>Agency profile</h2>
+          <div class="launch__choices">
+            @for (template of current.templates; track template.key) {
+              <label class="launch__choice">
+                <input type="radio" name="template" [value]="template.key" [(ngModel)]="profile.templateKey" (change)="chooseTemplate(template.key)" />
+                <span>
+                  <strong>{{ template.name }}</strong>
+                  <small>{{ template.description }}</small>
+                </span>
+              </label>
+            }
+          </div>
+          @if (template(); as selected) {
+            <p>Navigation: {{ selected.navigation.join(', ') }}</p>
+            <p>Widgets: {{ selected.widgets.join(', ') }}</p>
+          }
+          <label>Services <textarea name="services" [(ngModel)]="profile.services"></textarea></label>
+          <label>Technologies <input name="technologies" [(ngModel)]="profile.technologies" /></label>
+          <label>Team size <input name="teamSize" [(ngModel)]="profile.teamSize" /></label>
+          <label>Target clients <textarea name="clients" [(ngModel)]="profile.targetClients"></textarea></label>
+          <label>Business goals <textarea name="goals" [(ngModel)]="profile.goals"></textarea></label>
+          <button type="submit" [disabled]="saving()">Continue</button>
+        </form>
+      }
+      @case (3) {
+        <form class="launch__card" (ngSubmit)="saveWorkspace()">
+          <h2>Workspace</h2>
+          <fieldset>
+            <legend>Modules</legend>
+            @for (module of template()?.modules ?? []; track module) {
+              <label><input type="checkbox" [name]="'module-' + module" [ngModel]="checked(modules, module)" (ngModelChange)="setChecked(modules, module, $event)" /> {{ module }}</label>
+            }
+          </fieldset>
+          <fieldset>
+            <legend>Roles</legend>
+            @for (role of template()?.roles ?? []; track role) {
+              <label><input type="checkbox" [name]="'role-' + role" [ngModel]="checked(roles, role)" (ngModelChange)="setChecked(roles, role, $event)" /> {{ role }}</label>
+            }
+          </fieldset>
+          <label>Invite employees <textarea name="emails" [(ngModel)]="emails" placeholder="name@agency.com, name2@agency.com"></textarea></label>
+          <label>Initial project <input name="project" [(ngModel)]="projectName" /></label>
+          <button type="submit" [disabled]="saving()">Continue</button>
+        </form>
+      }
+      @case (4) {
+        <form class="launch__card" (ngSubmit)="saveWorkforce()">
+          <h2>AI workforce</h2>
+          <p>Sensitive actions stay behind approval. This setup cannot turn that off.</p>
+          <fieldset>
+            <legend>Agents</legend>
+            @for (agent of template()?.agents ?? []; track agent) {
+              <label><input type="checkbox" [name]="'agent-' + agent" [ngModel]="checked(agents, agent)" (ngModelChange)="setChecked(agents, agent, $event)" /> {{ agent }}</label>
+            }
+          </fieldset>
+          <label>Monthly AI budget in USD <input name="budget" type="number" min="0" max="5000" [(ngModel)]="budget" /></label>
+          <p>Workflows from this template are switched on. They still stop at the existing approval rules.</p>
+          <button type="submit" [disabled]="saving()">Continue</button>
+        </form>
+      }
+      @case (5) {
+        <form class="launch__card" (ngSubmit)="savePlan()">
+          <h2>Subscription</h2>
+          @for (plan of current.plans; track plan.key) {
+            <label class="launch__choice">
+              <input type="radio" name="plan" [value]="plan.key" [(ngModel)]="planKey" />
+              <span>
+                <strong>{{ plan.name }}</strong>
+                <small>{{ plan.monthlyPrice }} {{ plan.currency }} / month · trial {{ plan.trialDays }} days · {{ plan.maxAiRequests }} AI requests · {{ plan.maxAgentExecutions }} agent executions</small>
+              </span>
+            </label>
+          }
+          <p>{{ current.plans[0]?.checkoutNote }}</p>
+          <p><a [routerLink]="routes.billing.base">Open billing</a> when you are ready to check out.</p>
+          <button type="submit" [disabled]="saving()">Continue</button>
+        </form>
+      }
+      @case (6) {
+        <form class="launch__card" (ngSubmit)="saveObjective()">
+          <h2>First business objective</h2>
+          <label>Assign this to the AI CEO <textarea name="objective" [(ngModel)]="objective" required></textarea></label>
+          <button type="submit" [disabled]="saving()">Queue the objective</button>
+        </form>
+      }
+    }
+
+    <details class="launch__card">
+      <summary>What this release includes</summary>
+      <ul>
+        @for (item of current.notice.available; track item) {
+          <li>{{ item }}</li>
+        }
+      </ul>
+      <h3>Limitations</h3>
+      <ul>
+        @for (item of current.notice.limitations; track item) {
+          <li>{{ item }}</li>
+        }
+      </ul>
+      <h3>Not in this release</h3>
+      <ul>
+        @for (item of current.notice.notInThisRelease; track item) {
+          <li>{{ item }}</li>
+        }
+      </ul>
+      <p>{{ current.notice.dataHandling }}</p>
+      <p>{{ current.notice.subscriptionTerms }}</p>
+      <p>{{ current.notice.support }}</p>
+    </details>
+  }
+</section>

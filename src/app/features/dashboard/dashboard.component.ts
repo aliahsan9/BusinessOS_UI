@@ -34,6 +34,8 @@ import { AppChartComponent } from '../../shared/components/app-chart/app-chart.c
 import { AppSkeletonComponent } from '../../shared/components/app-skeleton/app-skeleton.component';
 import { AppAlertComponent } from '../../shared/components/app-alert/app-alert.component';
 import { AppEmptyStateComponent } from '../../shared/components/app-empty-state/app-empty-state.component';
+import { DashboardExperienceComponent } from '../experience/dashboard-experience.component';
+import { ExperienceService } from '../../core/services/experience.service';
 
 type StatusTone = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'neutral';
 
@@ -68,6 +70,7 @@ const DONUT_CIRCUMFERENCE = 2 * Math.PI * DONUT_RADIUS;
     AppSkeletonComponent,
     AppAlertComponent,
     AppEmptyStateComponent,
+    DashboardExperienceComponent,
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
@@ -83,6 +86,7 @@ export class DashboardComponent implements OnInit {
   private readonly currencyService = inject(CurrencyService);
   private readonly financeService = inject(FinanceService);
   private readonly dashboardService = inject(DashboardService);
+  readonly experience = inject(ExperienceService);
   private readonly financeReport = signal<FinancialDashboard | null>(null);
   private readonly customerSparkValues = signal<number[]>([]);
   readonly netProfit = computed(() => {
@@ -173,7 +177,7 @@ export class DashboardComponent implements OnInit {
     return this.currentPeriodLabel();
   });
 
-  readonly revenueTrend = computed((): number | null => this.customers()?.customerGrowthRate ?? null);
+  readonly revenueTrend = computed((): number | null => null);
   readonly customersTrend = computed((): number | null => this.customers()?.customerGrowthRate ?? null);
 
   readonly sparkRevenue = computed(() =>
@@ -280,7 +284,14 @@ export class DashboardComponent implements OnInit {
   });
 
   readonly salesHeadline = computed(() => this.overview()?.totalRevenue ?? 0);
-  readonly salesChange = computed(() => this.revenueTrend());
+  readonly salesChange = computed((): number | null => {
+    const values = this.salesSeries((point) => point.revenue).values;
+    if (values.length < 2) return null;
+    const previous = values[values.length - 2];
+    const latest = values[values.length - 1];
+    if (!previous) return null;
+    return ((latest - previous) / Math.abs(previous)) * 100;
+  });
 
   readonly donutCircumference = DONUT_CIRCUMFERENCE;
   readonly donutRadius = DONUT_RADIUS;

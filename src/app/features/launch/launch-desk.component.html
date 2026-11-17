@@ -1,0 +1,52 @@
+<section class="launch">
+  <header class="launch__header">
+    <p class="launch__kicker">Early access</p>
+    <h1>Feedback and company data</h1>
+    <p><a [routerLink]="routes.onboarding.agency">Agency setup</a></p>
+  </header>
+
+  @if (error()) {
+    <p class="launch__error" role="alert">{{ error() }}</p>
+  }
+  @if (message()) {
+    <p>{{ message() }}</p>
+  }
+
+  @if (analytics(); as figures) {
+    <div class="launch__metrics">
+      <div><strong>{{ figures.usageEvents }}</strong> events in 7 days</div>
+      <div><strong>{{ figures.agentExecutions }}</strong> agent executions</div>
+      <div><strong>{{ figures.failedExecutions }}</strong> failed executions</div>
+      <div><strong>{{ figures.workflowRuns }}</strong> workflow runs</div>
+      <div><strong>{{ figures.supportRequests }}</strong> support requests</div>
+      <div><strong>{{ figures.openFeedback }}</strong> open notes</div>
+    </div>
+  }
+
+  <form class="launch__card" (ngSubmit)="send()">
+    <h2>Tell CompanyOS</h2>
+    <label>Type
+      <select name="kind" [(ngModel)]="kind">
+        <option value="feedback">Feedback</option>
+        <option value="feature">Feature request</option>
+        <option value="bug">Bug</option>
+        <option value="survey">Satisfaction</option>
+        <option value="support">Support</option>
+      </select>
+    </label>
+    <label>Subject <input name="subject" [(ngModel)]="subject" /></label>
+    <label>Message <textarea name="body" [(ngModel)]="body" required></textarea></label>
+    @if (kind === 'survey') {
+      <label>Rating from 1 to 5 <input name="rating" type="number" min="1" max="5" [(ngModel)]="rating" /></label>
+    }
+    <button type="submit">Send</button>
+  </form>
+
+  <section class="launch__card">
+    <h2>Your company data</h2>
+    <p>The export contains this company's operational records. It leaves out passwords, tokens, and payment methods.</p>
+    <button type="button" (click)="exportData()">Download export</button>
+    <label><input type="checkbox" [(ngModel)]="confirmDelete" name="confirmDelete" /> I have downloaded the export and want to request deletion.</label>
+    <button type="button" (click)="requestDeletion()">Request deletion</button>
+  </section>
+</section>

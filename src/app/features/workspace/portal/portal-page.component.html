@@ -1,0 +1,19 @@
+<app-page-header title="Client portal" subtitle="Projects shared with this invitation." />
+@if (error()) { <app-alert variant="danger" [message]="error()!" [dismissible]="false" /> }
+@if (loading()) { <app-skeleton height="4rem" /> }
+@for (project of projects(); track project.id) {
+  <section>
+    <h2>{{ project.name }}</h2>
+    <p>{{ project.status }} · {{ project.deadline }}</p>
+    <h3>Milestones</h3>
+    @for (milestone of project.milestones; track milestone.id) { <p>{{ milestone.name }} · {{ milestone.status }}</p> }
+    <h3>Tasks</h3>
+    @for (task of project.tasks; track task.id) { <p>{{ task.title }} · {{ task.stage }}</p> }
+    <h3>Files</h3>
+    @for (file of project.files; track file.id) { <p><a [href]="fileUrl(file.id)">{{ file.fileName }}</a></p> }
+    <form (ngSubmit)="send(project.id)">
+      <input class="form-control" placeholder="Feedback" required [(ngModel)]="message" name="message" />
+      <button class="btn btn-primary" type="submit">Send feedback</button>
+    </form>
+  </section>
+}

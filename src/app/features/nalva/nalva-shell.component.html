@@ -1,0 +1,11 @@
+<header class="nalva-head">
+  <p class="eyebrow">Nalva.ai</p>
+  <h1>AI workforce</h1>
+  <p>Hire agents for this company, give them only the tools they need, and approve anything that leaves the workspace.</p>
+</header>
+<nav class="nalva-nav" aria-label="Nalva.ai">
+  @for (link of links; track link.route) {
+    <a [routerLink]="link.route" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: link.route === links[0].route }">{{ link.label }}</a>
+  }
+</nav>
+<router-outlet />

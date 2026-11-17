@@ -1,0 +1,63 @@
+@if (error()) { <p class="muted">{{ error() }}</p> }
+@if (notice()) { <p class="nalva-panel">{{ notice() }}</p> }
+@if (agent(); as agent) {
+  <section class="nalva-panel">
+    <h2>{{ agent.name }}</h2>
+    <p>{{ agent.description }}</p>
+    <div class="pills">
+      <span class="pill">{{ agent.role }}</span>
+      <span class="pill">{{ agent.category }}</span>
+      <span class="pill">{{ agent.status }}</span>
+      <span class="pill">{{ agent.health }}</span>
+      <span class="pill">Autonomy {{ agent.autonomyLevel }}</span>
+    </div>
+    @if (agent.unavailableReason) { <p class="muted">{{ agent.unavailableReason }}</p> }
+    <label>Objective <input [value]="objective()" (input)="objective.set($any($event.target).value)" /></label>
+    <div class="actions">
+      <button class="btn primary" type="button" (click)="run()" [disabled]="!agent.executionAvailable">Run</button>
+      <button class="btn" type="button" (click)="setAutonomy(1)">Read only</button>
+      <button class="btn" type="button" (click)="setAutonomy(2)">Drafting</button>
+      <button class="btn" type="button" (click)="setAutonomy(3)">Supervised</button>
+    </div>
+  </section>
+  <section class="nalva-cards" style="margin-top: 14px">
+    <article class="nalva-panel">
+      <h3>Responsibilities</h3>
+      <ul>@for (item of agent.responsibilities; track item) { <li>{{ item }}</li> }</ul>
+    </article>
+    <article class="nalva-panel">
+      <h3>Tools and permissions</h3>
+      <ul>
+        @for (tool of agent.tools; track tool.name) {
+          <li>{{ tool.name }} · {{ tool.integration }} @if (tool.requiresApproval) { · approval {{ tool.approvalAction }} }</li>
+        }
+      </ul>
+    </article>
+    <article class="nalva-panel">
+      <h3>Model</h3>
+      <p>{{ agent.model }} · temperature {{ agent.temperature ?? 'platform default' }}</p>
+      <p class="muted">Daily limit {{ agent.dailyExecutionLimit }} · monthly token budget {{ agent.monthlyTokenBudget }}</p>
+      <p class="muted">The stored temperature is kept for this agent. The shared model client still uses the platform temperature.</p>
+    </article>
+    <article class="nalva-panel">
+      <h3>Memory</h3>
+      @for (item of memory(); track item.id) { <p>{{ item.kind }}: {{ item.excerpt }}</p> }
+      @if (!memory().length) { <p class="muted">No stored summaries yet.</p> }
+    </article>
+  </section>
+  <section class="nalva-panel" style="margin-top: 14px">
+    <h3>Execution history</h3>
+    <table class="table">
+      <tr><th>When</th><th>Status</th><th>Tokens</th><th>Estimate</th><th>Summary</th></tr>
+      @for (row of history(); track row.id) {
+        <tr>
+          <td>{{ row.startedAt | date:'short' }}</td>
+          <td>{{ row.status }}</td>
+          <td>{{ row.inputTokens + row.outputTokens }}</td>
+          <td>${{ row.estimatedCostUsd }}</td>
+          <td>{{ row.summary }}</td>
+        </tr>
+      }
+    </table>
+  </section>
+}

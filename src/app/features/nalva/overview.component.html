@@ -1,0 +1,19 @@
+@if (error()) { <p class="muted">{{ error() }}</p> }
+@if (data(); as overview) {
+  @if (overview.costAlert) {
+    <p class="nalva-panel">Estimated spend has reached the alert threshold. Costs use pricing version {{ overview.pricingVersion }} and are estimates.</p>
+  }
+  <section class="nalva-grid">
+    <article class="nalva-stat"><span>Activated agents</span><strong>{{ overview.activatedAgents }}</strong></article>
+    <article class="nalva-stat"><span>Active</span><strong>{{ overview.activeAgents }}</strong></article>
+    <article class="nalva-stat"><span>Running</span><strong>{{ overview.runningExecutions }}</strong></article>
+    <article class="nalva-stat"><span>Completed tasks</span><strong>{{ overview.completedTasks }}</strong></article>
+    <article class="nalva-stat"><span>Failed this month</span><strong>{{ overview.failedExecutions }}</strong></article>
+    <article class="nalva-stat"><span>Pending approvals</span><strong>{{ overview.pendingApprovals }}</strong></article>
+    <article class="nalva-stat"><span>Tokens this month</span><strong>{{ overview.totalTokens }}</strong></article>
+    <article class="nalva-stat"><span>Estimated cost</span><strong>${{ overview.estimatedCostUsd }}</strong></article>
+    <article class="nalva-stat"><span>Workflow runs</span><strong>{{ overview.workflowRuns }}</strong></article>
+  </section>
+  <p class="muted">Estimated cost is not an invoice. Pricing version {{ overview.pricingVersion }}.</p>
+  <p><a [routerLink]="routes.nalva.marketplace">Open the marketplace</a></p>
+}

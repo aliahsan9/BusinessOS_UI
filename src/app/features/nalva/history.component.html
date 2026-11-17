@@ -1,0 +1,19 @@
+<div class="nalva-grid">
+  <label>Agent <input [value]="agentKey()" (input)="agentKey.set($any($event.target).value)" (change)="load()" /></label>
+  <label>Status <input [value]="status()" (input)="status.set($any($event.target).value)" (change)="load()" /></label>
+</div>
+<table class="table">
+  <tr><th>Agent</th><th>Status</th><th>Model</th><th>Tokens</th><th>Estimate</th><th>Duration</th><th>Summary</th></tr>
+  @for (row of rows(); track row.id) {
+    <tr>
+      <td>{{ row.agentKey }}</td>
+      <td>{{ row.status }}</td>
+      <td>{{ row.model }}</td>
+      <td>{{ row.inputTokens + row.outputTokens }}</td>
+      <td>${{ row.estimatedCostUsd }}@if (row.costIsEstimate) { est. }</td>
+      <td>{{ row.durationMs }} ms</td>
+      <td>{{ row.error || row.summary }}</td>
+    </tr>
+  }
+</table>
+<p class="muted">Each row is a stored execution. Estimates use the pricing version recorded on that run.</p>

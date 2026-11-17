@@ -1,0 +1,33 @@
+<label>
+  Department
+  <select [value]="category()" (change)="category.set($any($event.target).value); load()">
+    <option value="">All</option>
+    <option>Executive Management</option>
+    <option>Marketing</option>
+    <option>Sales</option>
+    <option>Customer Support</option>
+    <option>Software Development</option>
+    <option>Finance</option>
+    <option>Human Resources</option>
+    <option>Business Intelligence</option>
+    <option>Procurement</option>
+    <option>Administration</option>
+  </select>
+</label>
+@if (data(); as data) {
+  <section class="nalva-grid">
+    <article class="nalva-stat"><span>Executions</span><strong>{{ data.executions }}</strong></article>
+    <article class="nalva-stat"><span>Succeeded</span><strong>{{ data.succeeded }}</strong></article>
+    <article class="nalva-stat"><span>Failed</span><strong>{{ data.failed }}</strong></article>
+    <article class="nalva-stat"><span>Success rate</span><strong>{{ data.successRate }}</strong></article>
+    <article class="nalva-stat"><span>Average duration</span><strong>{{ data.averageDurationMs }} ms</strong></article>
+    <article class="nalva-stat"><span>Tokens</span><strong>{{ data.tokens }}</strong></article>
+    <article class="nalva-stat"><span>Estimated cost</span><strong>${{ data.estimatedCostUsd }}</strong></article>
+    <article class="nalva-stat"><span>Tool calls</span><strong>{{ data.toolCalls }}</strong></article>
+    <article class="nalva-stat"><span>Approvals</span><strong>{{ data.approvalRequests }}</strong></article>
+    <article class="nalva-stat"><span>Rejected</span><strong>{{ data.rejectedActions }}</strong></article>
+    <article class="nalva-stat"><span>Retries</span><strong>{{ data.retries }}</strong></article>
+    <article class="nalva-stat"><span>Tasks completed</span><strong>{{ data.tasksCompleted }}</strong></article>
+  </section>
+  <p class="muted">Pricing {{ data.pricingVersion }}. Costs are estimates{{ data.costIsEstimate ? '' : '' }}.</p>
+}

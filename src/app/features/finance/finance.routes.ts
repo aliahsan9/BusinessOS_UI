@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { permissionGuard } from '../../core/guards/permission.guard';
 import { PermissionCodes } from '../../core/constants/permission.constants';
+import { FINANCE_OPS_ROUTES } from '../workspace/workspace.routes';
 
 export const FINANCE_ROUTES: Routes = [
   {
@@ -16,4 +17,5 @@ export const FINANCE_ROUTES: Routes = [
     title: 'Profit & Loss | BusinessOS',
     canActivate: [permissionGuard([PermissionCodes.finance.view])],
   },
+  ...FINANCE_OPS_ROUTES,
 ];

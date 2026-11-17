@@ -26,6 +26,7 @@ import { APP_ROUTE_PATHS } from '../../constants/nav.constants';
 import { ROUTES } from '../../../core/constants/route.constants';
 import { GlobalSearchHit, buildGlobalSearchResults } from '../../search/global-search';
 import { NotificationBellComponent } from '../notification-bell/notification-bell.component';
+import { ExperienceService } from '../../../core/services/experience.service';
 
 @Component({
   selector: 'app-navbar',
@@ -42,6 +43,8 @@ export class AppNavbarComponent implements OnInit, OnDestroy {
   private readonly notificationState = inject(NotificationStateService);
   private readonly themeService = inject(ThemeService);
   private readonly router = inject(Router);
+  private readonly experience = inject(ExperienceService);
+  readonly companies = signal<{ companyId: string; companyName: string; isCurrent: boolean }[]>([]);
 
   readonly menuOpen = input(false);
   readonly menuToggle = output<void>();
@@ -174,10 +177,29 @@ export class AppNavbarComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     document.addEventListener('pointerdown', this.dismissProfileOnOutsidePointer, true);
     this.notificationState.initialize();
+    this.experience.companies().subscribe({
+      next: (rows) => this.companies.set(rows ?? []),
+      error: () => this.companies.set([]),
+    });
     this.syncCompactNav();
     if (typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.userAgent)) {
       this.searchShortcut.set('⌘K');
     }
+  }
+
+  currentCompanyId(): string {
+    return this.companies().find((company) => company.isCurrent)?.companyId ?? '';
+  }
+
+  switchCompany(event: Event): void {
+    const companyId = (event.target as HTMLSelectElement).value;
+    if (!companyId) return;
+    this.experience.switchCompany(companyId).subscribe({
+      next: (auth) => {
+        this.authService.establishSession(auth, { welcomeMessage: '' });
+        window.location.assign('/dashboard');
+      },
+    });
   }
 
   ngOnDestroy(): void {

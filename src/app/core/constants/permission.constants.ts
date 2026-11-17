@@ -137,6 +137,49 @@ export const PermissionCodes = {
     view: 'Subscription.View',
     manage: 'Subscription.Manage',
   },
+  employee: {
+    view: 'Employee.View',
+    manage: 'Employee.Manage',
+    salary: 'Employee.Salary',
+  },
+  attendance: { manage: 'Attendance.Manage' },
+  leave: { manage: 'Leave.Manage' },
+  announcement: {
+    view: 'Announcement.View',
+    manage: 'Announcement.Manage',
+  },
+  performance: {
+    view: 'Performance.View',
+    manage: 'Performance.Manage',
+  },
+  lead: {
+    view: 'Lead.View',
+    manage: 'Lead.Manage',
+  },
+  deal: {
+    view: 'Deal.View',
+    manage: 'Deal.Manage',
+  },
+  warehouse: {
+    view: 'Warehouse.View',
+    manage: 'Warehouse.Manage',
+  },
+  fulfillment: { manage: 'Fulfillment.Manage' },
+  return: { manage: 'Return.Manage' },
+  time: {
+    view: 'Time.View',
+    manage: 'Time.Manage',
+  },
+  portal: { manage: 'Portal.Manage' },
+  storefront: {
+    view: 'Storefront.View',
+    manage: 'Storefront.Manage',
+  },
+  nalva: {
+    view: 'Nalva.View',
+    manage: 'Nalva.Manage',
+    approve: 'Nalva.Approve',
+  },
 } as const;
 
 export const RoleNames = {

@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { Observable } from 'rxjs';
 import { BillingService } from '../../../core/services/billing.service';
 import {
   BillingDashboardDto,
@@ -82,6 +83,8 @@ export class BillingDashboardComponent implements OnInit {
       { label: 'Projects', icon: 'bi bi-folder', current: usage.projectCount, max: usage.maxProjects, custom: false, detail: null },
       { label: 'Tasks', icon: 'bi bi-check2-square', current: usage.taskCount, max: usage.maxTasks, custom: false, detail: null },
       { label: 'AI requests', icon: 'bi bi-stars', current: usage.aiRequestsUsed, max: usage.maxAiRequests, custom: usage.aiRequestsAreCustom, detail: usage.aiRequestsRemaining === -1 ? null : `${Math.max(0, usage.aiRequestsRemaining)} remaining this period` },
+      { label: 'Agent executions', icon: 'bi bi-cpu', current: usage.agentExecutionsUsed ?? 0, max: usage.maxAgentExecutions ?? -1, custom: (usage.maxAgentExecutions ?? -1) < 0, detail: 'Counted for the current month. Reaching the allowance blocks new runs and keeps existing results.' },
+      { label: 'Automation runs', icon: 'bi bi-diagram-3', current: usage.automationRunsUsed ?? 0, max: usage.maxAutomationRuns ?? -1, custom: (usage.maxAutomationRuns ?? -1) < 0, detail: 'Counted for the current month. Extra runs wait until the next period or an upgrade.' },
       { label: 'Storage', icon: 'bi bi-hdd', current: usage.storageOverLimit ? usage.maxStorageMb + 1 : Number(((usage.storageUsedBytes ?? 0) / (1024 * 1024)).toFixed(2)), max: usage.maxStorageMb, custom: false, detail: null, storage: true },
     ];
   }
@@ -145,16 +148,24 @@ export class BillingDashboardComponent implements OnInit {
   }
 
   download(id: string): void {
-    this.billingService.downloadInvoice(id).subscribe({
+    this.savePdf(this.billingService.downloadInvoice(id), `invoice-${id}.pdf`, 'The invoice could not be downloaded.');
+  }
+
+  downloadReceipt(id: string): void {
+    this.savePdf(this.billingService.downloadReceipt(id), `receipt-${id}.pdf`, 'The receipt could not be downloaded.');
+  }
+
+  private savePdf(request: Observable<Blob>, fileName: string, failure: string): void {
+    request.subscribe({
       next: (blob) => {
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `invoice-${id}.pdf`;
+        link.download = fileName;
         link.click();
         URL.revokeObjectURL(url);
       },
-      error: () => this.error.set('The invoice could not be downloaded.'),
+      error: () => this.error.set(failure),
     });
   }
 }

@@ -58,8 +58,13 @@
       >
         <i class="bi bi-arrow-clockwise" [class.dash__spin]="loading()" aria-hidden="true"></i>
       </button>
+      <a class="dash__icon-btn" [routerLink]="routes.nalva.command" aria-label="AI Command Center" title="AI Command Center">
+        <i class="bi bi-stars" aria-hidden="true"></i>
+      </a>
     </div>
   </header>
+
+  <app-dashboard-experience />
 
   @if (error()) {
     <app-alert [message]="error()!" variant="danger" [dismissible]="false" />
@@ -83,6 +88,7 @@
     <div class="dash__shell">
       <div class="dash__main">
         <!-- KPI cards -->
+        @if (experience.visible('performance')) {
         <section class="dash__kpi-grid" aria-label="Key metrics">
           <a class="kpi kpi--purple" [routerLink]="routes.orders.list">
             <div class="kpi__top">
@@ -171,7 +177,9 @@
             </svg>
           </a>
         </section>
+        }
 
+        @if (experience.visible('sales')) {
         <!-- Charts row -->
         <section class="dash__charts" aria-label="Analytics">
           <article class="panel panel--sales">
@@ -180,9 +188,11 @@
                 <h2 class="panel__title">Sales Overview</h2>
                 <p class="panel__meta">
                   <strong>{{ salesHeadline() | appCurrency }}</strong>
+                  @if (salesChange() !== null) {
                   <span class="panel__chip panel__chip--up">
                     ↑ {{ salesChange() | number: '1.1-1' }}%
                   </span>
+                  }
                 </p>
               </div>
               <span class="panel__filter">{{ currentPeriodLabel() }}</span>
@@ -257,9 +267,11 @@
             </div>
           </article>
         </section>
+        }
 
         <!-- Lists row -->
         <section class="dash__lists" aria-label="Products and orders">
+          @if (experience.visible('products')) {
           <article class="panel">
             <div class="panel__head">
               <h2 class="panel__title">Top Selling Products</h2>
@@ -285,7 +297,9 @@
               <p class="panel__empty">No product sales in this period.</p>
             }
           </article>
+          }
 
+          @if (experience.visible('orders')) {
           <article class="panel">
             <div class="panel__head">
               <h2 class="panel__title">Recent Orders</h2>
@@ -316,11 +330,13 @@
               </div>
             }
           </article>
+          }
         </section>
       </div>
 
       <!-- Right rail -->
       <aside class="dash__rail" aria-label="Activity and tasks">
+        @if (experience.visible('activity')) {
         <article class="panel">
           <div class="panel__head">
             <h2 class="panel__title">Activity</h2>
@@ -348,7 +364,9 @@
             </ul>
           }
         </article>
+        }
 
+        @if (experience.visible('tasks')) {
         <article class="panel">
           <div class="panel__head">
             <h2 class="panel__title">Tasks</h2>
@@ -369,6 +387,7 @@
           </ul>
           }
         </article>
+        }
 
         <article class="ai-card">
           <div class="ai-card__copy">

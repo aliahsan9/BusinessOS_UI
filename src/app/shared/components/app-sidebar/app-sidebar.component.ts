@@ -146,8 +146,7 @@ export class AppSidebarComponent implements OnInit, OnDestroy {
     for (const name of NAV_GROUP_ORDER) {
       const groupItems = groupMap.get(name);
       if (!groupItems?.length) continue;
-      // Home is a single item — no section label needed
-      groups.push({ name: name === 'Home' ? '' : name, items: groupItems });
+      groups.push({ name, items: groupItems });
       groupMap.delete(name);
     }
 

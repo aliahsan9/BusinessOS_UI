@@ -1,0 +1,127 @@
+@if (company(); as profile) {
+  <article class="sf" [style.--brand]="profile.brandColor">
+    <header class="sf__hero">
+      @if (profile.logoUrl) { <img [src]="profile.logoUrl" [alt]="profile.name + ' logo'" width="72" height="72" /> }
+      <h1>{{ profile.name }}</h1>
+      @if (profile.tagline) { <p>{{ profile.tagline }}</p> }
+      <p>{{ profile.industry }} {{ profile.category }}</p>
+    </header>
+    @if (profile.coverImageUrl) { <img [src]="profile.coverImageUrl" alt="" /> }
+    @if (profile.description) { <p>{{ profile.description }}</p> }
+    <p>
+      @if (profile.email) { <span>{{ profile.email }} </span> }
+      @if (profile.phone) { <span>{{ profile.phone }} </span> }
+      @if (profile.location) { <span>{{ profile.location }} </span> }
+      @if (profile.website) { <a [href]="profile.website">Website</a> }
+    </p>
+    @if (error()) { <p class="ux__error" role="alert">{{ error() }}</p> }
+    @if (result(); as result) { <p role="status">{{ result.message }} @if (result.orderNumber) { Order {{ result.orderNumber }} is {{ result.status }}. }</p> }
+
+    <div class="sf__grid">
+      @for (item of profile.offerings; track item.id) {
+        <article class="sf__card">
+          @if (item.imageUrl) { <img [src]="item.imageUrl" [alt]="item.name" /> }
+          <h2>{{ item.name }}</h2>
+          <p>{{ item.summary }}</p>
+          <p>{{ priceLabel(item, profile.currency) }}</p>
+          @if (item.deliverables) { <p>{{ item.deliverables }}</p> }
+          @if (item.deliveryTime) { <p class="sf__muted">{{ item.deliveryTime }}</p> }
+          @if (item.inStock === false) { <p>Unavailable</p> }
+          <button type="button" class="sf__btn" (click)="selected.set(item)">Select</button>
+        </article>
+      }
+    </div>
+
+    @if (profile.packages.length) {
+      <h2>Packages</h2>
+      <div class="sf__grid">
+        @for (item of profile.packages; track item.id) {
+          <article class="sf__card">
+            <h3>{{ item.name }}</h3>
+            <p>{{ item.scope }}</p>
+            <p>{{ item.deliverables }}</p>
+            <p>{{ item.pricingModel === 'quote' || item.price === null ? 'Custom quotation' : item.price + ' ' + profile.currency }}</p>
+          </article>
+        }
+      </div>
+    }
+
+    @if (profile.portfolio.length) {
+      <h2>Portfolio</h2>
+      <div class="sf__grid">
+        @for (item of profile.portfolio; track item.id) {
+          <article class="sf__card">
+            <h3>{{ item.title }}</h3>
+            <p>{{ item.summary }}</p>
+            <p class="sf__muted">{{ item.technologies }} {{ item.industry }}</p>
+            @if (item.results) { <p>{{ item.results }}</p> }
+            @if (item.projectUrl) { <a [href]="item.projectUrl">View project</a> }
+          </article>
+        }
+      </div>
+    }
+
+    @if (profile.reviews.length) {
+      <h2>Reviews</h2>
+      @for (review of profile.reviews; track review.id) {
+        <article class="sf__card">
+          <h3>{{ review.displayName }} · {{ review.rating }}/5</h3>
+          <p>{{ review.body }}</p>
+          <button type="button" class="sf__btn" (click)="report(review.id)">Report</button>
+        </article>
+      }
+    }
+
+    <section class="sf__card">
+      <h2>Inquiry</h2>
+      <p>{{ profile.consentNotice || 'Your message is sent to this company and stored as a sales inquiry.' }}</p>
+      <form class="sf__form" (submit)="$event.preventDefault(); submitInquiry(selected()?.kind === 'service' ? 'booking' : 'inquiry')">
+        <label class="sf__honeypot">Company website <input [(ngModel)]="inquiry.companyWebsite" name="companyWebsite" tabindex="-1" autocomplete="off" /></label>
+        <input [(ngModel)]="inquiry.name" name="name" placeholder="Name" required />
+        <input [(ngModel)]="inquiry.email" name="email" type="email" placeholder="Email" required />
+        <input [(ngModel)]="inquiry.phone" name="phone" placeholder="Phone, optional" />
+        <input [(ngModel)]="inquiry.budgetRange" name="budget" placeholder="Budget range, optional" />
+        <textarea [(ngModel)]="inquiry.requirements" name="requirements" rows="3" placeholder="Requirements"></textarea>
+        <textarea [(ngModel)]="inquiry.message" name="message" rows="4" placeholder="Message" required></textarea>
+        <label><input type="checkbox" [(ngModel)]="inquiry.consent" name="consent" required /> I agree to be contacted about this request.</label>
+        <button type="submit" class="sf__btn sf__btn--primary">{{ selected()?.kind === 'service' ? 'Request booking' : 'Send inquiry' }}</button>
+      </form>
+    </section>
+
+    @if (selected()?.kind === 'product') {
+      <section class="sf__card">
+        <h2>Order {{ selected()?.name }}</h2>
+        <form class="sf__form" (submit)="$event.preventDefault(); submitOrder()">
+          <label class="sf__honeypot">Company website <input [(ngModel)]="order.companyWebsite" name="orderWebsite" tabindex="-1" autocomplete="off" /></label>
+          <input type="number" min="1" max="99" [(ngModel)]="order.quantity" name="quantity" required />
+          <input [(ngModel)]="order.name" name="orderName" placeholder="Name" required />
+          <input [(ngModel)]="order.email" name="orderEmail" type="email" placeholder="Email" required />
+          <input [(ngModel)]="order.phone" name="orderPhone" placeholder="Phone" />
+          <input [(ngModel)]="order.address" name="address" placeholder="Address" />
+          <input [(ngModel)]="order.city" name="city" placeholder="City" />
+          <input [(ngModel)]="order.country" name="country" placeholder="Country" />
+          <input [(ngModel)]="order.postalCode" name="postal" placeholder="Postal code" />
+          <label><input type="checkbox" [(ngModel)]="order.consent" name="orderConsent" required /> I agree to this order request.</label>
+          <button type="submit" class="sf__btn sf__btn--primary">Place order</button>
+        </form>
+      </section>
+    }
+
+    <section class="sf__card">
+      <h2>Write a review</h2>
+      <p>Reviews stay hidden until the company publishes them.</p>
+      <form class="sf__form" (submit)="$event.preventDefault(); submitReview()">
+        <label class="sf__honeypot">Company website <input [(ngModel)]="review.companyWebsite" name="reviewWebsite" tabindex="-1" autocomplete="off" /></label>
+        <input [(ngModel)]="review.displayName" name="displayName" placeholder="Display name" required />
+        <input type="number" min="1" max="5" [(ngModel)]="review.rating" name="rating" required />
+        <textarea [(ngModel)]="review.body" name="reviewBody" rows="3" required></textarea>
+        <label><input type="checkbox" [(ngModel)]="review.consent" name="reviewConsent" required /> I wrote this review myself.</label>
+        <button type="submit" class="sf__btn">Submit review</button>
+      </form>
+    </section>
+  </article>
+} @else if (missing()) {
+  <section class="sf"><h1>This company profile is not published.</h1></section>
+} @else {
+  <section class="sf" aria-busy="true"><p>Loading the company profile.</p></section>
+}

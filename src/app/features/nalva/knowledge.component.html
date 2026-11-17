@@ -1,0 +1,24 @@
+<form class="nalva-panel stack" (submit)="$event.preventDefault(); add()">
+  <h3>Add knowledge</h3>
+  <label>Agent key, blank for company-wide <input [value]="agentKey()" (input)="agentKey.set($any($event.target).value)" /></label>
+  <label>Title <input [value]="title()" (input)="title.set($any($event.target).value)" /></label>
+  <label>Content <textarea rows="4" [value]="content()" (input)="content.set($any($event.target).value)"></textarea></label>
+  <button class="btn primary" type="submit">Save</button>
+</form>
+<section class="stack" style="margin-top: 16px">
+  @for (row of rows(); track row.id) {
+    <article class="nalva-panel">
+      <h3>{{ row.title }}</h3>
+      <p class="muted">{{ row.agentKey || 'Shared' }}</p>
+      <p>{{ row.excerpt }}</p>
+      <button class="btn" type="button" (click)="remove(row.id)">Delete</button>
+    </article>
+  }
+</section>
+<section class="nalva-panel" style="margin-top: 16px">
+  <h3>Memory</h3>
+  <label>Agent <input [value]="memoryAgent()" (input)="memoryAgent.set($any($event.target).value)" (change)="load()" /></label>
+  @for (item of memory(); track item.id) {
+    <p>{{ item.kind }} · {{ item.excerpt }} <button class="btn" type="button" (click)="forget(item.id)">Delete</button></p>
+  }
+</section>

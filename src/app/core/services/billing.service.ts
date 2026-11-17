@@ -62,6 +62,13 @@ export class BillingService extends BaseApiService {
     });
   }
 
+  downloadReceipt(id: string): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/billing/invoices/${id}/receipt`, {
+      responseType: 'blob',
+      withCredentials: true,
+    });
+  }
+
   getUsage(): Observable<BillingUsageDto> {
     return this.get<BillingUsageDto>('/billing/usage');
   }

@@ -1,17 +1,20 @@
 import { ChangeDetectionStrategy, Component, output } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { AppButtonComponent } from '../../../../shared/components/app-button/app-button.component';
 import { ButtonVariant } from '../../../../core/enums';
+import { ROUTES } from '../../../../core/constants/route.constants';
 
 @Component({
   selector: 'app-welcome-step',
   standalone: true,
-  imports: [AppButtonComponent],
+  imports: [AppButtonComponent, RouterLink],
   templateUrl: './welcome-step.component.html',
   styleUrl: './welcome-step.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WelcomeStepComponent {
   readonly ButtonVariant = ButtonVariant;
+  readonly agencySetup = ROUTES.onboarding.agency;
 
   readonly next = output<void>();
   readonly skip = output<void>();

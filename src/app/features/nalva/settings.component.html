@@ -1,0 +1,44 @@
+@if (notice()) { <p class="nalva-panel">{{ notice() }}</p> }
+@if (settings(); as settings) {
+  <form class="nalva-panel stack" (submit)="$event.preventDefault(); save()">
+    <p class="muted">Used this month: {{ settings.tokensUsedThisMonth }} tokens, estimated ${{ settings.estimatedSpendThisMonthUsd }}. Pricing {{ settings.pricingVersion }}.</p>
+    @if (settings.costAlert) { <p>Cost alert is on.</p> }
+    <label>Default model
+      <select [value]="settings.defaultModel" (change)="patch({ defaultModel: $any($event.target).value })">
+        @for (model of models(); track model.model) {
+          @if (model.kind === 'chat') { <option [value]="model.model">{{ model.model }}</option> }
+        }
+      </select>
+    </label>
+    <label>Embedding model
+      <select [value]="settings.embeddingModel" (change)="patch({ embeddingModel: $any($event.target).value })">
+        @for (model of models(); track model.model) {
+          @if (model.kind === 'embedding') { <option [value]="model.model">{{ model.model }}</option> }
+        }
+      </select>
+    </label>
+    <label>Temperature <input type="number" step="0.1" min="0" max="1" [value]="settings.temperature" (input)="patch({ temperature: +$any($event.target).value })" /></label>
+    <label>Monthly token budget <input type="number" [value]="settings.monthlyTokenBudget" (input)="patch({ monthlyTokenBudget: +$any($event.target).value })" /></label>
+    <label>Monthly budget USD <input type="number" [value]="settings.monthlyBudgetUsd" (input)="patch({ monthlyBudgetUsd: +$any($event.target).value })" /></label>
+    <label>Daily execution limit <input type="number" [value]="settings.dailyExecutionLimit" (input)="patch({ dailyExecutionLimit: +$any($event.target).value })" /></label>
+    <label>Alert at percent <input type="number" [value]="settings.alertThresholdPercent" (input)="patch({ alertThresholdPercent: +$any($event.target).value })" /></label>
+    <label>Autonomy ceiling
+      <select [value]="settings.autonomyCeiling" (change)="patch({ autonomyCeiling: +$any($event.target).value })">
+        <option [value]="1">1 Read only</option>
+        <option [value]="2">2 Drafting</option>
+        <option [value]="3">3 Supervised</option>
+        <option [value]="4">4 Limited autonomy</option>
+      </select>
+    </label>
+    <button class="btn primary" type="submit">Save</button>
+  </form>
+  <section class="nalva-panel" style="margin-top: 16px">
+    <h3>Versioned prices</h3>
+    <table class="table">
+      <tr><th>Model</th><th>Input / 1M</th><th>Output / 1M</th></tr>
+      @for (model of models(); track model.model) {
+        <tr><td>{{ model.model }}</td><td>${{ model.inputUsdPerMillion }}</td><td>${{ model.outputUsdPerMillion }}</td></tr>
+      }
+    </table>
+  </section>
+}

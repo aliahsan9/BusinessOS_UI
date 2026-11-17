@@ -1,0 +1,140 @@
+<section class="cc" aria-label="AI command center">
+  @if (leftOpen()) {
+    <aside class="cc__panel">
+      <div class="ux__actions">
+        <h2>Conversations</h2>
+        <button type="button" class="cc__btn" (click)="leftOpen.set(false)">Hide</button>
+      </div>
+      <button type="button" class="cc__btn" (click)="newConversation()">New conversation</button>
+      <div class="cc__scroll">
+        @for (session of sessions(); track session.id) {
+          <button type="button" class="cc__item" (click)="openSession(session)">
+            <strong>{{ session.title || 'Conversation' }}</strong>
+            <small class="cc__status">{{ session.lastMessagePreview || session.summary || session.messageCount + ' messages' }}</small>
+          </button>
+        } @empty {
+          <p class="cc__empty">No saved conversations yet.</p>
+        }
+        <h2>Tasks</h2>
+        @for (task of rootTasks(); track task.id) {
+          <article class="cc__item">
+            <strong>{{ task.agentKey }} · {{ task.status }}</strong>
+            <p>{{ task.objective }}</p>
+            @if (task.deadline) { <p class="cc__status">Deadline {{ task.deadline }}</p> }
+            @if (task.lastError) { <p class="cc__status">{{ task.lastError }}</p> }
+            @if (canManage) {
+              <div class="ux__actions">
+                @if (task.status === 'Queued') { <button type="button" class="cc__btn" (click)="control(task, 'pause')">Pause</button> }
+                @if (task.status === 'Paused') { <button type="button" class="cc__btn" (click)="control(task, 'resume')">Resume</button> }
+                @if (task.status === 'Failed' || task.status === 'DeadLetter') { <button type="button" class="cc__btn" (click)="control(task, 'retry')">Retry</button> }
+                @if (task.status === 'Queued' || task.status === 'Paused' || task.status === 'Pending' || task.status === 'AwaitingApproval') {
+                  <button type="button" class="cc__btn" (click)="control(task, 'cancel')">Cancel</button>
+                }
+              </div>
+            }
+            @for (child of childTasks(task.id); track child.id) {
+              <p class="cc__status">{{ child.agentKey }} · {{ child.status }}</p>
+            }
+          </article>
+        }
+      </div>
+    </aside>
+  }
+
+  <section class="cc__panel">
+    <div class="ux__actions">
+      @if (!leftOpen()) { <button type="button" class="cc__btn" (click)="leftOpen.set(true)">Conversations</button> }
+      <h2>Command</h2>
+      <span class="cc__status">{{ status() }}</span>
+      @if (!rightOpen()) { <button type="button" class="cc__btn" (click)="rightOpen.set(true)">Workforce</button> }
+    </div>
+    @if (error()) { <p class="ux__error" role="alert">{{ error() }}</p> }
+    <div class="cc__scroll" aria-live="polite">
+      @for (message of messages(); track message.id) {
+        <article class="cc__message cc__message--user"><strong>You</strong><p>{{ message.prompt }}</p></article>
+        <article class="cc__message">
+          <strong>CompanyOS</strong>
+          <p>{{ message.response }}</p>
+          @if (message.toolsUsed.length) { <p class="cc__status">Tools: {{ message.toolsUsed.join(', ') }}</p> }
+        </article>
+      } @empty {
+        <p class="cc__empty">Ask a question or select agents and assign an objective. Answers and task states come from the company AI services.</p>
+      }
+    </div>
+    <form class="cc__composer" (submit)="$event.preventDefault(); send()">
+      <label for="command-input">Objective</label>
+      <textarea id="command-input" rows="3" [ngModel]="draft()" (ngModelChange)="draft.set($event)" name="objective"></textarea>
+      <label for="command-deadline">Deadline, optional</label>
+      <input id="command-deadline" type="datetime-local" [ngModel]="deadline()" (ngModelChange)="deadline.set($event)" name="deadline" />
+      @if (transcript()) { <p class="cc__status">Heard: {{ transcript() }}</p> }
+      @if (voiceNote()) { <p class="cc__status">{{ voiceNote() }}</p> }
+      <div class="ux__actions">
+        <button type="submit" class="cc__btn cc__btn--primary">Send</button>
+        <button type="button" class="cc__btn" (click)="stop()">Stop</button>
+        <button type="button" class="cc__btn" (click)="listen()">Voice</button>
+        <a class="cc__btn" routerLink="/reports">Reports</a>
+        <button type="button" class="cc__btn" (click)="stopSpeech()">Stop speech</button>
+        <label>
+          Voice
+          <select [value]="selectedVoice()" (change)="chooseVoice($event)" aria-label="Spoken voice">
+            @for (voice of voices(); track voice.id) {
+              <option [value]="voice.id">{{ voice.label }}</option>
+            }
+          </select>
+        </label>
+      </div>
+    </form>
+  </section>
+
+  @if (rightOpen()) {
+    <aside class="cc__panel">
+      <div class="ux__actions">
+        <h2>Workforce</h2>
+        <button type="button" class="cc__btn" (click)="rightOpen.set(false)">Hide</button>
+      </div>
+      <div class="cc__scroll">
+        @for (agent of agents(); track agent.key) {
+          <label class="cc__item">
+            <input type="checkbox" [checked]="selectedAgents().includes(agent.key)" (change)="toggleAgent(agent.key)" [disabled]="!canManage" />
+            <a [routerLink]="['/nalva/agents', agent.key]">{{ agent.name }}</a>
+            <span class="cc__status">{{ agent.status }} · {{ agent.role }}</span>
+          </label>
+        } @empty {
+          <p class="cc__empty">No agents are activated for this company.</p>
+        }
+        <h2>Approvals</h2>
+        @for (approval of approvals(); track approval.id) {
+          <article class="cc__item">
+            <strong>{{ approval.action }}</strong>
+            <p>{{ approval.agentKey }} · {{ approval.toolName }} · {{ approval.risk }}</p>
+            @if (approval.contextJson) { <p class="cc__status">{{ approval.contextJson }}</p> }
+            @if (canApprove) {
+              <div class="ux__actions">
+                <button type="button" class="cc__btn cc__btn--primary" (click)="decide(approval, 'approve')">Approve</button>
+                <button type="button" class="cc__btn" (click)="decide(approval, 'reject')">Reject</button>
+              </div>
+            }
+          </article>
+        } @empty {
+          <p class="cc__empty">No approvals are waiting.</p>
+        }
+        <h2>Executions</h2>
+        @for (execution of executions(); track execution.id) {
+          <button type="button" class="cc__item" (click)="selectedExecution.set(execution)">
+            {{ execution.agentKey }} · {{ execution.status }} · {{ execution.toolCallCount }} tools
+          </button>
+        }
+        @if (selectedExecution(); as execution) {
+          <article class="cc__item">
+            <h2>Execution record</h2>
+            <p>{{ execution.summary || 'No summary was stored.' }}</p>
+            <p class="cc__status">{{ execution.status }} · {{ execution.durationMs }} ms · attempt {{ execution.retryAttempt }}</p>
+            <p class="cc__status">Estimated cost {{ execution.estimatedCostUsd }} USD{{ execution.costIsEstimate ? ' (estimate)' : '' }}</p>
+            @if (execution.error) { <p class="ux__error">{{ execution.error }}</p> }
+            <p class="cc__status">Hidden model reasoning is not shown. This is the stored summary, tool count, and result.</p>
+          </article>
+        }
+      </div>
+    </aside>
+  }
+</section>

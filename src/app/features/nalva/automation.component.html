@@ -1,0 +1,29 @@
+<section class="nalva-grid">
+  <article class="nalva-stat"><span>Active workflows</span><strong>{{ active() }}</strong></article>
+  <article class="nalva-stat"><span>Paused</span><strong>{{ paused() }}</strong></article>
+  <article class="nalva-stat"><span>Scheduled</span><strong>{{ scheduled() }}</strong></article>
+  <article class="nalva-stat"><span>Running</span><strong>{{ count('Running') }}</strong></article>
+  <article class="nalva-stat"><span>Completed</span><strong>{{ count('Completed') }}</strong></article>
+  <article class="nalva-stat"><span>Failed</span><strong>{{ count('Failed') }}</strong></article>
+  <article class="nalva-stat"><span>Pending approvals</span><strong>{{ approvals().length }}</strong></article>
+</section>
+
+<section class="nalva-panel">
+  <h2>Execution history</h2>
+  @if (runs().length === 0) {
+    <p class="muted">No workflow runs yet.</p>
+  } @else {
+    <ul>
+      @for (run of runs(); track run.id) {
+        <li>
+          <strong>{{ run.workflowName }}</strong>
+          <span class="pill">{{ run.status }}</span>
+          <span class="muted">{{ run.triggerSource || 'Manual' }}</span>
+          @if (run.isDryRun) { <span class="pill">Dry run</span> }
+          @if (run.error) { <p>{{ run.error }}</p> }
+          @if (run.summary) { <p>{{ run.summary }}</p> }
+        </li>
+      }
+    </ul>
+  }
+</section>

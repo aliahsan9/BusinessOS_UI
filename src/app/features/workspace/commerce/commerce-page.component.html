@@ -1,0 +1,89 @@
+<app-breadcrumb [items]="[{ label: 'Sales and inventory' }, { label: title() }]" />
+<app-page-header [title]="title()" subtitle="Warehouse stock and return decisions from recorded transactions." />
+@if (error()) { <app-alert variant="danger" [message]="error()!" [dismissible]="false" /> }
+@if (loading()) {
+  <div class="workspace-stack">@for (row of [1, 2, 3]; track row) { <app-skeleton height="2.5rem" /> }</div>
+} @else if (screen() === 'warehouses') {
+  <form class="workspace-form" (ngSubmit)="saveWarehouse()">
+    <input class="form-control" placeholder="Warehouse name" required [(ngModel)]="warehouse.name" name="name" />
+    <input class="form-control" placeholder="Code" [(ngModel)]="warehouse.code" name="code" />
+    <input class="form-control" placeholder="Address" [(ngModel)]="warehouse.address" name="address" />
+    <label class="form-check"><input type="checkbox" [(ngModel)]="warehouse.isDefault" name="isDefault" /> Default</label>
+    <button class="btn btn-primary" type="submit" [disabled]="saving()">Add warehouse</button>
+  </form>
+  <form class="workspace-form" (ngSubmit)="saveTransfer()">
+    <select class="form-select" required [(ngModel)]="transfer.fromWarehouseId" name="from">
+      <option value="">From</option>
+      @for (warehouse of warehouses(); track warehouse.id) { <option [value]="warehouse.id">{{ warehouse.name }}</option> }
+    </select>
+    <select class="form-select" required [(ngModel)]="transfer.toWarehouseId" name="to">
+      <option value="">To</option>
+      @for (warehouse of warehouses(); track warehouse.id) { <option [value]="warehouse.id">{{ warehouse.name }}</option> }
+    </select>
+    <input class="form-control" placeholder="Product id" required [(ngModel)]="transfer.productId" name="product" />
+    <input class="form-control" type="number" min="0.01" [(ngModel)]="transfer.quantity" name="quantity" />
+    <button class="btn btn-outline-primary" type="submit" [disabled]="saving()">Transfer stock</button>
+  </form>
+  @if (warehouses().length === 0) {
+    <app-empty-state icon="bi-building" title="No warehouses" description="Add a warehouse. The first stock movement also seeds a Main warehouse." />
+  }
+  <div class="bos-table-wrapper">
+    <table class="bos-table bos-table--compact">
+      <thead><tr><th>Warehouse</th><th>Code</th><th></th></tr></thead>
+      <tbody>
+        @for (warehouse of warehouses(); track warehouse.id) {
+          <tr>
+            <td>{{ warehouse.name }} {{ warehouse.isDefault ? '(default)' : '' }}</td>
+            <td>{{ warehouse.code }}</td>
+            <td><button type="button" class="btn btn-link" (click)="loadStock(warehouse.id)">View stock</button></td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  @if (stock().length) {
+    <div class="bos-table-wrapper">
+      <table class="bos-table bos-table--compact">
+        <thead><tr><th>Product</th><th>On hand</th><th>Reserved</th><th>Available</th></tr></thead>
+        <tbody>
+          @for (row of stock(); track row.productId) { <tr><td>{{ row.productName }}</td><td>{{ row.onHand }}</td><td>{{ row.reserved }}</td><td>{{ row.available }}</td></tr> }
+        </tbody>
+      </table>
+    </div>
+  }
+  <h3>Inventory alerts</h3>
+  @if (alerts().length === 0) { <p>No low-stock or out-of-stock products.</p> }
+  @for (alert of alerts(); track alert.productId) {
+    <article class="workspace-card"><strong>{{ alert.productName }}</strong><div>{{ alert.alert }} · on hand {{ alert.onHand }} · reorder {{ alert.reorderLevel }}</div></article>
+  }
+} @else {
+  <form class="workspace-form" (ngSubmit)="saveReturn()">
+    <input class="form-control" placeholder="Completed order id" required [(ngModel)]="returnRequest.orderId" name="order" />
+    <input class="form-control" placeholder="Product id" required [(ngModel)]="returnRequest.productId" name="product" />
+    <input class="form-control" type="number" min="0.01" [(ngModel)]="returnRequest.quantity" name="qty" />
+    <input class="form-control" placeholder="Reason" required [(ngModel)]="returnRequest.reason" name="reason" />
+    <button class="btn btn-primary" type="submit" [disabled]="saving()">Request return</button>
+  </form>
+  @if (returns().length === 0) {
+    <app-empty-state icon="bi-arrow-return-left" title="No returns" description="Returns can be requested for completed orders." />
+  }
+  <div class="bos-table-wrapper">
+    <table class="bos-table bos-table--compact">
+      <thead><tr><th>Number</th><th>Order</th><th>Status</th><th>Restock</th><th>Refund</th><th></th></tr></thead>
+      <tbody>
+        @for (row of returns(); track row.id) {
+          <tr>
+            <td>{{ row.returnNumber }}</td><td>{{ row.orderId }}</td><td>{{ row.status }}</td><td>{{ row.restock ? 'Yes' : 'No' }}</td><td>{{ row.refundAmount }}</td>
+            <td>
+              @if (row.status === 'Requested') {
+                <button type="button" class="btn btn-link" (click)="decide(row, true, true)">Approve and restock</button>
+                <button type="button" class="btn btn-link" (click)="decide(row, true, false)">Approve without restock</button>
+                <button type="button" class="btn btn-link link-danger" (click)="decide(row, false, false)">Reject</button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

@@ -1,5 +1,5 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
-import { forkJoin } from 'rxjs';
+import { Observable, catchError, forkJoin, of } from 'rxjs';
 import { DashboardService } from '../core/services/dashboard.service';
 import {
   ChartDataResponse,
@@ -62,15 +62,16 @@ export class DashboardStateService {
     const params: DashboardQueryParams = { period, top: 10 };
     this.patchState({ loading: true, error: null, period });
 
+    const safe = <T>(source: Observable<T>) => source.pipe(catchError(() => of(null as T | null)));
     forkJoin({
-      overview: this.dashboardService.getOverview(params),
-      sales: this.dashboardService.getSales(params),
-      customers: this.dashboardService.getCustomers(params),
-      products: this.dashboardService.getProducts(params),
-      inventory: this.dashboardService.getInventory(params),
-      orders: this.dashboardService.getOrders(params),
-      revenueChart: this.dashboardService.getRevenueChart(params),
-      ordersChart: this.dashboardService.getOrdersChart(params),
+      overview: safe(this.dashboardService.getOverview(params)),
+      sales: safe(this.dashboardService.getSales(params)),
+      customers: safe(this.dashboardService.getCustomers(params)),
+      products: safe(this.dashboardService.getProducts(params)),
+      inventory: safe(this.dashboardService.getInventory(params)),
+      orders: safe(this.dashboardService.getOrders(params)),
+      revenueChart: safe(this.dashboardService.getRevenueChart(params)),
+      ordersChart: safe(this.dashboardService.getOrdersChart(params)),
     }).subscribe({
       next: (data) => {
         this.patchState({

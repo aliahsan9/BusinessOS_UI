@@ -1,0 +1,36 @@
+<p class="muted">Connections belong to this company. Tokens stay on the server. A provider is not verified with a live account until its server credentials are configured and a connection succeeds.</p>
+@if (notice()) { <p class="nalva-panel">{{ notice() }}</p> }
+
+<label>
+  Shopify shop name
+  <input [value]="shop()" (input)="shop.set($any($event.target).value)" placeholder="your-shop" />
+</label>
+
+<section class="nalva-cards">
+  @for (provider of providers(); track provider.key) {
+    <article class="nalva-card">
+      <p class="eyebrow">{{ provider.category }}</p>
+      <h3>{{ provider.name }}</h3>
+      <p>{{ provider.description }}</p>
+      <div class="pills">
+        <span class="pill">{{ provider.implementationStatus }}</span>
+        <span class="pill">{{ provider.connectionStatus }}</span>
+        @if (!provider.providerVerified) { <span class="pill">Not verified live</span> }
+        @if (!provider.serverConfigured) { <span class="pill">Server credentials missing</span> }
+      </div>
+      @if (provider.readOperations.length) {
+        <p class="muted">Read: {{ provider.readOperations.join(', ') }}</p>
+      }
+      @if (provider.writeOperations.length) {
+        <p class="muted">Write, after approval: {{ provider.writeOperations.join(', ') }}</p>
+      }
+      <div class="actions">
+        <button type="button" (click)="connect(provider)" [disabled]="!provider.serverConfigured">Connect</button>
+        @if (provider.connectionId) {
+          <button type="button" (click)="test(provider)">Test</button>
+          <button type="button" (click)="disconnect(provider)">Disconnect</button>
+        }
+      </div>
+    </article>
+  }
+</section>

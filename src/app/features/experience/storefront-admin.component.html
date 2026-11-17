@@ -1,0 +1,124 @@
+<section class="sf">
+  <header>
+    <h1>Public storefront</h1>
+    <p>Publish only the profile, products, services, portfolio, and reviews you want customers to see.</p>
+  </header>
+  @if (error()) { <p class="ux__error" role="alert">{{ error() }}</p> }
+  @if (notice()) { <p role="status">{{ notice() }}</p> }
+  @if (profile(); as profile) {
+    <form class="sf__form" (submit)="$event.preventDefault(); saveProfile()">
+      <label><input type="checkbox" [(ngModel)]="profile.isPublished" name="published" /> Published</label>
+      <label>Public address <input [(ngModel)]="profile.slug" name="slug" /></label>
+      <p class="sf__muted">Current path: <a [routerLink]="profile.publicPath">{{ profile.publicPath }}</a></p>
+      <label>Tagline <input [(ngModel)]="profile.tagline" name="tagline" /></label>
+      <label>Description <textarea [(ngModel)]="profile.publicDescription" name="description" rows="4"></textarea></label>
+      <label>Industry <input [(ngModel)]="profile.industry" name="industry" /></label>
+      <label>Category <input [(ngModel)]="profile.category" name="category" /></label>
+      <label>Public email <input [(ngModel)]="profile.publicEmail" name="email" type="email" /></label>
+      <label>Public phone <input [(ngModel)]="profile.publicPhone" name="phone" /></label>
+      <label>Website <input [(ngModel)]="profile.website" name="website" /></label>
+      <label>Location <input [(ngModel)]="profile.location" name="location" /></label>
+      <label>Cover image URL <input [(ngModel)]="profile.coverImageUrl" name="cover" /></label>
+      <label>Brand color <input [(ngModel)]="profile.brandColor" name="color" /></label>
+      <label>SEO title <input [(ngModel)]="profile.seoTitle" name="seoTitle" /></label>
+      <label>SEO description <textarea [(ngModel)]="profile.seoDescription" name="seoDescription" rows="2"></textarea></label>
+      <label>Consent notice <textarea [(ngModel)]="profile.consentNotice" name="consent" rows="2"></textarea></label>
+      <label><input type="checkbox" [(ngModel)]="profile.showProducts" name="showProducts" /> Show products</label>
+      <label><input type="checkbox" [(ngModel)]="profile.showServices" name="showServices" /> Show services</label>
+      <label><input type="checkbox" [(ngModel)]="profile.showPortfolio" name="showPortfolio" /> Show portfolio</label>
+      <label><input type="checkbox" [(ngModel)]="profile.showReviews" name="showReviews" /> Show published reviews</label>
+      <button type="submit" class="sf__btn sf__btn--primary">Save profile</button>
+    </form>
+
+    <article class="sf__card">
+      <h2>Catalog</h2>
+      <form class="sf__form" (submit)="$event.preventDefault(); addOffering()">
+        <select [(ngModel)]="offering.kind" name="kind">
+          <option value="service">Service</option>
+          <option value="product">Product</option>
+        </select>
+        @if (offering.kind === 'product') {
+          <select [(ngModel)]="offering.productId" name="productId">
+            <option value="">Select a catalog product</option>
+            @for (product of productOptions(); track product.id) {
+              <option [value]="product.id">{{ product.name }}</option>
+            }
+          </select>
+        }
+        <input [(ngModel)]="offering.name" name="offeringName" placeholder="Name" required />
+        <input [(ngModel)]="offering.summary" name="summary" placeholder="Summary" />
+        <select [(ngModel)]="offering.pricingModel" name="pricing">
+          <option value="fixed">Fixed price</option>
+          <option value="starting">Starting from</option>
+          <option value="hourly">Hourly</option>
+          <option value="quote">Custom quotation</option>
+        </select>
+        <input type="number" [(ngModel)]="offering.price" name="price" placeholder="Price, optional" />
+        <input [(ngModel)]="offering.deliverables" name="deliverables" placeholder="Deliverables" />
+        <input [(ngModel)]="offering.deliveryTime" name="delivery" placeholder="Estimated delivery" />
+        <label><input type="checkbox" [(ngModel)]="offering.isPublished" name="offeringPublished" /> Publish</label>
+        <button type="submit" class="sf__btn">Add offering</button>
+      </form>
+      <ul>
+        @for (item of profile.offerings; track item.id) {
+          <li>{{ item.name }} · {{ item.kind }} · {{ item.pricingModel }} · {{ item.isPublished ? 'Published' : 'Hidden' }}</li>
+        }
+      </ul>
+    </article>
+
+    <article class="sf__card">
+      <h2>Packages</h2>
+      <form class="sf__form" (submit)="$event.preventDefault(); addPackage()">
+        <input [(ngModel)]="packageDraft.name" name="packageName" placeholder="Package name" required />
+        <textarea [(ngModel)]="packageDraft.scope" name="scope" rows="2" placeholder="Scope and deliverables"></textarea>
+        <select [(ngModel)]="packageDraft.pricingModel" name="packagePricing">
+          <option value="fixed">Fixed</option>
+          <option value="starting">Starting from</option>
+          <option value="quote">Custom quotation</option>
+        </select>
+        <input type="number" [(ngModel)]="packageDraft.price" name="packagePrice" placeholder="Price, optional" />
+        <button type="submit" class="sf__btn">Add package</button>
+      </form>
+      <ul>
+        @for (item of profile.packages; track item.id) {
+          <li>{{ item.name }} · {{ item.pricingModel }}</li>
+        }
+      </ul>
+    </article>
+
+    <article class="sf__card">
+      <h2>Portfolio</h2>
+      <form class="sf__form" (submit)="$event.preventDefault(); addPortfolio()">
+        <input [(ngModel)]="portfolioDraft.title" name="title" placeholder="Project title" required />
+        <textarea [(ngModel)]="portfolioDraft.summary" name="portfolioSummary" rows="2" placeholder="Public summary"></textarea>
+        <input [(ngModel)]="portfolioDraft.technologies" name="tech" placeholder="Technologies" />
+        <input [(ngModel)]="portfolioDraft.industry" name="portfolioIndustry" placeholder="Industry" />
+        <input [(ngModel)]="portfolioDraft.projectUrl" name="url" placeholder="https:// project URL" />
+        <input [(ngModel)]="portfolioDraft.results" name="results" placeholder="Verified result" />
+        <label><input type="checkbox" [(ngModel)]="portfolioDraft.isPublished" name="portfolioPublished" /> Publish</label>
+        <button type="submit" class="sf__btn">Add portfolio item</button>
+      </form>
+      <ul>
+        @for (item of profile.portfolio; track item.id) {
+          <li>{{ item.title }} · {{ item.isPublished ? 'Published' : 'Hidden' }}</li>
+        }
+      </ul>
+    </article>
+
+    <article class="sf__card">
+      <h2>Reviews</h2>
+      <ul>
+        @for (review of profile.reviews; track review.id) {
+          <li>
+            <strong>{{ review.displayName }} · {{ review.rating }}/5 · {{ review.status }}</strong>
+            <p>{{ review.body }}</p>
+            <button type="button" class="sf__btn" (click)="moderate(review.id, 'published')">Publish</button>
+            <button type="button" class="sf__btn" (click)="moderate(review.id, 'rejected')">Unpublish</button>
+          </li>
+        } @empty {
+          <li>No reviews have been submitted.</li>
+        }
+      </ul>
+    </article>
+  }
+</section>

@@ -42,6 +42,16 @@ export interface PlanFeatureFlagsDto {
   hasPdfReports: boolean;
   hasAdvancedReports: boolean;
   hasPrioritySupport: boolean;
+  hasApiAccess?: boolean;
+  hasMultiBranch?: boolean;
+  hasAutomations?: boolean;
+  hasIntegrations?: boolean;
+  hasClientPortal?: boolean;
+  hasStorefront?: boolean;
+  hasMultiAgent?: boolean;
+  hasFinance?: boolean;
+  hasAdvancedSecurity?: boolean;
+  accessMode?: string;
 }
 
 export interface CurrentPlanDto {
@@ -66,6 +76,8 @@ export interface CurrentPlanDto {
   autoRenew: boolean;
   paymentMethodSummary?: string;
   currencyScale: number;
+  graceEndsAt?: string;
+  accessMode?: string;
   featureFlags: PlanFeatureFlagsDto;
 }
 
@@ -106,6 +118,11 @@ export interface BillingUsageDto {
   storageOverLimit?: boolean;
   aiRequestsOverLimit?: boolean;
   subscriptionStatus?: string;
+  agentExecutionsUsed?: number;
+  maxAgentExecutions?: number;
+  automationRunsUsed?: number;
+  maxAutomationRuns?: number;
+  quotaMessage?: string;
 }
 
 export interface BillingInvoiceDto {
@@ -122,6 +139,9 @@ export interface BillingInvoiceDto {
   periodStart: string;
   periodEnd: string;
   paidAt?: string;
+  dueDate?: string;
+  receiptNumber?: string;
+  billToName?: string;
   createdAt: string;
 }
 

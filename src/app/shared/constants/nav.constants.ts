@@ -34,12 +34,11 @@ export const APP_ROUTE_PATHS = {
 export { ROUTES };
 
 export type NavGroupName =
-  | 'Home'
-  | 'Buying'
-  | 'Selling'
-  | 'Insights'
-  | 'Finance'
-  | 'Administration';
+  | 'Overview'
+  | 'Business'
+  | 'Workforce'
+  | 'AI Workforce'
+  | 'Workspace';
 
 export interface NavItem {
   label: string;
@@ -52,12 +51,11 @@ export interface NavItem {
 
 /** Display order for sidebar groups (friendly, non-technical labels). */
 export const NAV_GROUP_ORDER: readonly NavGroupName[] = [
-  'Home',
-  'Buying',
-  'Selling',
-  'Insights',
-  'Finance',
-  'Administration',
+  'Overview',
+  'Business',
+  'Workforce',
+  'AI Workforce',
+  'Workspace',
 ] as const;
 
 /** Compact quick links shown in the top navbar (sidebar holds full navigation). */
@@ -87,11 +85,66 @@ export const TOP_NAV_ITEMS: NavItem[] = [
 
 export const NAV_ITEMS: NavItem[] = [
   {
+    label: 'Feedback',
+    icon: 'bi-chat-left-text',
+    route: ROUTES.launch,
+    description: 'Send feedback, report a bug, or download a company export.',
+    group: 'Overview',
+  },
+  {
     label: 'Dashboard',
     icon: 'bi-grid-1x2',
     route: ROUTES.dashboard,
     description: 'See how your business is doing at a glance.',
-    group: 'Home',
+    group: 'Overview',
+  },
+  {
+    label: 'Nalva.ai',
+    icon: 'bi-stars',
+    route: ROUTES.nalva.base,
+    description: 'Hire, supervise, and review your AI workforce.',
+    permissions: ['Nalva.View'],
+    group: 'AI Workforce',
+  },
+  {
+    label: 'AI Command Center',
+    icon: 'bi-chat-dots',
+    route: ROUTES.nalva.command,
+    description: 'Ask questions and assign work to the AI workforce.',
+    permissions: ['Nalva.View'],
+    group: 'Overview',
+  },
+  {
+    label: 'AI agents',
+    icon: 'bi-person-gear',
+    route: ROUTES.nalva.agents,
+    description: 'Agents activated for this company.',
+    permissions: ['Nalva.View'],
+    group: 'AI Workforce',
+  },
+  {
+    label: 'Agent tasks',
+    icon: 'bi-list-check',
+    route: ROUTES.nalva.tasks,
+    description: 'Tasks assigned to AI agents.',
+    permissions: ['Nalva.View'],
+    group: 'AI Workforce',
+  },
+  {
+    label: 'Automations',
+    icon: 'bi-lightning',
+    route: ROUTES.nalva.automation,
+    description: 'Workflows and scheduled automation.',
+    permissions: ['Nalva.View'],
+    group: 'AI Workforce',
+  },
+  {
+    label: 'Execution history',
+    icon: 'bi-clock-history',
+    route: ROUTES.nalva.history,
+    description: 'Stored agent execution records.',
+    permissions: ['Nalva.View'],
+    group: 'AI Workforce',
   },
   {
     label: 'Products',
@@ -99,7 +152,7 @@ export const NAV_ITEMS: NavItem[] = [
     route: ROUTES.products.base,
     description: 'Your product catalog and prices.',
     permissions: ['Product.View'],
-    group: 'Buying',
+    group: 'Business',
   },
   {
     label: 'Stock',
@@ -107,7 +160,7 @@ export const NAV_ITEMS: NavItem[] = [
     route: ROUTES.inventory.base,
     description: 'See what you have in stock.',
     permissions: ['Inventory.View'],
-    group: 'Buying',
+    group: 'Business',
   },
   {
     label: 'Suppliers',
@@ -115,7 +168,7 @@ export const NAV_ITEMS: NavItem[] = [
     route: ROUTES.suppliers.base,
     description: 'People you buy from.',
     permissions: ['Supplier.View'],
-    group: 'Buying',
+    group: 'Business',
   },
   {
     label: 'Buy orders',
@@ -123,7 +176,7 @@ export const NAV_ITEMS: NavItem[] = [
     route: ROUTES.purchaseOrders.base,
     description: 'Orders you place with suppliers.',
     permissions: ['PurchaseOrder.View'],
-    group: 'Buying',
+    group: 'Business',
   },
   {
     label: 'Customers',
@@ -131,7 +184,7 @@ export const NAV_ITEMS: NavItem[] = [
     route: ROUTES.customers.base,
     description: 'People who buy from you.',
     permissions: ['Customer.View'],
-    group: 'Selling',
+    group: 'Business',
   },
   {
     label: 'Orders',
@@ -139,7 +192,7 @@ export const NAV_ITEMS: NavItem[] = [
     route: ROUTES.orders.base,
     description: 'Customer orders to fulfill.',
     permissions: ['Order.View'],
-    group: 'Selling',
+    group: 'Business',
   },
   {
     label: 'Quotes',
@@ -147,7 +200,7 @@ export const NAV_ITEMS: NavItem[] = [
     route: ROUTES.quotations.base,
     description: 'Price quotes for customers.',
     permissions: ['Quotation.View'],
-    group: 'Selling',
+    group: 'Business',
   },
   {
     label: 'Invoices',
@@ -155,7 +208,7 @@ export const NAV_ITEMS: NavItem[] = [
     route: ROUTES.invoices.base,
     description: 'Bills you send to customers.',
     permissions: ['Invoice.View'],
-    group: 'Selling',
+    group: 'Business',
   },
   {
     label: 'Payments',
@@ -163,7 +216,7 @@ export const NAV_ITEMS: NavItem[] = [
     route: ROUTES.payments.base,
     description: 'Money received from customers.',
     permissions: ['Payment.View'],
-    group: 'Selling',
+    group: 'Business',
   },
   {
     label: 'Sales overview',
@@ -171,7 +224,7 @@ export const NAV_ITEMS: NavItem[] = [
     route: ROUTES.sales.dashboard,
     description: 'Sales numbers and top products.',
     permissions: ['Order.View'],
-    group: 'Insights',
+    group: 'Business',
   },
   {
     label: 'Reports',
@@ -179,7 +232,7 @@ export const NAV_ITEMS: NavItem[] = [
     route: ROUTES.reports,
     description: 'Simple reports on how you are doing.',
     permissions: ['Report.View'],
-    group: 'Insights',
+    group: 'Workspace',
   },
   {
     label: 'Deeper charts',
@@ -187,7 +240,7 @@ export const NAV_ITEMS: NavItem[] = [
     route: ROUTES.analytics.base,
     description: 'Deeper charts across your business.',
     permissions: ['Analytics.View'],
-    group: 'Insights',
+    group: 'Workspace',
   },
   {
     label: 'Money overview',
@@ -195,7 +248,7 @@ export const NAV_ITEMS: NavItem[] = [
     route: ROUTES.finance.dashboard,
     description: 'Income, expenses, and financial health.',
     permissions: ['Finance.View'],
-    group: 'Finance',
+    group: 'Business',
   },
   {
     label: 'Expenses',
@@ -203,7 +256,7 @@ export const NAV_ITEMS: NavItem[] = [
     route: ROUTES.expenses.base,
     description: 'Track money your business spends.',
     permissions: ['Expense.View'],
-    group: 'Finance',
+    group: 'Business',
   },
   {
     label: 'Expense groups',
@@ -211,7 +264,7 @@ export const NAV_ITEMS: NavItem[] = [
     route: ROUTES.expenseCategories.base,
     description: 'Organize expenses into groups.',
     permissions: ['ExpenseCategory.View'],
-    group: 'Finance',
+    group: 'Business',
   },
   {
     label: 'Profit & loss',
@@ -219,7 +272,7 @@ export const NAV_ITEMS: NavItem[] = [
     route: ROUTES.finance.profitLoss,
     description: 'See if you are making or losing money.',
     permissions: ['Finance.View'],
-    group: 'Finance',
+    group: 'Business',
   },
   {
     label: 'Team',
@@ -227,7 +280,7 @@ export const NAV_ITEMS: NavItem[] = [
     route: ROUTES.team.base,
     description: 'Manage team members, roles, and collaboration.',
     permissions: ['Team.View'],
-    group: 'Administration',
+    group: 'Workforce',
   },
   {
     label: 'Tenant',
@@ -235,7 +288,7 @@ export const NAV_ITEMS: NavItem[] = [
     route: ROUTES.tenant.dashboard,
     description: 'Tenant dashboard, plan, and resource usage.',
     permissions: ['Tenant.View'],
-    group: 'Administration',
+    group: 'Workspace',
   },
   {
     label: 'Organization',
@@ -243,7 +296,7 @@ export const NAV_ITEMS: NavItem[] = [
     route: ROUTES.organization.base,
     description: 'Organization profile, logo, timezone, and currency.',
     permissions: ['Organization.View'],
-    group: 'Administration',
+    group: 'Workspace',
   },
   {
     label: 'Users',
@@ -251,7 +304,7 @@ export const NAV_ITEMS: NavItem[] = [
     route: ROUTES.users.base,
     description: 'Manage user accounts and access.',
     permissions: ['User.View'],
-    group: 'Administration',
+    group: 'Workspace',
   },
   {
     label: 'Roles',
@@ -259,7 +312,7 @@ export const NAV_ITEMS: NavItem[] = [
     route: ROUTES.roles.base,
     description: 'Configure roles and assign permissions.',
     permissions: ['Role.View'],
-    group: 'Administration',
+    group: 'Workspace',
   },
   {
     label: 'Permissions',
@@ -267,7 +320,7 @@ export const NAV_ITEMS: NavItem[] = [
     route: ROUTES.permissions.base,
     description: 'Review permission definitions across the system.',
     permissions: ['Role.View'],
-    group: 'Administration',
+    group: 'Workspace',
   },
   {
     label: 'Audit Logs',
@@ -275,7 +328,7 @@ export const NAV_ITEMS: NavItem[] = [
     route: ROUTES.audit.base,
     description: 'Review system audit trail and entity changes.',
     permissions: ['Audit.View'],
-    group: 'Administration',
+    group: 'Workspace',
   },
   {
     label: 'Activity',
@@ -283,7 +336,7 @@ export const NAV_ITEMS: NavItem[] = [
     route: ROUTES.activity.base,
     description: 'View business activity timeline.',
     permissions: ['Activity.View'],
-    group: 'Administration',
+    group: 'Workspace',
   },
   {
     label: 'Notifications',
@@ -291,7 +344,7 @@ export const NAV_ITEMS: NavItem[] = [
     route: ROUTES.notifications.base,
     description: 'View and manage notifications.',
     permissions: ['Notification.View'],
-    group: 'Administration',
+    group: 'Overview',
   },
   {
     label: 'Billing',
@@ -299,7 +352,7 @@ export const NAV_ITEMS: NavItem[] = [
     route: ROUTES.billing.base,
     description: 'Manage subscription, usage, and invoices.',
     permissions: ['Subscription.View'],
-    group: 'Administration',
+    group: 'Workspace',
   },
   {
     label: 'Pricing',
@@ -307,7 +360,38 @@ export const NAV_ITEMS: NavItem[] = [
     route: ROUTES.pricing.base,
     description: 'Compare plans and upgrade your subscription.',
     permissions: ['Subscription.View'],
-    group: 'Administration',
+    group: 'Workspace',
+  },
+  {
+    label: 'Workspaces',
+    icon: 'bi-columns-gap',
+    route: ROUTES.workspaces,
+    description: 'Highlight the modules that match this business.',
+    group: 'Workspace',
+  },
+  {
+    label: 'Storefront',
+    icon: 'bi-shop',
+    route: ROUTES.storefront,
+    description: 'Public company profile, catalog, and inquiries.',
+    permissions: ['Storefront.View', 'Organization.View'],
+    group: 'Workspace',
+  },
+  {
+    label: 'My work',
+    icon: 'bi-person-workspace',
+    route: ROUTES.myWork,
+    description: 'Your tasks, leave, and announcements.',
+    permissions: ['Employee.View', 'Tasks.View'],
+    group: 'Workforce',
+  },
+  {
+    label: 'Supplier access',
+    icon: 'bi-link-45deg',
+    route: ROUTES.supplierAccess,
+    description: 'Temporary links for a supplier’s purchase orders.',
+    permissions: ['Supplier.View', 'PurchaseOrder.View'],
+    group: 'Business',
   },
   {
     label: 'Settings',
@@ -315,7 +399,7 @@ export const NAV_ITEMS: NavItem[] = [
     route: ROUTES.settings.base,
     description: 'Configure application and tenant settings.',
     permissions: ['Settings.View'],
-    group: 'Administration',
+    group: 'Workspace',
   },
   {
     label: 'System Admin',
@@ -323,6 +407,174 @@ export const NAV_ITEMS: NavItem[] = [
     route: ROUTES.admin.base,
     description: 'Monitor system health, stats, and environment.',
     permissions: ['SystemAdmin.View'],
-    group: 'Administration',
+    group: 'Workspace',
+  },
+  {
+    label: 'Employees',
+    icon: 'bi-person-badge',
+    route: ROUTES.people.employees,
+    description: 'Employee profiles for this company.',
+    permissions: ['Employee.View'],
+    group: 'Workforce',
+  },
+  {
+    label: 'Departments',
+    icon: 'bi-diagram-3',
+    route: ROUTES.people.departments,
+    description: 'Departments and teams.',
+    permissions: ['Employee.View'],
+    group: 'Workforce',
+  },
+  {
+    label: 'Attendance',
+    icon: 'bi-clock',
+    route: ROUTES.people.attendance,
+    description: 'Check in, check out, and attendance history.',
+    permissions: ['Employee.View', 'Attendance.Manage'],
+    group: 'Workforce',
+  },
+  {
+    label: 'Leave',
+    icon: 'bi-calendar-event',
+    route: ROUTES.people.leave,
+    description: 'Leave requests and approvals.',
+    permissions: ['Employee.View', 'Leave.Manage'],
+    group: 'Workforce',
+  },
+  {
+    label: 'Announcements',
+    icon: 'bi-megaphone',
+    route: ROUTES.people.announcements,
+    description: 'Company, department, and team announcements.',
+    permissions: ['Announcement.View'],
+    group: 'Workforce',
+  },
+  {
+    label: 'Performance',
+    icon: 'bi-clipboard-data',
+    route: ROUTES.people.performance,
+    description: 'Goals, KPIs, and reviews.',
+    permissions: ['Performance.View'],
+    group: 'Workforce',
+  },
+  {
+    label: 'Leads',
+    icon: 'bi-funnel',
+    route: ROUTES.crm.leads,
+    description: 'Lead pipeline and conversion.',
+    permissions: ['Lead.View'],
+    group: 'Business',
+  },
+  {
+    label: 'Deals',
+    icon: 'bi-handshake',
+    route: ROUTES.crm.deals,
+    description: 'Sales deals and expected value.',
+    permissions: ['Deal.View'],
+    group: 'Business',
+  },
+  {
+    label: 'Follow-ups',
+    icon: 'bi-bell',
+    route: ROUTES.crm.followUps,
+    description: 'Scheduled follow-ups and overdue work.',
+    permissions: ['Lead.View'],
+    group: 'Business',
+  },
+  {
+    label: 'Segments',
+    icon: 'bi-collection',
+    route: ROUTES.crm.segments,
+    description: 'Saved customer segments.',
+    permissions: ['Customer.View'],
+    group: 'Business',
+  },
+  {
+    label: 'CRM activity',
+    icon: 'bi-graph-up',
+    route: ROUTES.crm.activities,
+    description: 'Lead and deal totals from company records.',
+    permissions: ['Lead.View'],
+    group: 'Business',
+  },
+  {
+    label: 'Warehouses',
+    icon: 'bi-building',
+    route: ROUTES.warehouses,
+    description: 'Warehouse stock and transfers.',
+    permissions: ['Warehouse.View'],
+    group: 'Business',
+  },
+  {
+    label: 'Returns',
+    icon: 'bi-arrow-return-left',
+    route: ROUTES.returns,
+    description: 'Customer returns and restock decisions.',
+    permissions: ['Order.View', 'Return.Manage'],
+    group: 'Business',
+  },
+  {
+    label: 'Income',
+    icon: 'bi-cash',
+    route: ROUTES.finance.income,
+    description: 'Recorded company income.',
+    permissions: ['Finance.View'],
+    group: 'Business',
+  },
+  {
+    label: 'Purchase invoices',
+    icon: 'bi-receipt-cutoff',
+    route: ROUTES.finance.purchaseInvoices,
+    description: 'Supplier invoices and payments.',
+    permissions: ['Finance.View'],
+    group: 'Business',
+  },
+  {
+    label: 'Cash flow',
+    icon: 'bi-water',
+    route: ROUTES.finance.cashFlow,
+    description: 'Cash movement, receivables, and profit.',
+    permissions: ['Finance.View'],
+    group: 'Business',
+  },
+  {
+    label: 'Tax rates',
+    icon: 'bi-percent',
+    route: ROUTES.finance.tax,
+    description: 'Company tax rates.',
+    permissions: ['Finance.View'],
+    group: 'Business',
+  },
+  {
+    label: 'Subscriptions',
+    icon: 'bi-repeat',
+    route: ROUTES.finance.subscriptions,
+    description: 'Operational software and hosting subscriptions.',
+    permissions: ['Finance.View'],
+    group: 'Business',
+  },
+  {
+    label: 'Projects',
+    icon: 'bi-kanban',
+    route: ROUTES.projects.base,
+    description: 'Client projects, milestones, and portal access.',
+    permissions: ['Projects.View'],
+    group: 'Business',
+  },
+  {
+    label: 'Tasks',
+    icon: 'bi-check2-square',
+    route: ROUTES.projects.board,
+    description: 'Task board with saved stage changes.',
+    permissions: ['Tasks.View'],
+    group: 'Business',
+  },
+  {
+    label: 'Timesheets',
+    icon: 'bi-stopwatch',
+    route: ROUTES.projects.time,
+    description: 'Timers, manual time, and approvals.',
+    permissions: ['Time.View'],
+    group: 'Business',
   },
 ];

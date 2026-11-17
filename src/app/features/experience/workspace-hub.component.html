@@ -1,0 +1,25 @@
+<section class="sf">
+  <header>
+    <h1>Workspace</h1>
+    <p>Choose the work this company wants highlighted. Other permitted modules stay available in the sidebar.</p>
+  </header>
+  @if (error()) { <p class="ux__error" role="alert">{{ error() }}</p> }
+  @if (data(); as current) {
+    <form class="sf__form" (submit)="$event.preventDefault(); save()">
+      <label for="workspace-type">Workspace template</label>
+      <select id="workspace-type" [ngModel]="workspace()" (ngModelChange)="workspace.set($event)" name="workspace">
+        @for (option of options; track option.id) {
+          <option [value]="option.id">{{ option.label }}</option>
+        }
+      </select>
+      <p class="sf__muted">Business type on file: {{ current.businessType || 'Not set' }}</p>
+      <button type="submit" class="sf__btn sf__btn--primary">Save workspace</button>
+    </form>
+    <p>{{ current.note }}</p>
+    <div class="sf__grid">
+      @for (link of current.suggestedNavigation; track link.route) {
+        <a class="sf__card" [routerLink]="link.route"><h2>{{ link.label }}</h2></a>
+      }
+    </div>
+  }
+</section>

@@ -1,0 +1,29 @@
+<label>
+  Status
+  <select [value]="status()" (change)="status.set($any($event.target).value); load()">
+    <option>Pending</option>
+    <option>Approved</option>
+    <option>Rejected</option>
+    <option>ChangesRequested</option>
+  </select>
+</label>
+@if (notice()) { <p class="nalva-panel">{{ notice() }}</p> }
+<section class="stack">
+  @for (row of rows(); track row.id) {
+    <article class="nalva-panel">
+      <h3>{{ row.action }}</h3>
+      <p>{{ row.agentKey }} asked to run {{ row.toolName }}.</p>
+      <div class="pills"><span class="pill">{{ row.risk }}</span><span class="pill">{{ row.status }}</span></div>
+      <p class="muted">{{ row.requestedAt | date:'short' }}</p>
+      @if (row.contextJson) { <pre>{{ row.contextJson }}</pre> }
+      @if (row.status === 'Pending') {
+        <div class="actions">
+          <button class="btn primary" type="button" (click)="decide(row, 'approve')">Approve</button>
+          <button class="btn" type="button" (click)="decide(row, 'reject')">Reject</button>
+          <button class="btn" type="button" (click)="decide(row, 'changes')">Request changes</button>
+        </div>
+      }
+      @if (row.executionResult) { <p>{{ row.executionResult }}</p> }
+    </article>
+  } @empty { <p class="muted">No approvals in this view.</p> }
+</section>

@@ -9,6 +9,7 @@ import { ServicesComponent } from './features/services/services.component';
 import { ContactComponent } from './features/contact/contact.component';
 import { FaqComponent } from './features/faq/faq.component';
 import { LegalPageComponent } from './features/legal/legal-page.component';
+import { CRM_ROUTES, PEOPLE_ROUTES, PROJECT_OPS_ROUTES, RETURN_ROUTES, WAREHOUSE_ROUTES } from './features/workspace/workspace.routes';
 
 export const routes: Routes = [
   { path: 'about', component: AboutComponent, title: 'About | BusinessOS' },
@@ -57,8 +58,32 @@ export const routes: Routes = [
     title: 'Register Business | BusinessOS',
   },
   {
+    path: 'early-access',
+    loadComponent: () =>
+      import('./features/launch/early-access.component').then((m) => m.EarlyAccessComponent),
+    title: 'Early access | BusinessOS',
+  },
+  {
     path: 'onboarding',
     loadChildren: () => import('./features/onboarding/onboarding.routes').then((m) => m.ONBOARDING_ROUTES),
+  },
+  {
+    path: 'company/:slug',
+    loadComponent: () =>
+      import('./features/experience/public-company.component').then((m) => m.PublicCompanyComponent),
+    title: 'Company | BusinessOS',
+  },
+  {
+    path: 'supplier-portal/:token',
+    loadComponent: () =>
+      import('./features/experience/supplier-portal.component').then((m) => m.SupplierPortalComponent),
+    title: 'Supplier portal | BusinessOS',
+  },
+  {
+    path: 'portal/:token',
+    loadComponent: () =>
+      import('./features/workspace/portal/portal-page.component').then((m) => m.PortalPageComponent),
+    title: 'Client portal | BusinessOS',
   },
   {
     path: 'forbidden',
@@ -185,6 +210,10 @@ export const routes: Routes = [
         loadChildren: () => import('./features/ai/ai.routes').then((m) => m.AI_ROUTES),
       },
       {
+        path: 'nalva',
+        loadChildren: () => import('./features/nalva/nalva.routes').then((m) => m.NALVA_ROUTES),
+      },
+      {
         path: 'subscription',
         loadChildren: () => import('./features/subscription/subscription.routes').then((m) => m.SUBSCRIPTION_ROUTES),
       },
@@ -216,6 +245,56 @@ export const routes: Routes = [
       {
         path: 'tenant',
         loadChildren: () => import('./features/tenant/tenant.routes').then((m) => m.TENANT_ROUTES),
+      },
+      {
+        path: 'people',
+        children: PEOPLE_ROUTES,
+      },
+      {
+        path: 'crm',
+        children: CRM_ROUTES,
+      },
+      {
+        path: 'warehouses',
+        children: WAREHOUSE_ROUTES,
+      },
+      {
+        path: 'returns',
+        children: RETURN_ROUTES,
+      },
+      {
+        path: 'projects',
+        children: PROJECT_OPS_ROUTES,
+      },
+      {
+        path: 'storefront',
+        loadComponent: () =>
+          import('./features/experience/storefront-admin.component').then((m) => m.StorefrontAdminComponent),
+        title: 'Storefront | BusinessOS',
+      },
+      {
+        path: 'workspaces',
+        loadComponent: () =>
+          import('./features/experience/workspace-hub.component').then((m) => m.WorkspaceHubComponent),
+        title: 'Workspace | BusinessOS',
+      },
+      {
+        path: 'my-work',
+        loadComponent: () =>
+          import('./features/experience/employee-portal.component').then((m) => m.EmployeePortalComponent),
+        title: 'My work | BusinessOS',
+      },
+      {
+        path: 'launch',
+        loadComponent: () =>
+          import('./features/launch/launch-desk.component').then((m) => m.LaunchDeskComponent),
+        title: 'Feedback | BusinessOS',
+      },
+      {
+        path: 'supplier-access',
+        loadComponent: () =>
+          import('./features/experience/supplier-access.component').then((m) => m.SupplierAccessComponent),
+        title: 'Supplier access | BusinessOS',
       },
       ...buildFeatureRoutes(),
     ],

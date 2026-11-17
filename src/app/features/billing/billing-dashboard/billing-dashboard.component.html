@@ -65,7 +65,18 @@
           <dt>Scheduled cancellation</dt>
           <dd>{{ data.currentPlan.scheduledCancellationDate ? (data.currentPlan.scheduledCancellationDate | date:'mediumDate') : 'None' }}</dd>
         </div>
+        <div>
+          <dt>Payment grace</dt>
+          <dd>{{ data.currentPlan.graceEndsAt ? (data.currentPlan.graceEndsAt | date:'mediumDate') : 'Not in grace' }}</dd>
+        </div>
+        <div>
+          <dt>Access</dt>
+          <dd>{{ data.currentPlan.accessMode || 'Full' }}</dd>
+        </div>
       </dl>
+      @if (data.usage.quotaMessage) {
+        <app-alert variant="warning" [message]="data.usage.quotaMessage" />
+      }
 
       @if (canManage) {
         <div class="actions">
@@ -178,7 +189,10 @@
                 </div>
                 <div class="feed__end">
                   <strong>{{ money(inv.totalAmount, inv.currency) }}</strong>
-                  <button type="button" (click)="download(inv.id)">Download</button>
+                  <button type="button" (click)="download(inv.id)">Invoice</button>
+                  @if (inv.status === 'Paid') {
+                    <button type="button" (click)="downloadReceipt(inv.id)">Receipt</button>
+                  }
                 </div>
               </li>
             }

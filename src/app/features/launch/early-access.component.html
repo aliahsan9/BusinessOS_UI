@@ -1,0 +1,39 @@
+<section class="launch">
+  <header class="launch__header">
+    <p class="launch__kicker">CompanyOS</p>
+    <h1>Early access for software agencies</h1>
+  </header>
+
+  @if (error()) {
+    <p class="launch__error" role="alert">{{ error() }}</p>
+  }
+
+  @if (notice(); as current) {
+    <article class="launch__card">
+      <p>{{ current.status }}</p>
+      <p>Audience: {{ current.audience }}</p>
+      <h2>Available</h2>
+      <ul>
+        @for (item of current.available; track item) {
+          <li>{{ item }}</li>
+        }
+      </ul>
+      <h2>Limitations</h2>
+      <ul>
+        @for (item of current.limitations; track item) {
+          <li>{{ item }}</li>
+        }
+      </ul>
+      <h2>Not in this release</h2>
+      <ul>
+        @for (item of current.notInThisRelease; track item) {
+          <li>{{ item }}</li>
+        }
+      </ul>
+      <p>{{ current.dataHandling }}</p>
+      <p>{{ current.subscriptionTerms }}</p>
+      <p>{{ current.support }}</p>
+      <p><a [routerLink]="routes.auth.register">Create an account</a> · <a [routerLink]="routes.onboarding.agency">Agency setup</a></p>
+    </article>
+  }
+</section>

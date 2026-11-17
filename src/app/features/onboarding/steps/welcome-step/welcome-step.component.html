@@ -17,6 +17,8 @@
     }
   </div>
 
+  <p><a [routerLink]="agencySetup">Set up a software agency</a></p>
+
   <div class="onboarding-step__actions">
     <app-button label="Get Started" (clicked)="next.emit()" />
     <app-button label="Skip Onboarding" [variant]="ButtonVariant.Outline" (clicked)="skip.emit()" />

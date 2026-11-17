@@ -1,0 +1,14 @@
+<section class="sf">
+  @if (error()) { <h1>{{ error() }}</h1> }
+  @if (data(); as portal) {
+    <header>
+      <h1>{{ portal.supplierName }}</h1>
+      <p>Purchase orders from {{ portal.companyName }}. Access ends {{ portal.expiresAt }}.</p>
+    </header>
+    <ul>
+      @for (order of portal.orders; track order.reference) {
+        <li class="sf__card">{{ order.reference || 'Purchase order' }} · {{ order.status }} · {{ order.total }} · {{ order.date }}</li>
+      } @empty { <li>No purchase orders are available.</li> }
+    </ul>
+  }
+</section>

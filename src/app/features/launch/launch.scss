@@ -1,0 +1,118 @@
+.launch {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 2rem 1rem 3rem;
+  display: grid;
+  gap: 1rem;
+}
+
+.launch__kicker {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.75rem;
+}
+
+.launch h1,
+.launch h2 {
+  margin: 0 0 0.5rem;
+}
+
+.launch__card,
+.launch__steps {
+  border: 1px solid #d7dce3;
+  border-radius: 12px;
+  padding: 1rem;
+  background: #fff;
+}
+
+.launch__card {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.launch label,
+.launch fieldset {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.launch input,
+.launch textarea,
+.launch button {
+  font: inherit;
+}
+
+.launch input,
+.launch textarea {
+  border: 1px solid #c5ccd6;
+  border-radius: 8px;
+  padding: 0.5rem 0.65rem;
+}
+
+.launch textarea {
+  min-height: 5rem;
+}
+
+.launch button,
+.launch__choice {
+  border-radius: 8px;
+}
+
+.launch button {
+  justify-self: start;
+  border: 0;
+  background: #1f4b99;
+  color: #fff;
+  padding: 0.55rem 0.9rem;
+}
+
+.launch__steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  list-style: none;
+  margin: 0;
+}
+
+.launch__steps .is-current {
+  font-weight: 700;
+}
+
+.launch__choices,
+.launch__metrics {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.launch__choice {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  border: 1px solid #e1e6ee;
+  padding: 0.6rem;
+}
+
+.launch__choice small,
+.launch__error {
+  display: block;
+}
+
+.launch__error {
+  color: #8d1d1d;
+}
+
+.launch__metrics {
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+.launch__metrics div {
+  border: 1px solid #e1e6ee;
+  border-radius: 8px;
+  padding: 0.7rem;
+}
+
+.launch__metrics strong {
+  display: block;
+  font-size: 1.3rem;
+}
