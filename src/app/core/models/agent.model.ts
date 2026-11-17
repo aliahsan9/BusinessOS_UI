@@ -2,6 +2,10 @@
 
 export type VoiceUiState = 'idle' | 'listening' | 'processing' | 'speaking' | 'paused' | 'working';
 
+export interface UpdateAgentToolPermissionsRequest {
+  allowedTools: string[];
+}
+
 export interface UpdateAgentConfigurationRequest {
   displayName: string;
   roleTitle: string;
@@ -18,6 +22,8 @@ export interface AgentEmployee {
   isDefault: boolean;
   isActive: boolean;
   avatarHint?: string | null;
+  /** null = no custom policy; [] = no tools allowed. */
+  allowedTools?: string[] | null;
 }
 
 /** Summary returned by GET /api/v1/agents/workflows. */
