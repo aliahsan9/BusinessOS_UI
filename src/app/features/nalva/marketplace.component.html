@@ -1,31 +1,48 @@
-@if (error()) { <p class="muted">{{ error() }}</p> }
-@if (notice()) { <p class="nalva-panel">{{ notice() }}</p> }
-<label>
-  Category
-  <select [value]="category()" (change)="category.set($any($event.target).value)">
-    @for (item of categories(); track item) { <option [value]="item">{{ item }}</option> }
-  </select>
-</label>
-<section class="nalva-cards">
-  @for (agent of visible(); track agent.key) {
-    <article class="nalva-card">
-      <h3>{{ agent.name }}</h3>
-      <p>{{ agent.description }}</p>
-      <div class="pills">
-        <span class="pill">{{ agent.category }}</span>
-        <span class="pill">{{ agent.status }}</span>
-        <span class="pill">{{ agent.health }}</span>
-      </div>
-      <p class="muted">{{ agent.responsibilities[0] }}</p>
-      <p class="muted">Recent: {{ agent.recentExecution || 'No execution yet' }} · {{ agent.executions }} runs · est. ${{ agent.estimatedCostUsd }}</p>
-      <div class="actions">
-        <a class="btn" [routerLink]="[routes.nalva.agent, agent.key]">Open</a>
-        @if (agent.status !== 'Active') {
-          <button class="btn primary" type="button" (click)="activate(agent)">Activate</button>
-        } @else {
-          <button class="btn" type="button" (click)="deactivate(agent)">Deactivate</button>
-        }
-      </div>
-    </article>
+<header class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+  <div>
+    <h2>AI employee catalog</h2>
+    <p class="muted mb-0">Browse the AI employee personas currently exposed by your BusinessOS backend.</p>
+  </div>
+  <button class="btn" type="button" (click)="load()" [disabled]="loading()">Refresh</button>
+</header>
+
+@if (mine()) {
+  <p class="nalva-panel" role="note">Tenant-specific agent activation is not available in the backend yet. This page shows the shared employee catalog, not a verified list of agents activated for your business.</p>
+}
+@if (loading()) {
+  <p class="muted" role="status">Loading AI employees…</p>
+}
+@if (error()) {
+  <p class="nalva-panel" role="alert">{{ error() }}</p>
+}
+
+@if (!loading() && !error()) {
+  <label class="d-inline-flex flex-column gap-1 mb-3">
+    <span>Specialty</span>
+    <select [value]="category()" (change)="category.set($any($event.target).value)">
+      @for (item of categories(); track item) {
+        <option [value]="item">{{ item }}</option>
+      }
+    </select>
+  </label>
+
+  @if (visible().length === 0) {
+    <p class="muted">No AI employees are available in this category.</p>
+  } @else {
+    <section class="nalva-cards">
+      @for (employee of visible(); track employee.key) {
+        <article class="nalva-card">
+          <h3>{{ employee.displayName }}</h3>
+          <p>{{ employee.roleTitle }}</p>
+          <div class="pills">
+            <span class="pill">{{ employee.specialty }}</span>
+            <span class="pill">{{ employee.defaultLanguage }}</span>
+            @if (employee.isDefault) { <span class="pill">Default assistant</span> }
+            <span class="pill">{{ employee.isActive ? 'Enabled in catalog' : 'Unavailable' }}</span>
+          </div>
+        </article>
+      }
+    </section>
   }
-</section>
+  <p class="muted small mt-3">Activation, tenant-specific configuration, execution analytics and agent health are not represented here because the current employee-catalog API does not provide those contracts.</p>
+}
