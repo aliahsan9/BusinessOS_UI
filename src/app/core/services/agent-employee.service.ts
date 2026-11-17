@@ -9,6 +9,7 @@ import { environment } from '../../../environments/environment';
 import { AiStreamError } from '../models/ai.model';
 import {
   AgentChatRequest,
+  AgentToolCatalogItem,
   AgentChatResponse,
   AgentEmployee,
   AgentOnboardingContinueRequest,
@@ -45,6 +46,11 @@ export class AgentEmployeeService extends BaseApiService {
 
   listEmployees(): Observable<AgentEmployee[]> {
     return this.get<AgentEmployee[]>(API_ENDPOINTS.agents.employees);
+  }
+
+  /** Returns the actual tool catalog registered by the backend. */
+  listToolCatalog(): Observable<AgentToolCatalogItem[]> {
+    return this.get<AgentToolCatalogItem>(`${API_ENDPOINTS.agents.employees.replace(/\/employees$/, '')}/tools`);
   }
 
   /** Activates or deactivates an employee for the current tenant (Owner/Admin API). */
