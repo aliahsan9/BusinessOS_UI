@@ -49,6 +49,15 @@ The marketplace and employee detail screens now use the supported employee catal
 - Employee detail resolves the selected employee from the catalog and filters the latest 100 persisted execution workflow summaries by `agentKey`.
 - Unsupported activation/deactivation, autonomy configuration, direct run, memory, cost, health and detailed execution metrics have been removed from these screens. No unsupported write operation is presented as working.
 
+
+## Task queue and automation builder boundaries
+
+The current backend does not expose persistent agent-task endpoints or saved automation-definition endpoints. The frontend no longer submits unsupported requests from these surfaces:
+
+- Task queue: creation, scheduling, pause, resume and cancellation are explicitly marked unavailable.
+- Automation builder: definition creation, trigger configuration, activation and dry-run are explicitly marked unavailable.
+- Workflow history: displays persisted agent execution workflows from `GET /api/v1/agents/workflows`; it does not label those records as reusable automation definitions.
+
 ## Contract rules
 
 1. Frontend URLs include the configured API base URL; backend business routes are grouped under `/api/v1`.
