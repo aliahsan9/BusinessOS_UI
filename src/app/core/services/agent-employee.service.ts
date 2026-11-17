@@ -45,6 +45,12 @@ export class AgentEmployeeService extends BaseApiService {
     return this.get<AgentEmployee[]>(API_ENDPOINTS.agents.employees);
   }
 
+  /** Activates or deactivates an employee for the current tenant (Owner/Admin API). */
+  setEmployeeActivation(agentKey: string, isActive: boolean): Observable<AgentEmployee> {
+    const url = `${API_ENDPOINTS.agents.employees}/${encodeURIComponent(agentKey)}/activation`;
+    return this.put<AgentEmployee>(url, { isActive });
+  }
+
   getVoicePreferences(): Observable<VoicePreference> {
     return this.get<VoicePreference>(API_ENDPOINTS.agents.voicePreferences);
   }
