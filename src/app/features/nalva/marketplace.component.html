@@ -88,13 +88,52 @@
                     <option value="ar">Arabic</option>
                   </select>
                 </label>
+
+                <section class="nalva-panel tool-permissions mb-3" aria-labelledby="tool-permissions-title">
+                  <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                    <div>
+                      <h4 id="tool-permissions-title">Tool permissions</h4>
+                      <p class="muted small mb-2">Choose which registered BusinessOS actions this employee can invoke. Access is still limited by the signed-in user's permissions.</p>
+                    </div>
+                    <span class="pill">{{ selectedTools().length }} / {{ allToolNames.length }} enabled</span>
+                  </div>
+                  <div class="d-flex gap-2 mb-3">
+                    <button class="btn btn-sm" type="button" (click)="selectAllTools()">Allow all</button>
+                    <button class="btn btn-sm" type="button" (click)="clearAllTools()">Disable all</button>
+                  </div>
+                  @for (group of toolGroups; track group.label) {
+                    <div class="tool-group">
+                      <h5>{{ group.label }}</h5>
+                      <div class="tool-options">
+                        @for (tool of group.tools; track tool) {
+                          <label class="tool-option">
+                            <input type="checkbox" [checked]="isToolSelected(tool)"
+                              (change)="toggleTool(tool, $any($event.target).checked)" />
+                            <span>{{ tool }}</span>
+                          </label>
+                        }
+                      </div>
+                    </div>
+                  }
+                  @if (selectedTools().length === 0) {
+                    <p class="permission-warning" role="status">No tools selected. This employee will be unable to perform tool-based actions.</p>
+                  }
+                  @if (permissionError()) { <p class="permission-warning" role="alert">{{ permissionError() }}</p> }
+                  @if (permissionMessage()) { <p class="muted small" role="status">{{ permissionMessage() }}</p> }
+                  <button class="btn btn-sm mt-2" type="button"
+                    [disabled]="permissionSavingKey() !== null || savingKey() !== null"
+                    (click)="saveToolPermissions(employee)">
+                    {{ permissionSavingKey() === employee.key ? 'Saving permissions…' : 'Save tool permissions' }}
+                  </button>
+                </section>
+
                 <div class="d-flex gap-2">
                   <button class="btn btn-sm" type="submit" [disabled]="savingKey() !== null">
                     {{ savingKey() === employee.key ? 'Saving…' : 'Save configuration' }}
                   </button>
                   <button class="btn btn-sm" type="button" [disabled]="savingKey() !== null" (click)="cancelConfiguration()">Cancel</button>
                 </div>
-                <p class="muted small mt-2 mb-0">System instructions, tool permissions and module access cannot be changed here.</p>
+                <p class="muted small mt-2 mb-0">System instructions and module access remain protected. Tool permissions are managed separately above.</p>
               </form>
             }
           }
