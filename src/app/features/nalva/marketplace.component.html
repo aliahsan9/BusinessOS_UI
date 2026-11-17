@@ -43,7 +43,12 @@
             <span class="pill">{{ employee.isActive ? 'Active for this business' : 'Inactive for this business' }}</span>
           </div>
           @if (mine()) {
-            <div class="mt-3">
+            <div class="mt-3 d-flex flex-wrap gap-2">
+              <button class="btn btn-sm" type="button"
+                [disabled]="savingKey() !== null"
+                (click)="startConfiguration(employee)">
+                Configure
+              </button>
               <button class="btn btn-sm" type="button"
                 [disabled]="employee.isDefault || savingKey() !== null"
                 (click)="toggleActivation(employee)">
@@ -52,6 +57,46 @@
                 @else { {{ employee.isActive ? 'Deactivate' : 'Activate' }} }
               </button>
             </div>
+            @if (editingKey() === employee.key) {
+              <form class="nalva-panel mt-3" (submit)="$event.preventDefault(); saveConfiguration(employee)">
+                <h4>Configure {{ employee.displayName }}</h4>
+                <label class="d-flex flex-column gap-1 mb-2">
+                  <span>Display name</span>
+                  <input type="text" maxlength="100" required
+                    [value]="configurationDraft().displayName"
+                    (input)="updateDraft('displayName', $any($event.target).value)" />
+                </label>
+                <label class="d-flex flex-column gap-1 mb-2">
+                  <span>Job title</span>
+                  <input type="text" maxlength="150" required
+                    [value]="configurationDraft().roleTitle"
+                    (input)="updateDraft('roleTitle', $any($event.target).value)" />
+                </label>
+                <label class="d-flex flex-column gap-1 mb-2">
+                  <span>Specialty</span>
+                  <textarea maxlength="300" required rows="2"
+                    [value]="configurationDraft().specialty"
+                    (input)="updateDraft('specialty', $any($event.target).value)"></textarea>
+                </label>
+                <label class="d-flex flex-column gap-1 mb-3">
+                  <span>Default language</span>
+                  <select [value]="configurationDraft().defaultLanguage"
+                    (change)="updateDraft('defaultLanguage', $any($event.target).value)">
+                    <option value="en">English</option>
+                    <option value="ur">Urdu</option>
+                    <option value="ur-Latn">Roman Urdu</option>
+                    <option value="ar">Arabic</option>
+                  </select>
+                </label>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-sm" type="submit" [disabled]="savingKey() !== null">
+                    {{ savingKey() === employee.key ? 'Saving…' : 'Save configuration' }}
+                  </button>
+                  <button class="btn btn-sm" type="button" [disabled]="savingKey() !== null" (click)="cancelConfiguration()">Cancel</button>
+                </div>
+                <p class="muted small mt-2 mb-0">System instructions, tool permissions and module access cannot be changed here.</p>
+              </form>
+            }
           }
         </article>
       }
