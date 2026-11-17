@@ -24,6 +24,18 @@ export class NalvaMarketplaceComponent implements OnInit {
   readonly actionError = signal<string | null>(null);
   readonly actionMessage = signal<string | null>(null);
   readonly editingKey = signal<string | null>(null);
+  readonly selectedTools = signal<string[]>([]);
+  readonly permissionSavingKey = signal<string | null>(null);
+  readonly permissionError = signal<string | null>(null);
+  readonly permissionMessage = signal<string | null>(null);
+  readonly toolGroups = [
+    { label: 'Read business data', tools: ['GetCustomers', 'GetProjects', 'GetTasks', 'GetInvoices', 'GetExpenses', 'GetProducts', 'GetRevenue', 'GetSalesSummary', 'GetBestSellingProducts', 'GetSalesTrends', 'GetBusinessHealth', 'GetDailyPriorities', 'GetCustomerInsights', 'GetBusinessSettings', 'GetNotificationsSummary'] },
+    { label: 'Customers and sales', tools: ['SearchCustomer', 'CreateCustomer', 'UpdateCustomer', 'DeleteCustomer', 'CreateSale'] },
+    { label: 'Products and inventory', tools: ['SearchProduct', 'CreateProduct', 'UpdateProduct', 'DeleteProduct', 'GetInventorySummary', 'GetInventoryHealth', 'GetLowStock', 'GetOutOfStock', 'GetDeadStock', 'AdjustInventory', 'ReceiveStock'] },
+    { label: 'Invoices and purchasing', tools: ['CreateInvoice', 'SearchInvoice', 'CancelInvoice', 'CreatePurchaseOrderDraft', 'CreatePurchaseOrder', 'ApprovePurchaseOrder', 'ReceivePurchase', 'SearchSupplier', 'CreateSupplier', 'UpdateSupplier', 'DeleteSupplier', 'GetPurchaseRecommendations'] },
+    { label: 'Projects, reports and settings', tools: ['CreateProject', 'CreateTask', 'SearchDocuments', 'GenerateInventoryReport', 'GenerateSalesReport', 'ApplyOnboardingProfile', 'ShowProfit', 'UpdateCompanyProfile', 'UpdateTaxDefaults'] },
+  ];
+  readonly allToolNames = [...new Set(this.toolGroups.flatMap((group) => group.tools))];
   readonly configurationDraft = signal<UpdateAgentConfigurationRequest>({
     displayName: '', roleTitle: '', specialty: '', defaultLanguage: 'en',
   });
@@ -77,6 +89,11 @@ export class NalvaMarketplaceComponent implements OnInit {
       specialty: employee.specialty,
       defaultLanguage: employee.defaultLanguage || 'en',
     });
+    // An unconfigured policy preserves the legacy tool behavior. Preselect all
+    // currently registered tools so the first save does not accidentally remove access.
+    this.selectedTools.set([...(employee.allowedTools ?? this.allToolNames)]);
+    this.permissionError.set(null);
+    this.permissionMessage.set(null);
     this.editingKey.set(employee.key);
   }
 
@@ -101,6 +118,51 @@ export class NalvaMarketplaceComponent implements OnInit {
           ? 'Only a business Owner or Admin can configure AI employees.'
           : 'Could not save this configuration. Confirm the backend configuration API is deployed and try again.'));
         this.savingKey.set(null);
+      },
+    });
+  }
+
+  isToolSelected(tool: string): boolean {
+    return this.selectedTools().includes(tool);
+  }
+
+  toggleTool(tool: string, checked: boolean): void {
+    this.selectedTools.update((current) => checked
+      ? [...new Set([...current, tool])]
+      : current.filter((item) => item !== tool));
+    this.permissionError.set(null);
+    this.permissionMessage.set(null);
+  }
+
+  selectAllTools(): void {
+    this.selectedTools.set([...this.allToolNames]);
+  }
+
+  clearAllTools(): void {
+    this.selectedTools.set([]);
+  }
+
+  saveToolPermissions(employee: AgentEmployee): void {
+    if (!this.mine() || this.savingKey() || this.permissionSavingKey()) return;
+    this.permissionSavingKey.set(employee.key);
+    this.permissionError.set(null);
+    this.permissionMessage.set(null);
+    const allowedTools = [...this.selectedTools()];
+    this.api.updateEmployeeToolPermissions(employee.key, { allowedTools }).subscribe({
+      next: (updated) => {
+        this.employees.update((rows) => rows.map((row) => row.key === updated.key ? updated : row));
+        this.permissionMessage.set(allowedTools.length === 0
+          ? 'All tool access has been disabled for this employee.'
+          : `${allowedTools.length} tool permissions saved.`);
+        this.permissionSavingKey.set(null);
+      },
+      error: (error: { status?: number; error?: { error?: string } }) => {
+        this.permissionError.set(error.error?.error || (error.status === 403
+          ? 'Only a business Owner or Admin can manage employee tool permissions.'
+          : error.status === 404 || error.status === 405
+            ? 'The backend permissions endpoint is not deployed yet. Merge and deploy the backend permissions change first.'
+            : 'Could not save tool permissions. Check the API connection and try again.'));
+        this.permissionSavingKey.set(null);
       },
     });
   }
