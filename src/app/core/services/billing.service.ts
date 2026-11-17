@@ -62,11 +62,13 @@ export class BillingService extends BaseApiService {
     });
   }
 
+  /**
+   * The API currently exposes one PDF download endpoint for billing invoices.
+   * A receipt is the same issued billing document, so keep this UI method as
+   * an alias rather than calling the unsupported /receipt route (which 404s).
+   */
   downloadReceipt(id: string): Observable<Blob> {
-    return this.http.get(`${this.baseUrl}/billing/invoices/${id}/receipt`, {
-      responseType: 'blob',
-      withCredentials: true,
-    });
+    return this.downloadInvoice(id);
   }
 
   getUsage(): Observable<BillingUsageDto> {
