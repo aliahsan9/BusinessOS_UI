@@ -23,3 +23,12 @@ Angular build and tests have not been executed in this environment. Run the fron
 3. Attempt the endpoint as a non-Owner/Admin and expect 403.
 4. Verify one tenant's saved permissions do not appear in another tenant.
 5. Verify the effective permission remains the intersection of employee policy and user permissions.
+
+
+## Automated API contract coverage
+`src/app/core/services/agent-employee.service.spec.ts` covers:
+- Fetching the registered tool catalog from `GET /agents/tools`.
+- Saving a full allow-list, including an intentionally empty list.
+- URL-encoding employee keys in the permissions route.
+
+The specs are committed but have not been executed in this environment.
