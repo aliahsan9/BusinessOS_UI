@@ -249,6 +249,7 @@ export interface AgentActionProposal {
   expiresAt?: string | null;
   decisionComment?: string | null;
   decidedAt?: string | null;
+  executionMessage?: string | null;
 }
 
 export interface DecideAgentActionProposalRequest {
