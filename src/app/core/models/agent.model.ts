@@ -220,3 +220,29 @@ export interface AgentOnboardingResponse {
   suggestions?: import('./ai.model').AiSuggestionDto[];
   workflowSteps?: AgentWorkflowStep[];
 }
+
+
+/** Human-review proposal returned by the Sales Agent approval API. */
+export type AgentActionProposalStatus =
+  | 'AwaitingApproval' | 'Approved' | 'Rejected'
+  | number | string;
+
+export interface AgentActionProposal {
+  id: string;
+  agentKey: string;
+  actionType: string;
+  title: string;
+  summary: string;
+  payloadJson: string;
+  status: AgentActionProposalStatus;
+  createdAt: string;
+  expiresAt?: string | null;
+  decisionComment?: string | null;
+  decidedAt?: string | null;
+}
+
+export interface DecideAgentActionProposalRequest {
+  decision: 'approved' | 'rejected';
+  comment?: string | null;
+}
+
