@@ -24,6 +24,7 @@ export class NalvaShellComponent {
     { label: 'Approvals', route: ROUTES.nalva.approvals },
     { label: 'Knowledge', route: ROUTES.nalva.knowledge },
     { label: 'History', route: ROUTES.nalva.history },
+    { label: 'Audit history', route: ROUTES.nalva.base + '/audit-history' },
     { label: 'Analytics', route: ROUTES.nalva.analytics },
     { label: 'Settings', route: ROUTES.nalva.settings },
   ];

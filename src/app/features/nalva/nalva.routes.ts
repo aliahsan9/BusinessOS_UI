@@ -24,6 +24,7 @@ export const NALVA_ROUTES: Routes = [
       { path: 'approvals', loadComponent: () => import('./approvals.component').then((m) => m.NalvaApprovalsComponent), title: 'Approvals | BusinessOS' },
       { path: 'knowledge', loadComponent: () => import('./knowledge.component').then((m) => m.NalvaKnowledgeComponent), title: 'Knowledge | BusinessOS' },
       { path: 'history', loadComponent: () => import('./history.component').then((m) => m.NalvaHistoryComponent), title: 'Execution history | BusinessOS' },
+      { path: 'audit-history', loadComponent: () => import('./audit-history.component').then((m) => m.NalvaAuditHistoryComponent), title: 'Audit history | BusinessOS' },
       { path: 'analytics', loadComponent: () => import('./analytics.component').then((m) => m.NalvaAnalyticsComponent), title: 'AI analytics | BusinessOS' },
       { path: 'settings', loadComponent: () => import('./settings.component').then((m) => m.NalvaSettingsComponent), title: 'AI settings | BusinessOS' },
     ],

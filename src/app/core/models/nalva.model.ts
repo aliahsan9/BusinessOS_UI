@@ -219,3 +219,15 @@ export interface NalvaRunResult {
   costIsEstimate: boolean;
   error?: string;
 }
+
+
+export interface NalvaAuditEntry {
+  id: string;
+  actorUserId: string;
+  action: string;
+  entityType: string;
+  entityId: string;
+  oldValue?: string | null;
+  newValue?: string | null;
+  createdAt: string;
+}
