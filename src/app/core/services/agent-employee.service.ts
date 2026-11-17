@@ -35,7 +35,7 @@ export class AgentEmployeeService extends BaseApiService {
 
   private streamAbort: AbortController | null = null;
   private preferredAgentKey = 'sophia';
-  private language = 'en';
+  private language: string | null = null;
 
   chat(message: string): Observable<AgentChatResponse> {
     return this.post<AgentChatResponse>(API_ENDPOINTS.agents.chat, this.buildRequest(message, false));
@@ -101,7 +101,7 @@ export class AgentEmployeeService extends BaseApiService {
       headers,
       body: JSON.stringify({
         text,
-        language: options?.language ?? this.language,
+        language: options?.language ?? this.language ?? 'en',
         speechRate: options?.speechRate ?? 1,
         voiceName: options?.voiceName,
       }),
