@@ -162,6 +162,7 @@ export const API_ENDPOINTS = {
     workflows: '/agents/workflows',
     workflow: '/agents/workflows',
     askSophia: '/agents/ask-sophia',
+    actionProposals: '/agents/actions/proposals',
   },
   help: {
     faqs: '/help/faqs',

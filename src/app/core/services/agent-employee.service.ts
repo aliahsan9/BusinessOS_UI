@@ -11,6 +11,8 @@ import {
   AgentChatRequest,
   AgentChatResponse,
   AgentEmployee,
+  AgentActionProposal,
+  DecideAgentActionProposalRequest,
   AgentOnboardingContinueRequest,
   AgentOnboardingResponse,
   AgentOnboardingStartRequest,
@@ -67,6 +69,29 @@ export class AgentEmployeeService extends BaseApiService {
 
   saveVoicePreferences(request: SaveVoicePreferenceRequest): Observable<VoicePreference> {
     return this.put<VoicePreference>(API_ENDPOINTS.agents.voicePreferences, request);
+  }
+
+  /** Lists human-review Sales Agent proposals from the current tenant. */
+  listActionProposals(pendingOnly = true, limit = 50): Observable<AgentActionProposal[]> {
+    return this.get<AgentActionProposal[]>(API_ENDPOINTS.agents.actionProposals, { pendingOnly, limit });
+  }
+
+  /** Loads one proposal; the API enforces tenant ownership. */
+  getActionProposal(proposalId: string): Observable<AgentActionProposal> {
+    return this.get<AgentActionProposal>(
+      `${API_ENDPOINTS.agents.actionProposals}/${encodeURIComponent(proposalId)}`,
+    );
+  }
+
+  /** Records a reviewer decision. Approval does not itself execute the action. */
+  decideActionProposal(
+    proposalId: string,
+    request: DecideAgentActionProposalRequest,
+  ): Observable<AgentActionProposal> {
+    return this.post<AgentActionProposal>(
+      `${API_ENDPOINTS.agents.actionProposals}/${encodeURIComponent(proposalId)}/decision`,
+      request,
+    );
   }
 
   /** Lists persisted agent execution workflows from the backend. */
