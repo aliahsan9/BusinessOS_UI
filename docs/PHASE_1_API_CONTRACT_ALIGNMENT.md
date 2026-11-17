@@ -30,6 +30,15 @@ The existing `/agents/employees`, chat, voice-preference, onboarding and TTS ope
 | `/nalva/analytics`, `/nalva/executions`, `/nalva/settings`, `/nalva/models` | No matching endpoints found in the registered agent API | Requires explicit contracts and backed data sources |
 | `/integrations/*` | No corresponding integration endpoint group found in inspected API map | Keep unavailable integrations disabled; do not simulate success |
 
+## Navla overview integration
+
+The Navla overview screen now composes two existing, authenticated backend reads:
+
+- `GET /api/v1/agents/employees` for the employee catalog and each employee's active flag.
+- `GET /api/v1/agents/workflows?limit=20` for the signed-in user's recent execution workflows.
+
+The screen displays only values present in those responses: employee count, active employee count, recent workflow count, and workflow details. It intentionally no longer calls the unsupported `/nalva/overview` endpoint or displays token, cost, task-queue, or approval figures that are not supplied by these contracts. If either read fails, the overview reports an error rather than substituting zeroes.
+
 ## Contract rules
 
 1. Frontend URLs include the configured API base URL; backend business routes are grouped under `/api/v1`.
