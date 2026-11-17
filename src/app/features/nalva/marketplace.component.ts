@@ -27,6 +27,11 @@ export class NalvaMarketplaceComponent implements OnInit {
   readonly configurationDraft = signal<UpdateAgentConfigurationRequest>({
     displayName: '', roleTitle: '', specialty: '', defaultLanguage: 'en',
   });
+  readonly permissionsEditingKey = signal<string | null>(null);
+  readonly permissionsLoadingKey = signal<string | null>(null);
+  readonly permissionsSavingKey = signal<string | null>(null);
+  readonly availableTools = signal<string[]>([]);
+  readonly allowedToolsDraft = signal<string[]>([]);
 
   ngOnInit(): void {
     this.mine.set(this.route.snapshot.data['mine'] === true);
@@ -107,6 +112,67 @@ export class NalvaMarketplaceComponent implements OnInit {
 
   cancelConfiguration(): void {
     if (!this.savingKey()) this.editingKey.set(null);
+  }
+
+  startToolPermissions(employee: AgentEmployee): void {
+    if (!this.mine() || this.permissionsLoadingKey() || this.permissionsSavingKey()) return;
+    this.actionError.set(null);
+    this.actionMessage.set(null);
+    this.permissionsLoadingKey.set(employee.key);
+    this.api.getEmployeeToolPermissions(employee.key).subscribe({
+      next: (permissions) => {
+        this.availableTools.set(permissions.availableTools ?? []);
+        this.allowedToolsDraft.set(permissions.allowedTools ?? []);
+        this.permissionsEditingKey.set(employee.key);
+        this.permissionsLoadingKey.set(null);
+      },
+      error: (error: { status?: number }) => {
+        this.actionError.set(error.status === 403
+          ? 'Only a business Owner or Admin can manage AI employee tool access.'
+          : 'Could not load tool permissions. Confirm the backend permissions API is deployed.');
+        this.permissionsLoadingKey.set(null);
+      },
+    });
+  }
+
+  isToolAllowed(tool: string): boolean {
+    return this.allowedToolsDraft().includes(tool);
+  }
+
+  toggleToolPermission(tool: string, checked: boolean): void {
+    this.allowedToolsDraft.update((current) => {
+      const next = new Set(current);
+      if (checked) next.add(tool);
+      else next.delete(tool);
+      return [...next].sort();
+    });
+  }
+
+  saveToolPermissions(employee: AgentEmployee): void {
+    if (!this.mine() || this.permissionsSavingKey()) return;
+    this.permissionsSavingKey.set(employee.key);
+    this.actionError.set(null);
+    this.actionMessage.set(null);
+    this.api.updateEmployeeToolPermissions(employee.key, {
+      allowedTools: this.allowedToolsDraft(),
+    }).subscribe({
+      next: (saved) => {
+        this.allowedToolsDraft.set(saved.allowedTools ?? []);
+        this.actionMessage.set('Tool access saved for ' + employee.displayName + '.');
+        this.permissionsEditingKey.set(null);
+        this.permissionsSavingKey.set(null);
+      },
+      error: (error: { status?: number; error?: { error?: string } }) => {
+        this.actionError.set(error.error?.error || (error.status === 403
+          ? 'Only a business Owner or Admin can manage AI employee tool access.'
+          : 'Could not save tool access. No permission changes were confirmed.'));
+        this.permissionsSavingKey.set(null);
+      },
+    });
+  }
+
+  cancelToolPermissions(): void {
+    if (!this.permissionsSavingKey()) this.permissionsEditingKey.set(null);
   }
 
   load(): void {
