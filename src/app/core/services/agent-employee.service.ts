@@ -18,6 +18,7 @@ import {
   AgentWorkflowDetail,
   AgentWorkflowSummary,
   UpdateAgentConfigurationRequest,
+  UpdateAgentToolPermissionsRequest,
   AskSophiaSuggestions,
   SaveVoicePreferenceRequest,
   SynthesizedSpeech,
@@ -58,6 +59,15 @@ export class AgentEmployeeService extends BaseApiService {
     request: UpdateAgentConfigurationRequest,
   ): Observable<AgentEmployee> {
     const url = `${API_ENDPOINTS.agents.employees}/${encodeURIComponent(agentKey)}/configuration`;
+    return this.put<AgentEmployee>(url, request);
+  }
+
+  /** Replaces the tenant-specific tool allow-list for an AI employee. */
+  updateEmployeeToolPermissions(
+    agentKey: string,
+    request: UpdateAgentToolPermissionsRequest,
+  ): Observable<AgentEmployee> {
+    const url = `${API_ENDPOINTS.agents.employees}/${encodeURIComponent(agentKey)}/permissions`;
     return this.put<AgentEmployee>(url, request);
   }
 
