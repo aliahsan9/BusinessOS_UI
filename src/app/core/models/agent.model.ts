@@ -9,6 +9,16 @@ export interface UpdateAgentConfigurationRequest {
   defaultLanguage: string;
 }
 
+export interface AgentToolPermissions {
+  agentKey: string;
+  allowedTools: string[];
+  availableTools: string[];
+}
+
+export interface UpdateAgentToolPermissionsRequest {
+  allowedTools: string[];
+}
+
 export interface AgentEmployee {
   key: string;
   displayName: string;

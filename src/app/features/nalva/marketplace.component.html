@@ -56,6 +56,12 @@
                 @else if (employee.isDefault) { Default employee }
                 @else { {{ employee.isActive ? 'Deactivate' : 'Activate' }} }
               </button>
+              <button class="btn btn-sm" type="button"
+                [disabled]="permissionsLoadingKey() !== null || permissionsSavingKey() !== null"
+                (click)="startToolPermissions(employee)">
+                @if (permissionsLoadingKey() === employee.key) { Loading tools… }
+                @else { Manage tool access }
+              </button>
             </div>
             @if (editingKey() === employee.key) {
               <form class="nalva-panel mt-3" (submit)="$event.preventDefault(); saveConfiguration(employee)">
@@ -96,6 +102,35 @@
                 </div>
                 <p class="muted small mt-2 mb-0">System instructions, tool permissions and module access cannot be changed here.</p>
               </form>
+            }
+            @if (permissionsEditingKey() === employee.key) {
+              <section class="nalva-panel mt-3" aria-label="AI employee tool permissions">
+                <h4>Tool access — {{ employee.displayName }}</h4>
+                <p class="muted small">Choose which BusinessOS tools this employee may invoke. Your own user permissions still apply, and write actions retain their confirmation requirements.</p>
+                <div class="d-flex flex-column gap-2">
+                  @for (tool of availableTools(); track tool) {
+                    <label class="d-flex align-items-center gap-2">
+                      <input type="checkbox"
+                        [checked]="isToolAllowed(tool)"
+                        (change)="toggleToolPermission(tool, $any($event.target).checked)" />
+                      <span>{{ tool }}</span>
+                    </label>
+                  }
+                </div>
+                @if (availableTools().length === 0) {
+                  <p class="muted small">No tool definitions were returned by the backend.</p>
+                }
+                <div class="d-flex flex-wrap gap-2 mt-3">
+                  <button class="btn btn-sm" type="button"
+                    [disabled]="permissionsSavingKey() !== null"
+                    (click)="saveToolPermissions(employee)">
+                    {{ permissionsSavingKey() === employee.key ? 'Saving…' : 'Save tool access' }}
+                  </button>
+                  <button class="btn btn-sm" type="button"
+                    [disabled]="permissionsSavingKey() !== null"
+                    (click)="cancelToolPermissions()">Cancel</button>
+                </div>
+              </section>
             }
           }
         </article>

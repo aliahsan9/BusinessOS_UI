@@ -19,6 +19,8 @@ import {
   AgentStreamChunk,
   AgentWorkflowDetail,
   AgentWorkflowSummary,
+  AgentToolPermissions,
+  UpdateAgentToolPermissionsRequest,
   UpdateAgentConfigurationRequest,
   AskSophiaSuggestions,
   SaveVoicePreferenceRequest,
@@ -61,6 +63,19 @@ export class AgentEmployeeService extends BaseApiService {
   ): Observable<AgentEmployee> {
     const url = `${API_ENDPOINTS.agents.employees}/${encodeURIComponent(agentKey)}/configuration`;
     return this.put<AgentEmployee>(url, request);
+  }
+
+  getEmployeeToolPermissions(agentKey: string): Observable<AgentToolPermissions> {
+    const url = `${API_ENDPOINTS.agents.employees}/${encodeURIComponent(agentKey)}/permissions`;
+    return this.get<AgentToolPermissions>(url);
+  }
+
+  updateEmployeeToolPermissions(
+    agentKey: string,
+    request: UpdateAgentToolPermissionsRequest,
+  ): Observable<AgentToolPermissions> {
+    const url = `${API_ENDPOINTS.agents.employees}/${encodeURIComponent(agentKey)}/permissions`;
+    return this.put<AgentToolPermissions>(url, request);
   }
 
   getVoicePreferences(): Observable<VoicePreference> {
