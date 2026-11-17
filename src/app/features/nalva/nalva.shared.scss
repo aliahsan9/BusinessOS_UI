@@ -119,3 +119,54 @@ textarea {
   background: var(--color-bg);
   color: var(--color-text);
 }
+
+
+.tool-permissions {
+  margin-top: 12px;
+}
+
+.tool-permissions h4 {
+  margin: 0 0 6px;
+}
+
+.tool-group {
+  padding: 12px 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.tool-group h5 {
+  margin: 0 0 10px;
+  font-size: 0.9rem;
+}
+
+.tool-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 8px 14px;
+}
+
+.tool-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 0.82rem;
+  overflow-wrap: anywhere;
+}
+
+.tool-option input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  margin: 0;
+  accent-color: var(--color-primary);
+}
+
+.permission-warning {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  color: var(--color-text);
+  font-size: 0.82rem;
+}
