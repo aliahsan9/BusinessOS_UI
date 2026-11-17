@@ -1,49 +1,43 @@
+import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
-import { NalvaService } from '../../core/services/nalva.service';
-import { NalvaWorkflow, NalvaWorkflowRun } from '../../core/models/nalva.model';
+import { AgentEmployeeService } from '../../core/services/agent-employee.service';
+import { AgentWorkflowSummary } from '../../core/models/agent.model';
 
 @Component({
   selector: 'app-nalva-workflows',
   standalone: true,
-  imports: [],
+  imports: [DatePipe],
   templateUrl: './workflows.component.html',
   styleUrls: ['./nalva.shared.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NalvaWorkflowsComponent implements OnInit {
-  private readonly api = inject(NalvaService);
-  readonly workflows = signal<NalvaWorkflow[]>([]);
-  readonly runs = signal<NalvaWorkflowRun[]>([]);
-  readonly name = signal('');
-  readonly agentKey = signal('sales');
-  readonly tool = signal('GetSalesPipeline');
-  readonly objective = signal('Review the pipeline');
-  readonly notice = signal<string | null>(null);
+  private readonly api = inject(AgentEmployeeService);
+  readonly workflows = signal<AgentWorkflowSummary[]>([]);
+  readonly loading = signal(true);
+  readonly error = signal<string | null>(null);
 
-  ngOnInit(): void { this.load(); }
+  ngOnInit(): void {
+    this.load();
+  }
 
   load(): void {
-    this.api.workflows().subscribe({ next: (rows) => this.workflows.set(rows) });
-    this.api.workflowRuns().subscribe({ next: (rows) => this.runs.set(rows) });
-  }
-
-  toggle(row: NalvaWorkflow): void {
-    this.api.setWorkflowActive(row.id, !row.isActive).subscribe({ next: () => this.load() });
-  }
-
-  run(row: NalvaWorkflow): void {
-    this.api.runWorkflow(row.id).subscribe({
-      next: (result) => { this.notice.set(`${row.name}: ${result.status}`); this.load(); },
-      error: () => this.notice.set('The workflow did not start. Activate the agents it uses first.'),
+    this.loading.set(true);
+    this.error.set(null);
+    this.api.listWorkflows(50).subscribe({
+      next: (rows) => {
+        this.workflows.set(rows);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.error.set('Execution workflow history could not be loaded.');
+        this.loading.set(false);
+      },
     });
   }
 
-  create(): void {
-    this.api.saveWorkflow({
-      name: this.name(),
-      description: 'Company workflow',
-      triggerKind: 'Manual',
-      steps: [{ key: 'step-1', agentKey: this.agentKey(), objective: this.objective(), tools: [this.tool()] }],
-    }).subscribe({ next: () => { this.name.set(''); this.load(); } });
+  status(value: number | string): string {
+    if (typeof value === 'string') return value;
+    return ['Pending', 'Running', 'Completed', 'Failed', 'Cancelled'][value] ?? 'Unknown';
   }
 }
