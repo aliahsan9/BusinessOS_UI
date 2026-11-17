@@ -90,7 +90,7 @@ export class NalvaApprovalsComponent implements OnInit {
 
   status(value: number | string): string {
     if (typeof value === 'number') {
-      return ['Pending', 'Running', 'Completed', 'Failed', 'Cancelled', 'AwaitingApproval', 'Approved', 'Rejected'][value] ?? 'Unknown';
+      return ['Pending', 'Running', 'Completed', 'Failed', 'Cancelled', 'AwaitingApproval', 'Approved', 'Rejected', 'Expired'][value] ?? 'Unknown';
     }
     const numeric = Number(value);
     if (value.trim() !== '' && Number.isInteger(numeric)) return this.status(numeric);
