@@ -75,3 +75,8 @@ The current backend does not expose persistent agent-task endpoints or saved aut
 - Complete the remaining service-by-service contract matrix.
 
 No runtime build or test result is claimed by this source-only change.
+
+
+## Tenant-specific AI employee activation
+
+The marketplace's "My agents" view now calls `PUT /api/v1/agents/employees/{agentKey}/activation` to activate or deactivate a non-default employee for the current tenant. The backend implementation is being delivered separately in BusinessOS PR #18. The API enforces tenant Owner/Admin roles, persists a tenant override, and leaves the shared catalog unchanged. Until the backend PR is merged and deployed, activation requests will fail and the UI will show an explicit error.
