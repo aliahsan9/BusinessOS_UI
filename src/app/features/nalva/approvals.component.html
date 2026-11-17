@@ -8,7 +8,7 @@
 
 <div class="nalva-panel mb-3" role="note">
   <strong>Human approval required.</strong>
-  Approval records your decision only. It does not send email or WhatsApp messages, create orders, or modify customer or inventory data.
+  Approval records consent. A separate Execute action sends the approved plain-text customer follow-up email. It does not create orders or modify customer or inventory data. Delivery attempts are one-time; failed or interrupted attempts require manual review.
 </div>
 
 <div class="d-flex flex-wrap align-items-center gap-2 mb-3" role="group" aria-label="Proposal filter">
@@ -54,6 +54,17 @@
 
         @if (row.decisionComment) {
           <p class="muted mt-2 mb-0">Reviewer comment: {{ row.decisionComment }}</p>
+        }
+
+        @if (status(row.status) === 'Approved') {
+          <div class="actions mt-3">
+            <button class="btn primary" type="button"
+              [disabled]="savingId() !== null"
+              (click)="execute(row)">
+              {{ savingId() === row.id ? 'Sending…' : 'Execute approved follow-up' }}
+            </button>
+          </div>
+          <p class="muted small mt-2 mb-0">This sends an email to the customer. The action cannot be automatically retried.</p>
         }
 
         @if (isPending(row)) {
