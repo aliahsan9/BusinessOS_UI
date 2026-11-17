@@ -80,7 +80,7 @@ export class NalvaMarketplaceComponent implements OnInit {
   }
 
   startConfiguration(employee: AgentEmployee): void {
-    if (!this.mine() || this.savingKey()) return;
+    if (!this.mine() || this.savingKey() || this.toolCatalogLoading()) return;
     this.actionError.set(null);
     this.actionMessage.set(null);
     this.configurationDraft.set({
