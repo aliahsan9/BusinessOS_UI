@@ -94,6 +94,14 @@ export class AgentEmployeeService extends BaseApiService {
     );
   }
 
+  /** Executes an approved customer follow-up once; backend enforces the one-time claim. */
+  executeActionProposal(proposalId: string): Observable<AgentActionProposal> {
+    return this.post<AgentActionProposal>(
+      `${API_ENDPOINTS.agents.actionProposals}/${encodeURIComponent(proposalId)}/execute`,
+      {},
+    );
+  }
+
   /** Lists persisted agent execution workflows from the backend. */
   listWorkflows(limit = 20): Observable<AgentWorkflowSummary[]> {
     return this.get<AgentWorkflowSummary[]>(API_ENDPOINTS.agents.workflows, { limit });
