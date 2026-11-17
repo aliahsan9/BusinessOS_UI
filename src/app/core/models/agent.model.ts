@@ -2,6 +2,11 @@
 
 export type VoiceUiState = 'idle' | 'listening' | 'processing' | 'speaking' | 'paused' | 'working';
 
+export interface AgentToolCatalogItem {
+  name: string;
+  description: string;
+}
+
 export interface UpdateAgentToolPermissionsRequest {
   allowedTools: string[];
 }
