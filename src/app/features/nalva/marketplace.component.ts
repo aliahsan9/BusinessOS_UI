@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { AgentEmployeeService } from '../../core/services/agent-employee.service';
-import { AgentEmployee } from '../../core/models/agent.model';
+import { AgentEmployee, UpdateAgentConfigurationRequest } from '../../core/models/agent.model';
 
 @Component({
   selector: 'app-nalva-marketplace',
@@ -23,6 +23,10 @@ export class NalvaMarketplaceComponent implements OnInit {
   readonly savingKey = signal<string | null>(null);
   readonly actionError = signal<string | null>(null);
   readonly actionMessage = signal<string | null>(null);
+  readonly editingKey = signal<string | null>(null);
+  readonly configurationDraft = signal<UpdateAgentConfigurationRequest>({
+    displayName: '', roleTitle: '', specialty: '', defaultLanguage: 'en',
+  });
 
   ngOnInit(): void {
     this.mine.set(this.route.snapshot.data['mine'] === true);
@@ -61,6 +65,48 @@ export class NalvaMarketplaceComponent implements OnInit {
         this.savingKey.set(null);
       },
     });
+  }
+
+  startConfiguration(employee: AgentEmployee): void {
+    if (!this.mine() || this.savingKey()) return;
+    this.actionError.set(null);
+    this.actionMessage.set(null);
+    this.configurationDraft.set({
+      displayName: employee.displayName,
+      roleTitle: employee.roleTitle,
+      specialty: employee.specialty,
+      defaultLanguage: employee.defaultLanguage || 'en',
+    });
+    this.editingKey.set(employee.key);
+  }
+
+  updateDraft(field: keyof UpdateAgentConfigurationRequest, value: string): void {
+    this.configurationDraft.update((draft) => ({ ...draft, [field]: value }));
+  }
+
+  saveConfiguration(employee: AgentEmployee): void {
+    if (!this.mine() || this.savingKey()) return;
+    this.savingKey.set(employee.key);
+    this.actionError.set(null);
+    this.actionMessage.set(null);
+    this.api.updateEmployeeConfiguration(employee.key, this.configurationDraft()).subscribe({
+      next: (updated) => {
+        this.employees.update((rows) => rows.map((row) => row.key === updated.key ? updated : row));
+        this.actionMessage.set(`${updated.displayName} configuration saved for this business.`);
+        this.editingKey.set(null);
+        this.savingKey.set(null);
+      },
+      error: (error: { status?: number; error?: { error?: string } }) => {
+        this.actionError.set(error.error?.error || (error.status === 403
+          ? 'Only a business Owner or Admin can configure AI employees.'
+          : 'Could not save this configuration. Confirm the backend configuration API is deployed and try again.'));
+        this.savingKey.set(null);
+      },
+    });
+  }
+
+  cancelConfiguration(): void {
+    if (!this.savingKey()) this.editingKey.set(null);
   }
 
   load(): void {
