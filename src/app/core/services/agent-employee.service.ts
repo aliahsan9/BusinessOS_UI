@@ -14,7 +14,7 @@ import {
   AgentOnboardingContinueRequest,
   AgentOnboardingResponse,
   AgentOnboardingStartRequest,
-  AgentStreamChunk,
+  AgentStreamChunk,\n  AgentWorkflowDetail,\n  AgentWorkflowSummary,
   AskSophiaSuggestions,
   SaveVoicePreferenceRequest,
   SynthesizedSpeech,
@@ -49,6 +49,16 @@ export class AgentEmployeeService extends BaseApiService {
 
   saveVoicePreferences(request: SaveVoicePreferenceRequest): Observable<VoicePreference> {
     return this.put<VoicePreference>(API_ENDPOINTS.agents.voicePreferences, request);
+  }
+
+  /** Lists persisted agent execution workflows from the backend. */
+  listWorkflows(limit = 20): Observable<AgentWorkflowSummary[]> {
+    return this.get<AgentWorkflowSummary[]>(API_ENDPOINTS.agents.workflows, { limit });
+  }
+
+  /** Loads one persisted agent workflow by its server-generated identifier. */
+  getWorkflow(workflowId: string): Observable<AgentWorkflowDetail> {
+    return this.get<AgentWorkflowDetail>(`${API_ENDPOINTS.agents.workflow}/${encodeURIComponent(workflowId)}`);
   }
 
   getAskSophiaSuggestions(): Observable<AskSophiaSuggestions> {
