@@ -2,6 +2,13 @@
 
 export type VoiceUiState = 'idle' | 'listening' | 'processing' | 'speaking' | 'paused' | 'working';
 
+export interface UpdateAgentConfigurationRequest {
+  displayName: string;
+  roleTitle: string;
+  specialty: string;
+  defaultLanguage: string;
+}
+
 export interface AgentEmployee {
   key: string;
   displayName: string;
