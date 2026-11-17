@@ -1,63 +1,48 @@
-@if (error()) { <p class="muted">{{ error() }}</p> }
-@if (notice()) { <p class="nalva-panel">{{ notice() }}</p> }
-@if (agent(); as agent) {
+<header class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+  <div>
+    <h2>AI employee details</h2>
+    <p class="muted mb-0">Catalog information and persisted execution history.</p>
+  </div>
+  <button class="btn" type="button" (click)="reload()" [disabled]="loading()">Refresh</button>
+</header>
+
+@if (loading()) { <p class="muted" role="status">Loading employee details…</p> }
+@if (error()) { <p class="nalva-panel" role="alert">{{ error() }}</p> }
+
+@if (agent(); as employee) {
   <section class="nalva-panel">
-    <h2>{{ agent.name }}</h2>
-    <p>{{ agent.description }}</p>
+    <h3>{{ employee.displayName }}</h3>
+    <p>{{ employee.roleTitle }}</p>
     <div class="pills">
-      <span class="pill">{{ agent.role }}</span>
-      <span class="pill">{{ agent.category }}</span>
-      <span class="pill">{{ agent.status }}</span>
-      <span class="pill">{{ agent.health }}</span>
-      <span class="pill">Autonomy {{ agent.autonomyLevel }}</span>
+      <span class="pill">{{ employee.specialty }}</span>
+      <span class="pill">{{ employee.defaultLanguage }}</span>
+      <span class="pill">{{ employee.isActive ? 'Enabled in catalog' : 'Unavailable' }}</span>
+      @if (employee.isDefault) { <span class="pill">Default assistant</span> }
     </div>
-    @if (agent.unavailableReason) { <p class="muted">{{ agent.unavailableReason }}</p> }
-    <label>Objective <input [value]="objective()" (input)="objective.set($any($event.target).value)" /></label>
-    <div class="actions">
-      <button class="btn primary" type="button" (click)="run()" [disabled]="!agent.executionAvailable">Run</button>
-      <button class="btn" type="button" (click)="setAutonomy(1)">Read only</button>
-      <button class="btn" type="button" (click)="setAutonomy(2)">Drafting</button>
-      <button class="btn" type="button" (click)="setAutonomy(3)">Supervised</button>
-    </div>
+    <p class="muted mt-3">The current backend exposes employee catalog reads and execution history only. Tenant activation, configuration, direct execution controls, memory management and agent health are not available through this API yet.</p>
   </section>
-  <section class="nalva-cards" style="margin-top: 14px">
-    <article class="nalva-panel">
-      <h3>Responsibilities</h3>
-      <ul>@for (item of agent.responsibilities; track item) { <li>{{ item }}</li> }</ul>
-    </article>
-    <article class="nalva-panel">
-      <h3>Tools and permissions</h3>
-      <ul>
-        @for (tool of agent.tools; track tool.name) {
-          <li>{{ tool.name }} · {{ tool.integration }} @if (tool.requiresApproval) { · approval {{ tool.approvalAction }} }</li>
-        }
-      </ul>
-    </article>
-    <article class="nalva-panel">
-      <h3>Model</h3>
-      <p>{{ agent.model }} · temperature {{ agent.temperature ?? 'platform default' }}</p>
-      <p class="muted">Daily limit {{ agent.dailyExecutionLimit }} · monthly token budget {{ agent.monthlyTokenBudget }}</p>
-      <p class="muted">The stored temperature is kept for this agent. The shared model client still uses the platform temperature.</p>
-    </article>
-    <article class="nalva-panel">
-      <h3>Memory</h3>
-      @for (item of memory(); track item.id) { <p>{{ item.kind }}: {{ item.excerpt }}</p> }
-      @if (!memory().length) { <p class="muted">No stored summaries yet.</p> }
-    </article>
-  </section>
-  <section class="nalva-panel" style="margin-top: 14px">
-    <h3>Execution history</h3>
-    <table class="table">
-      <tr><th>When</th><th>Status</th><th>Tokens</th><th>Estimate</th><th>Summary</th></tr>
-      @for (row of history(); track row.id) {
-        <tr>
-          <td>{{ row.startedAt | date:'short' }}</td>
-          <td>{{ row.status }}</td>
-          <td>{{ row.inputTokens + row.outputTokens }}</td>
-          <td>${{ row.estimatedCostUsd }}</td>
-          <td>{{ row.summary }}</td>
-        </tr>
-      }
-    </table>
+
+  <section class="nalva-panel mt-3">
+    <h3>Recent execution workflows</h3>
+    @if (history().length === 0) {
+      <p class="muted">No persisted workflows for this employee were found in the latest 100 records.</p>
+    } @else {
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead><tr><th>Workflow</th><th>Status</th><th>Progress</th><th>Started</th><th>Completed</th></tr></thead>
+          <tbody>
+            @for (workflow of history(); track workflow.id) {
+              <tr>
+                <td>{{ workflow.title }}</td>
+                <td>{{ workflowStatus(workflow.status) }}</td>
+                <td>{{ workflow.currentStepIndex }} / {{ workflow.totalSteps }}</td>
+                <td>{{ workflow.startedAt | date:'medium' }}</td>
+                <td>{{ workflow.completedAt ? (workflow.completedAt | date:'medium') : '—' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
   </section>
 }

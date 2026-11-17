@@ -13,6 +13,35 @@ export interface AgentEmployee {
   avatarHint?: string | null;
 }
 
+/** Summary returned by GET /api/v1/agents/workflows. */
+export interface AgentWorkflowSummary {
+  id: string;
+  agentKey: string;
+  title: string;
+  status: number | string;
+  currentStepIndex: number;
+  totalSteps: number;
+  resultSummary?: string | null;
+  startedAt: string;
+  completedAt?: string | null;
+}
+
+/** Detail returned by GET /api/v1/agents/workflows/{workflowId}. */
+export interface AgentWorkflowDetail {
+  id: string;
+  agentKey: string;
+  agentDisplayName?: string | null;
+  title: string;
+  status: number | string;
+  currentStepIndex: number;
+  resultSummary?: string | null;
+  errorMessage?: string | null;
+  sessionId?: string | null;
+  startedAt: string;
+  completedAt?: string | null;
+  steps: AgentWorkflowStep[];
+}
+
 export interface AgentWorkflowStep {
   id?: string;
   stepKey: string;

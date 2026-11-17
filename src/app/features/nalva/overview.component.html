@@ -1,19 +1,64 @@
-@if (error()) { <p class="muted">{{ error() }}</p> }
-@if (data(); as overview) {
-  @if (overview.costAlert) {
-    <p class="nalva-panel">Estimated spend has reached the alert threshold. Costs use pricing version {{ overview.pricingVersion }} and are estimates.</p>
-  }
+<header class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+  <div>
+    <h2>AI workforce overview</h2>
+    <p class="muted mb-0">Live data from your configured AI employees and recent execution workflows.</p>
+  </div>
+  <button class="btn" type="button" (click)="load()" [disabled]="loading()">Refresh</button>
+</header>
+
+@if (loading()) {
+  <p class="muted" role="status">Loading Navla data…</p>
+}
+@if (error()) {
+  <p class="nalva-panel" role="alert">{{ error() }}</p>
+}
+
+@if (!loading() && !error()) {
   <section class="nalva-grid">
-    <article class="nalva-stat"><span>Activated agents</span><strong>{{ overview.activatedAgents }}</strong></article>
-    <article class="nalva-stat"><span>Active</span><strong>{{ overview.activeAgents }}</strong></article>
-    <article class="nalva-stat"><span>Running</span><strong>{{ overview.runningExecutions }}</strong></article>
-    <article class="nalva-stat"><span>Completed tasks</span><strong>{{ overview.completedTasks }}</strong></article>
-    <article class="nalva-stat"><span>Failed this month</span><strong>{{ overview.failedExecutions }}</strong></article>
-    <article class="nalva-stat"><span>Pending approvals</span><strong>{{ overview.pendingApprovals }}</strong></article>
-    <article class="nalva-stat"><span>Tokens this month</span><strong>{{ overview.totalTokens }}</strong></article>
-    <article class="nalva-stat"><span>Estimated cost</span><strong>${{ overview.estimatedCostUsd }}</strong></article>
-    <article class="nalva-stat"><span>Workflow runs</span><strong>{{ overview.workflowRuns }}</strong></article>
+    <article class="nalva-stat">
+      <span>Available AI employees</span>
+      <strong>{{ employees().length }}</strong>
+    </article>
+    <article class="nalva-stat">
+      <span>Active AI employees</span>
+      <strong>{{ activeEmployees() }}</strong>
+    </article>
+    <article class="nalva-stat">
+      <span>Recent execution workflows</span>
+      <strong>{{ workflows().length }}</strong>
+    </article>
   </section>
-  <p class="muted">Estimated cost is not an invoice. Pricing version {{ overview.pricingVersion }}.</p>
-  <p><a [routerLink]="routes.nalva.marketplace">Open the marketplace</a></p>
+
+  <section class="nalva-panel mt-4">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+      <h3 class="mb-0">Recent execution workflows</h3>
+      <a [routerLink]="routes.nalva.marketplace">View AI employees</a>
+    </div>
+
+    @if (workflows().length === 0) {
+      <p class="muted mb-0">No agent workflows have been recorded for your account yet. Start a conversation with an AI employee to create an execution workflow.</p>
+    } @else {
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead>
+            <tr><th>Workflow</th><th>AI employee</th><th>Status</th><th>Started</th></tr>
+          </thead>
+          <tbody>
+            @for (workflow of workflows(); track workflow.id) {
+              <tr>
+                <td>
+                  <strong>{{ workflow.title }}</strong>
+                  @if (workflow.resultSummary) { <div class="muted small">{{ workflow.resultSummary }}</div> }
+                </td>
+                <td>{{ workflow.agentKey }}</td>
+                <td>{{ workflowStatus(workflow.status) }}</td>
+                <td>{{ workflow.startedAt | date:'medium' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+  <p class="muted small mt-2">These figures reflect the available employee catalog and the latest 20 execution workflows. Token usage, spend, approvals and task-queue metrics are intentionally not displayed until the backend exposes verified data for them.</p>
 }

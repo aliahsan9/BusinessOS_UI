@@ -15,6 +15,8 @@ import {
   AgentOnboardingResponse,
   AgentOnboardingStartRequest,
   AgentStreamChunk,
+  AgentWorkflowDetail,
+  AgentWorkflowSummary,
   AskSophiaSuggestions,
   SaveVoicePreferenceRequest,
   SynthesizedSpeech,
@@ -43,12 +45,28 @@ export class AgentEmployeeService extends BaseApiService {
     return this.get<AgentEmployee[]>(API_ENDPOINTS.agents.employees);
   }
 
+  /** Activates or deactivates an employee for the current tenant (Owner/Admin API). */
+  setEmployeeActivation(agentKey: string, isActive: boolean): Observable<AgentEmployee> {
+    const url = `${API_ENDPOINTS.agents.employees}/${encodeURIComponent(agentKey)}/activation`;
+    return this.put<AgentEmployee>(url, { isActive });
+  }
+
   getVoicePreferences(): Observable<VoicePreference> {
     return this.get<VoicePreference>(API_ENDPOINTS.agents.voicePreferences);
   }
 
   saveVoicePreferences(request: SaveVoicePreferenceRequest): Observable<VoicePreference> {
     return this.put<VoicePreference>(API_ENDPOINTS.agents.voicePreferences, request);
+  }
+
+  /** Lists persisted agent execution workflows from the backend. */
+  listWorkflows(limit = 20): Observable<AgentWorkflowSummary[]> {
+    return this.get<AgentWorkflowSummary[]>(API_ENDPOINTS.agents.workflows, { limit });
+  }
+
+  /** Loads one persisted agent workflow by its server-generated identifier. */
+  getWorkflow(workflowId: string): Observable<AgentWorkflowDetail> {
+    return this.get<AgentWorkflowDetail>(`${API_ENDPOINTS.agents.workflow}/${encodeURIComponent(workflowId)}`);
   }
 
   getAskSophiaSuggestions(): Observable<AskSophiaSuggestions> {
