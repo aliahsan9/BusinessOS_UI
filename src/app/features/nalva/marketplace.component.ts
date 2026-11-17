@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { AgentEmployeeService } from '../../core/services/agent-employee.service';
-import { AgentEmployee, UpdateAgentConfigurationRequest } from '../../core/models/agent.model';
+import { AgentEmployee, AgentToolCatalogItem, UpdateAgentConfigurationRequest } from '../../core/models/agent.model';
 
 @Component({
   selector: 'app-nalva-marketplace',
@@ -25,17 +25,16 @@ export class NalvaMarketplaceComponent implements OnInit {
   readonly actionMessage = signal<string | null>(null);
   readonly editingKey = signal<string | null>(null);
   readonly selectedTools = signal<string[]>([]);
+  readonly toolCatalog = signal<AgentToolCatalogItem[]>([]);
+  readonly toolCatalogLoading = signal(false);
+  readonly toolCatalogError = signal<string | null>(null);
   readonly permissionSavingKey = signal<string | null>(null);
   readonly permissionError = signal<string | null>(null);
   readonly permissionMessage = signal<string | null>(null);
-  readonly toolGroups = [
-    { label: 'Read business data', tools: ['GetCustomers', 'GetProjects', 'GetTasks', 'GetInvoices', 'GetExpenses', 'GetProducts', 'GetRevenue', 'GetSalesSummary', 'GetBestSellingProducts', 'GetSalesTrends', 'GetBusinessHealth', 'GetDailyPriorities', 'GetCustomerInsights', 'GetBusinessSettings', 'GetNotificationsSummary'] },
-    { label: 'Customers and sales', tools: ['SearchCustomer', 'CreateCustomer', 'UpdateCustomer', 'DeleteCustomer', 'CreateSale'] },
-    { label: 'Products and inventory', tools: ['SearchProduct', 'CreateProduct', 'UpdateProduct', 'DeleteProduct', 'GetInventorySummary', 'GetLowStock', 'GetOutOfStock', 'GetDeadStock', 'AdjustInventory', 'ReceiveStock'] },
-    { label: 'Invoices and purchasing', tools: ['CreateInvoice', 'SearchInvoice', 'CancelInvoice', 'CreatePurchaseOrderDraft', 'CreatePurchaseOrder', 'ApprovePurchaseOrder', 'ReceivePurchase', 'SearchSupplier', 'CreateSupplier', 'UpdateSupplier', 'DeleteSupplier', 'GetPurchaseRecommendations'] },
-    { label: 'Projects, reports and settings', tools: ['CreateProject', 'CreateTask', 'SearchDocuments', 'GenerateInventoryReport', 'GenerateSalesReport', 'ApplyOnboardingProfile', 'ShowProfit', 'UpdateCompanyProfile', 'UpdateTaxDefaults'] },
-  ];
-  readonly allToolNames = [...new Set(this.toolGroups.flatMap((group) => group.tools))];
+  readonly allToolNames = () => this.toolCatalog().map((tool) => tool.name);
+  readonly staleAllowedTools = () => this.selectedTools().filter(
+    (name) => !this.toolCatalog().some((tool) => tool.name === name),
+  );
   readonly configurationDraft = signal<UpdateAgentConfigurationRequest>({
     displayName: '', roleTitle: '', specialty: '', defaultLanguage: 'en',
   });
@@ -43,6 +42,7 @@ export class NalvaMarketplaceComponent implements OnInit {
   ngOnInit(): void {
     this.mine.set(this.route.snapshot.data['mine'] === true);
     this.load();
+    this.loadToolCatalog();
   }
 
   categories(): string[] {
@@ -91,7 +91,7 @@ export class NalvaMarketplaceComponent implements OnInit {
     });
     // An unconfigured policy preserves the legacy tool behavior. Preselect all
     // currently registered tools so the first save does not accidentally remove access.
-    this.selectedTools.set([...(employee.allowedTools ?? this.allToolNames)]);
+    this.selectedTools.set([...(employee.allowedTools ?? this.allToolNames())]);
     this.permissionError.set(null);
     this.permissionMessage.set(null);
     this.editingKey.set(employee.key);
@@ -135,7 +135,22 @@ export class NalvaMarketplaceComponent implements OnInit {
   }
 
   selectAllTools(): void {
-    this.selectedTools.set([...this.allToolNames]);
+    this.selectedTools.set([...this.allToolNames()]);
+  }
+
+  loadToolCatalog(): void {
+    this.toolCatalogLoading.set(true);
+    this.toolCatalogError.set(null);
+    this.api.listToolCatalog().subscribe({
+      next: (tools) => {
+        this.toolCatalog.set(tools ?? []);
+        this.toolCatalogLoading.set(false);
+      },
+      error: () => {
+        this.toolCatalogError.set('The registered tool catalog is unavailable. Deploy the backend tools endpoint before managing permissions.');
+        this.toolCatalogLoading.set(false);
+      },
+    });
   }
 
   clearAllTools(): void {
