@@ -45,7 +45,7 @@
           @if (mine()) {
             <div class="mt-3 d-flex flex-wrap gap-2">
               <button class="btn btn-sm" type="button"
-                [disabled]="savingKey() !== null"
+                [disabled]="savingKey() !== null || toolCatalogLoading()"
                 (click)="startConfiguration(employee)">
                 Configure
               </button>
