@@ -21,9 +21,16 @@ export class NalvaApprovalsComponent implements OnInit {
   readonly notice = signal<string | null>(null);
   readonly savingId = signal<string | null>(null);
   readonly commentDrafts = signal<Record<string, string>>({});
+  readonly followUpCapabilityEnabled = signal(false);
+  readonly capabilityAvailable = signal(false);
+  readonly capabilityLoading = signal(true);
+  readonly capabilitySaving = signal(false);
+  readonly capabilityError = signal<string | null>(null);
+  private readonly employeeAllowedTools = signal<string[]>([]);
 
   ngOnInit(): void {
     this.load();
+    this.loadFollowUpCapability();
   }
 
   load(): void {
@@ -41,6 +48,54 @@ export class NalvaApprovalsComponent implements OnInit {
             ? 'Your account does not have permission to view these proposals.'
             : 'Could not load Sales Agent proposals. Check your connection and try again.');
         this.loading.set(false);
+      },
+    });
+  }
+
+  loadFollowUpCapability(): void {
+    this.capabilityLoading.set(true);
+    this.capabilityError.set(null);
+    this.api.getEmployeeToolPermissions('emma').subscribe({
+      next: (permissions) => {
+        this.employeeAllowedTools.set(permissions.allowedTools ?? []);
+        this.capabilityAvailable.set((permissions.availableTools ?? []).includes('SendCustomerFollowUp'));
+        this.followUpCapabilityEnabled.set((permissions.allowedTools ?? []).includes('SendCustomerFollowUp'));
+        if (!(permissions.availableTools ?? []).includes('SendCustomerFollowUp')) {
+          this.capabilityError.set('The backend does not expose the customer follow-up capability yet.');
+        }
+        this.capabilityLoading.set(false);
+      },
+      error: (err: { status?: number }) => {
+        this.capabilityError.set(err.status === 403
+          ? 'Only a business Owner or Admin can view or change employee capabilities.'
+          : 'Could not load Emma’s follow-up capability. Check the backend and try again.');
+        this.capabilityLoading.set(false);
+      },
+    });
+  }
+
+  setFollowUpCapability(enabled: boolean): void {
+    if (this.capabilitySaving() || !this.capabilityAvailable()) return;
+
+    const current = this.employeeAllowedTools();
+    const next = enabled
+      ? [...new Set([...current, 'SendCustomerFollowUp'])]
+      : current.filter((tool) => tool !== 'SendCustomerFollowUp');
+
+    this.capabilitySaving.set(true);
+    this.capabilityError.set(null);
+    this.api.updateEmployeeToolPermissions('emma', { allowedTools: next }).subscribe({
+      next: (permissions) => {
+        this.employeeAllowedTools.set(permissions.allowedTools ?? []);
+        this.followUpCapabilityEnabled.set((permissions.allowedTools ?? []).includes('SendCustomerFollowUp'));
+        this.capabilitySaving.set(false);
+      },
+      error: (err: { status?: number }) => {
+        this.capabilityError.set(err.status === 403
+          ? 'Only a business Owner or Admin can change employee capabilities.'
+          : 'Could not save the follow-up capability. Your existing permissions were not changed.');
+        this.capabilitySaving.set(false);
+        this.loadFollowUpCapability();
       },
     });
   }
