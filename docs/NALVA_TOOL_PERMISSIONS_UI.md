@@ -4,7 +4,8 @@
 The permission editor is part of the tenant-scoped AI Employee configuration panel in the marketplace's **My Agents** view.
 
 ## Behavior
-- Displays grouped tool checkboxes based on the current backend registered tool catalog.
+- Displays tool checkboxes based on the current backend registered tool catalog from `GET /api/v1/agents/tools`.
+- Tool names and descriptions come directly from the dependency-injected `IAiToolRegistry`; the frontend no longer maintains a duplicate hardcoded tool list.
 - Loads a saved tenant-specific allow-list from the employee DTO.
 - If the API returns `allowedTools: null`, the editor preselects the currently known tools so the first save preserves existing broad access rather than unexpectedly disabling tools.
 - `Save tool permissions` sends the full selected list to `PUT /api/v1/agents/employees/{agentKey}/permissions`.
@@ -13,7 +14,7 @@ The permission editor is part of the tenant-scoped AI Employee configuration pan
 - The existing user permission check still limits the effective access at execution time.
 
 ## Backend dependency
-This UI depends on BusinessOS backend PR #22, which adds the permissions endpoint and returns `allowedTools` on the employee DTO. PR #22 is currently stacked on backend PR #21. Merge and deploy the backend changes before enabling this UI in production.
+This UI depends on BusinessOS backend PR #22, which adds the permissions endpoint, returns `allowedTools` on the employee DTO, and exposes the registered tool catalog at `GET /api/v1/agents/tools`. PR #22 is currently stacked on backend PR #21. Merge and deploy the backend changes before enabling this UI in production.
 
 ## Verification
 Angular build and tests have not been executed in this environment. Run the frontend production build and relevant unit tests after checking out this branch. Verify these cases against a backend with the migration applied:
