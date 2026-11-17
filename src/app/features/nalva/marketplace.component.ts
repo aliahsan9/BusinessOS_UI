@@ -31,7 +31,7 @@ export class NalvaMarketplaceComponent implements OnInit {
   readonly toolGroups = [
     { label: 'Read business data', tools: ['GetCustomers', 'GetProjects', 'GetTasks', 'GetInvoices', 'GetExpenses', 'GetProducts', 'GetRevenue', 'GetSalesSummary', 'GetBestSellingProducts', 'GetSalesTrends', 'GetBusinessHealth', 'GetDailyPriorities', 'GetCustomerInsights', 'GetBusinessSettings', 'GetNotificationsSummary'] },
     { label: 'Customers and sales', tools: ['SearchCustomer', 'CreateCustomer', 'UpdateCustomer', 'DeleteCustomer', 'CreateSale'] },
-    { label: 'Products and inventory', tools: ['SearchProduct', 'CreateProduct', 'UpdateProduct', 'DeleteProduct', 'GetInventorySummary', 'GetInventoryHealth', 'GetLowStock', 'GetOutOfStock', 'GetDeadStock', 'AdjustInventory', 'ReceiveStock'] },
+    { label: 'Products and inventory', tools: ['SearchProduct', 'CreateProduct', 'UpdateProduct', 'DeleteProduct', 'GetInventorySummary', 'GetLowStock', 'GetOutOfStock', 'GetDeadStock', 'AdjustInventory', 'ReceiveStock'] },
     { label: 'Invoices and purchasing', tools: ['CreateInvoice', 'SearchInvoice', 'CancelInvoice', 'CreatePurchaseOrderDraft', 'CreatePurchaseOrder', 'ApprovePurchaseOrder', 'ReceivePurchase', 'SearchSupplier', 'CreateSupplier', 'UpdateSupplier', 'DeleteSupplier', 'GetPurchaseRecommendations'] },
     { label: 'Projects, reports and settings', tools: ['CreateProject', 'CreateTask', 'SearchDocuments', 'GenerateInventoryReport', 'GenerateSalesReport', 'ApplyOnboardingProfile', 'ShowProfit', 'UpdateCompanyProfile', 'UpdateTaxDefaults'] },
   ];
