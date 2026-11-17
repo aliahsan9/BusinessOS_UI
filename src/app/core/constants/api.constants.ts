@@ -154,6 +154,7 @@ export const API_ENDPOINTS = {
     chat: '/agents/chat',
     chatStream: '/agents/chat/stream',
     employees: '/agents/employees',
+    tools: '/agents/tools',
     voicePreferences: '/agents/voice-preferences',
     tts: '/agents/tts',
     ttsVoices: '/agents/tts/voices',
