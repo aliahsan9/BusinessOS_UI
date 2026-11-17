@@ -17,6 +17,7 @@ import {
   AgentStreamChunk,
   AgentWorkflowDetail,
   AgentWorkflowSummary,
+  UpdateAgentConfigurationRequest,
   AskSophiaSuggestions,
   SaveVoicePreferenceRequest,
   SynthesizedSpeech,
@@ -35,7 +36,7 @@ export class AgentEmployeeService extends BaseApiService {
 
   private streamAbort: AbortController | null = null;
   private preferredAgentKey = 'sophia';
-  private language = 'en';
+  private language: string | null = null;
 
   chat(message: string): Observable<AgentChatResponse> {
     return this.post<AgentChatResponse>(API_ENDPOINTS.agents.chat, this.buildRequest(message, false));
@@ -49,6 +50,15 @@ export class AgentEmployeeService extends BaseApiService {
   setEmployeeActivation(agentKey: string, isActive: boolean): Observable<AgentEmployee> {
     const url = `${API_ENDPOINTS.agents.employees}/${encodeURIComponent(agentKey)}/activation`;
     return this.put<AgentEmployee>(url, { isActive });
+  }
+
+  /** Updates tenant-editable employee metadata; protected prompt and permission fields are not sent. */
+  updateEmployeeConfiguration(
+    agentKey: string,
+    request: UpdateAgentConfigurationRequest,
+  ): Observable<AgentEmployee> {
+    const url = `${API_ENDPOINTS.agents.employees}/${encodeURIComponent(agentKey)}/configuration`;
+    return this.put<AgentEmployee>(url, request);
   }
 
   getVoicePreferences(): Observable<VoicePreference> {
@@ -101,7 +111,7 @@ export class AgentEmployeeService extends BaseApiService {
       headers,
       body: JSON.stringify({
         text,
-        language: options?.language ?? this.language,
+        language: options?.language ?? this.language ?? 'en',
         speechRate: options?.speechRate ?? 1,
         voiceName: options?.voiceName,
       }),
