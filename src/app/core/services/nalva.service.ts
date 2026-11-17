@@ -3,6 +3,7 @@ import { Observable } from 'rxjs';
 import { BaseApiService } from './base-api.service';
 import {
   NalvaAgentCard,
+  NalvaAuditEntry,
   NalvaAgentDetail,
   NalvaAnalytics,
   NalvaApproval,
@@ -130,6 +131,10 @@ export class NalvaService extends BaseApiService {
 
   executions(agentKey?: string, status?: string): Observable<NalvaExecution[]> {
     return this.get<NalvaExecution[]>('/nalva/executions', { agentKey, status });
+  }
+
+  agentAuditHistory(limit = 50): Observable<NalvaAuditEntry[]> {
+    return this.get<NalvaAuditEntry[]>('/agents/audit-history', { limit });
   }
 
   analytics(agentKey?: string, category?: string): Observable<NalvaAnalytics> {
