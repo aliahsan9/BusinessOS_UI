@@ -3,7 +3,7 @@
 
 <label>
   Shopify shop name
-  <input [value]="shop()" (input)="shop.set($any($event.target).value)" placeholder="your-shop" />
+  <input [ngModel]="shop()" (ngModelChange)="shop.set($event)" placeholder="your-shop" />
 </label>
 
 <section class="nalva-cards">
@@ -17,6 +17,8 @@
         <span class="pill">{{ provider.connectionStatus }}</span>
         @if (!provider.providerVerified) { <span class="pill">Not verified live</span> }
         @if (!provider.serverConfigured) { <span class="pill">Server credentials missing</span> }
+        @if (needsReauth(provider)) { <span class="pill">Needs reauthorization</span> }
+        @if (provider.supportsWebhooks) { <span class="pill">Webhooks</span> }
       </div>
       @if (provider.readOperations.length) {
         <p class="muted">Read: {{ provider.readOperations.join(', ') }}</p>
@@ -25,12 +27,76 @@
         <p class="muted">Write, after approval: {{ provider.writeOperations.join(', ') }}</p>
       }
       <div class="actions">
-        <button type="button" (click)="connect(provider)" [disabled]="!provider.serverConfigured">Connect</button>
+        <button type="button" class="btn" (click)="connect(provider)" [disabled]="!provider.serverConfigured">
+          {{ provider.connectionId ? 'Reconnect' : 'Connect' }}
+        </button>
+        @if (needsReauth(provider)) {
+          <button type="button" class="btn" (click)="reauthorize(provider)">Reauthorize</button>
+        }
         @if (provider.connectionId) {
-          <button type="button" (click)="test(provider)">Test</button>
-          <button type="button" (click)="disconnect(provider)">Disconnect</button>
+          <button type="button" class="btn" (click)="test(provider)">Test / Sync</button>
+          <button type="button" class="btn" (click)="disconnect(provider)">Disconnect</button>
         }
       </div>
     </article>
   }
+</section>
+
+<section class="nalva-panel" style="margin-top: 20px;">
+  <h3>Tenant connection settings</h3>
+  <p class="muted">Select a connected integration to edit metadata (pageId, phoneNumberId, shop, instagramBusinessAccountId) and webhook secrets. Secrets are never shown after save.</p>
+  <div class="nalva-cards">
+    @for (connection of connections(); track connection.id) {
+      <article class="nalva-card">
+        <h3>{{ connection.providerKey }}</h3>
+        <p class="muted">{{ connection.status }} · {{ connection.externalAccountLabel || 'No account label' }}</p>
+        @if (connection.scopes?.length) {
+          <p class="muted">Scopes: {{ connection.scopes.join(', ') }}</p>
+        }
+        @if (connection.lastError) {
+          <p class="muted">Last error: {{ connection.lastError }}</p>
+        }
+        @if (connection.lastSuccessAt) {
+          <p class="muted">Last success: {{ connection.lastSuccessAt }}</p>
+        }
+        <div class="actions">
+          <button type="button" class="btn" (click)="selectConnection(connection)">Configure</button>
+        </div>
+      </article>
+    }
+  </div>
+
+  @if (selectedConnectionId()) {
+    <label>
+      Metadata JSON
+      <textarea rows="4" [ngModel]="metadataJson()" (ngModelChange)="metadataJson.set($event)" placeholder='{"pageId":"...","phoneNumberId":"..."}'></textarea>
+    </label>
+    <div class="actions">
+      <button type="button" class="btn" (click)="saveMetadata()">Save metadata</button>
+    </div>
+    <label>
+      Webhook secret
+      <input type="password" [ngModel]="webhookSecret()" (ngModelChange)="webhookSecret.set($event)" autocomplete="off" />
+    </label>
+    <div class="actions">
+      <button type="button" class="btn" (click)="saveWebhookSecret()">Store webhook secret</button>
+    </div>
+  }
+</section>
+
+<section class="nalva-panel" style="margin-top: 20px;">
+  <h3>Sync history and error logs</h3>
+  <p class="muted">Recent integration activity for this company. Tokens and secrets are redacted.</p>
+  <div class="nalva-cards">
+    @for (log of logs(); track log.id) {
+      <article class="nalva-card">
+        <p class="eyebrow">{{ log.providerKey }} · {{ log.operation }}</p>
+        <p>{{ log.success ? 'Success' : 'Failed' }} · {{ log.durationMs }} ms</p>
+        <p class="muted">{{ log.createdAt }}</p>
+        @if (log.errorRedacted) {
+          <p class="muted">{{ log.errorRedacted }}</p>
+        }
+      </article>
+    }
+  </div>
 </section>

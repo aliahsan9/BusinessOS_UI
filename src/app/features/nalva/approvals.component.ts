@@ -22,6 +22,7 @@ export class NalvaApprovalsComponent implements OnInit {
   readonly notice = signal<string | null>(null);
   readonly savingId = signal<string | null>(null);
   readonly commentDrafts = signal<Record<string, string>>({});
+  readonly argsDrafts = signal<Record<string, string>>({});
 
   ngOnInit(): void {
     this.load();
@@ -54,20 +55,25 @@ export class NalvaApprovalsComponent implements OnInit {
     this.commentDrafts.update((drafts) => ({ ...drafts, [id]: value }));
   }
 
+  setArgs(id: string, value: string): void {
+    this.argsDrafts.update((drafts) => ({ ...drafts, [id]: value }));
+  }
+
   decide(row: NalvaApproval, decision: 'approve' | 'reject' | 'changes'): void {
-    if (this.savingId() || row.status !== 'Pending') return;
+    if (this.savingId() || (row.status !== 'Pending' && row.status !== 'ChangesRequested')) return;
 
     this.savingId.set(row.id);
     this.error.set(null);
     this.notice.set(null);
-    this.api.decide(row.id, decision, this.commentDrafts()[row.id]?.trim() || undefined).subscribe({
+    const modified = this.argsDrafts()[row.id]?.trim() || undefined;
+    this.api.decide(row.id, decision, this.commentDrafts()[row.id]?.trim() || undefined, modified).subscribe({
       next: (result) => {
         this.notice.set(result.summary
           || (decision === 'approve'
             ? 'Approval recorded. Check the execution result for whether any write action completed.'
             : decision === 'reject'
               ? 'Approval rejected. No further action was taken for this request.'
-              : 'Changes requested. The agent must revise before another approval.'));
+              : 'Changes requested. Modified parameters were stored; approve again to execute.'));
         if (result.error) {
           this.error.set(result.error);
         }
@@ -86,7 +92,7 @@ export class NalvaApprovalsComponent implements OnInit {
   }
 
   isPending(row: NalvaApproval): boolean {
-    return row.status === 'Pending';
+    return row.status === 'Pending' || row.status === 'ChangesRequested';
   }
 
   trackById(_index: number, row: NalvaApproval): string {

@@ -29,6 +29,11 @@ export class NalvaWorkflowBuilderComponent implements OnInit {
   readonly name = signal('');
   readonly description = signal('');
   readonly triggerKind = signal('Manual');
+  readonly recurrenceKind = signal('Daily');
+  readonly intervalMinutes = signal(1440);
+  readonly timeZoneId = signal('UTC');
+  readonly localTimeOfDay = signal('09:00');
+  readonly daysOfWeek = signal('1,2,3,4,5');
   readonly stepAgentKey = signal('');
   readonly stepObjective = signal('');
 
@@ -71,6 +76,13 @@ export class NalvaWorkflowBuilderComponent implements OnInit {
       name,
       description: this.description().trim(),
       triggerKind: this.triggerKind(),
+      recurrenceKind: this.recurrenceKind(),
+      intervalMinutes: this.triggerKind() === 'Scheduled' ? this.intervalMinutes() : undefined,
+      timeZoneId: this.timeZoneId().trim() || 'UTC',
+      localTimeOfDay: this.localTimeOfDay().trim() || undefined,
+      daysOfWeek: this.recurrenceKind() === 'Weekly' || this.recurrenceKind() === 'Custom'
+        ? this.daysOfWeek().trim() || undefined
+        : undefined,
       steps: [{
         key: 'step-1',
         agentKey,

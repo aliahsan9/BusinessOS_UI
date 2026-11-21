@@ -1,0 +1,375 @@
+<section class="finance-workspace">
+  <header class="finance-hero">
+    <div>
+      <p class="eyebrow">AI Workforce</p>
+      <h1>Finance Agent</h1>
+      <p class="lede">
+        Revenue versus collected cash, expenses, receivables, payables, cash-flow risks, reconciliation, and budgets — from recorded tenant financials.
+        Sensitive actions stay behind approval.
+      </p>
+    </div>
+    <div class="hero-actions">
+      <label class="period-select">
+        Period
+        <select [ngModel]="period()" (ngModelChange)="period.set($event); reload()">
+          <option value="day">Today</option>
+          <option value="week">This week</option>
+          <option value="month">This month</option>
+          <option value="year">This year</option>
+        </select>
+      </label>
+      <button class="btn" type="button" [disabled]="working() || loading()" (click)="reload()">Refresh</button>
+      <button class="btn primary" type="button" [disabled]="working()" (click)="runMonitor()">Run finance monitor</button>
+    </div>
+  </header>
+
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+  }
+  @if (notice()) {
+    <p class="notice" role="status">{{ notice() }}</p>
+  }
+  @if (loading()) {
+    <p class="muted" role="status">Loading finance workspace…</p>
+  }
+
+  @if (overview(); as stats) {
+    <div class="nalva-grid">
+      <div class="nalva-stat"><span>Sales revenue</span><strong>{{ metric(stats.salesRevenue, true, stats.currency) }}</strong></div>
+      <div class="nalva-stat"><span>Collected cash</span><strong>{{ metric(stats.collectedCash, true, stats.currency) }}</strong></div>
+      <div class="nalva-stat"><span>Expenses</span><strong>{{ metric(stats.totalExpenses, true, stats.currency) }}</strong></div>
+      <div class="nalva-stat"><span>Gross profit</span><strong>{{ metric(stats.grossProfit, stats.grossProfit != null, stats.currency) }}</strong></div>
+      <div class="nalva-stat"><span>Net profit</span><strong>{{ metric(stats.netProfit, stats.netProfit != null, stats.currency) }}</strong></div>
+      <div class="nalva-stat"><span>Receivables</span><strong>{{ metric(stats.outstandingReceivables, true, stats.currency) }}</strong></div>
+      <div class="nalva-stat"><span>Payables</span><strong>{{ metric(stats.outstandingPayables, true, stats.currency) }}</strong></div>
+      <div class="nalva-stat"><span>Overdue invoices</span><strong>{{ stats.overdueInvoiceCount }}</strong></div>
+      <div class="nalva-stat"><span>Cash balance</span><strong>{{ metric(stats.cashBalance, stats.cashBalanceAvailable, stats.currency) }}</strong></div>
+    </div>
+    <p class="muted data-class">
+      {{ stats.currency }} · {{ stats.timeZoneId }} · {{ stats.startDate | date:'mediumDate' }} → {{ stats.endDate | date:'mediumDate' }} · {{ stats.dataClassification }}
+    </p>
+    @if (stats.limitations.length) {
+      <ul class="limitations">
+        @for (item of stats.limitations; track item) {
+          <li>{{ item }}</li>
+        }
+      </ul>
+    }
+  }
+
+  <section class="nalva-panel">
+    <h3>Formulas &amp; calculation basis</h3>
+    @if (intelligence(); as intel) {
+      <ul class="formula-list">
+        @for (f of intel.formulas; track f) {
+          <li>{{ f }}</li>
+        }
+      </ul>
+    }
+  </section>
+
+  <section class="nalva-panel">
+    <h3>Expense intelligence</h3>
+    @if (expenses(); as exp) {
+      <p>
+        Recognized expenses: <strong>{{ exp.totalRecognizedExpenses | number:'1.2-2' }} {{ exp.currency }}</strong>
+        @if (exp.changePercent != null) {
+          <span class="pill">{{ exp.changePercent > 0 ? '+' : '' }}{{ exp.changePercent | number:'1.1-1' }}% vs prior period</span>
+        }
+      </p>
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr><th>Category</th><th>Amount</th><th>Prior</th><th>Change</th><th>Why</th></tr>
+          </thead>
+          <tbody>
+            @for (row of exp.categories; track row.categoryName) {
+              <tr>
+                <td>{{ row.categoryName }}</td>
+                <td>{{ row.amount | number:'1.2-2' }}</td>
+                <td>{{ row.priorAmount | number:'1.2-2' }}</td>
+                <td>{{ row.changePercent == null ? '—' : (row.changePercent | number:'1.1-1') + '%' }}</td>
+                <td>{{ row.explanation }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      @if (exp.anomalies.length) {
+        <h4>Unusual spending</h4>
+        <ul>
+          @for (a of exp.anomalies; track a.expenseId) {
+            <li>{{ a.title }} — {{ a.explanation }}</li>
+          }
+        </ul>
+      }
+      @if (exp.duplicateHints.length) {
+        <h4>Possible duplicate expenses</h4>
+        <ul>
+          @for (d of exp.duplicateHints; track d.expenseId) {
+            <li>{{ d.title }} ({{ d.amount | number:'1.2-2' }}) — {{ d.reason }}</li>
+          }
+        </ul>
+      }
+      @if (exp.categorySuggestions.length) {
+        <h4>Category suggestions (not auto-applied)</h4>
+        <ul>
+          @for (s of exp.categorySuggestions; track s.expenseId) {
+            <li>{{ s.title }} → {{ s.suggestedCategoryName }} ({{ s.confidence }}) — {{ s.reason }}</li>
+          }
+        </ul>
+      }
+    }
+  </section>
+
+  <section class="nalva-panel">
+    <h3>Accounts receivable</h3>
+    @if (receivables(); as ar) {
+      <div class="nalva-grid compact">
+        <div class="nalva-stat"><span>Outstanding</span><strong>{{ ar.totalOutstanding | number:'1.2-2' }} {{ ar.currency }}</strong></div>
+        <div class="nalva-stat"><span>Overdue</span><strong>{{ ar.overdueTotal | number:'1.2-2' }} ({{ ar.overdueCount }})</strong></div>
+      </div>
+      <div class="aging-row">
+        @for (bucket of ar.aging; track bucket.label) {
+          <span class="pill">{{ bucket.label }}: {{ bucket.amount | number:'1.0-0' }} ({{ bucket.count }})</span>
+        }
+      </div>
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr><th>Invoice</th><th>Customer</th><th>Due</th><th>Outstanding</th><th>Days overdue</th><th></th></tr>
+          </thead>
+          <tbody>
+            @for (row of ar.items; track row.invoiceId) {
+              <tr>
+                <td>{{ row.invoiceNumber }}</td>
+                <td>{{ row.customerName }}</td>
+                <td>{{ row.dueDate | date:'mediumDate' }}</td>
+                <td>{{ row.outstandingAmount | number:'1.2-2' }}</td>
+                <td>{{ row.daysOverdue }}</td>
+                <td>
+                  @if (row.daysOverdue > 0) {
+                    <button class="btn" type="button" [disabled]="working()" (click)="prepareReminder(row.invoiceId)">Prepare reminder</button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+
+  <section class="nalva-panel">
+    <h3>Accounts payable</h3>
+    @if (payables(); as ap) {
+      <div class="nalva-grid compact">
+        <div class="nalva-stat"><span>Outstanding</span><strong>{{ ap.totalOutstanding | number:'1.2-2' }} {{ ap.currency }}</strong></div>
+        <div class="nalva-stat"><span>Overdue</span><strong>{{ ap.overdueTotal | number:'1.2-2' }}</strong></div>
+        <div class="nalva-stat"><span>Due soon</span><strong>{{ ap.dueSoonTotal | number:'1.2-2' }}</strong></div>
+      </div>
+      <p class="muted">The agent never transfers money. Payment commitments require human approval.</p>
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr><th>Bill</th><th>Supplier</th><th>Due</th><th>Outstanding</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            @for (row of ap.items; track row.purchaseInvoiceId) {
+              <tr>
+                <td>{{ row.invoiceNumber }}</td>
+                <td>{{ row.supplierName }}</td>
+                <td>{{ row.dueDate | date:'mediumDate' }}</td>
+                <td>{{ row.outstanding | number:'1.2-2' }}</td>
+                <td>{{ row.isOverdue ? 'Overdue' : row.status }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+
+  <section class="nalva-panel">
+    <h3>Cash-flow intelligence</h3>
+    @if (cashFlow(); as cf) {
+      <div class="nalva-grid compact">
+        <div class="nalva-stat"><span>Inflows</span><strong>{{ cf.inflows | number:'1.2-2' }} {{ cf.currency }}</strong></div>
+        <div class="nalva-stat"><span>Outflows</span><strong>{{ cf.outflows | number:'1.2-2' }}</strong></div>
+        <div class="nalva-stat"><span>Closing balance</span><strong>{{ metric(cf.closingBalance, cf.closingBalanceAvailable, cf.currency) }}</strong></div>
+        <div class="nalva-stat"><span>Projection</span><strong>{{ cf.projectionAvailable ? cf.projectionConfidence : 'Unavailable' }}</strong></div>
+      </div>
+      @if (cf.shortageWarnings.length) {
+        <ul class="warnings">
+          @for (w of cf.shortageWarnings; track w) {
+            <li>{{ w }}</li>
+          }
+        </ul>
+      }
+      @for (item of cf.limitations; track item) {
+        <p class="muted">{{ item }}</p>
+      }
+      <p class="muted">Projections are estimates, not guaranteed outcomes.</p>
+    }
+  </section>
+
+  <section class="nalva-panel">
+    <h3>Reconciliation workspace</h3>
+    @if (reconciliation(); as recon) {
+      <div class="nalva-grid compact">
+        <div class="nalva-stat"><span>Invoice mismatches</span><strong>{{ recon.invoicePaymentMismatches }}</strong></div>
+        <div class="nalva-stat"><span>Duplicate payment hints</span><strong>{{ recon.possibleDuplicatePayments }}</strong></div>
+        <div class="nalva-stat"><span>Partial payments</span><strong>{{ recon.partialPayments }}</strong></div>
+        <div class="nalva-stat"><span>Unmatched bank lines</span><strong>{{ recon.unmatchedBankLines }}</strong></div>
+      </div>
+      <p class="muted">Bank sync classification: {{ recon.bankSyncClassification }}</p>
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr><th>Kind</th><th>Summary</th><th>Recommended action</th></tr>
+          </thead>
+          <tbody>
+            @for (issue of recon.issues; track issue.summary) {
+              <tr>
+                <td>{{ issue.kind }}</td>
+                <td>{{ issue.summary }}</td>
+                <td>{{ issue.recommendedAction }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <h4>Import authorized bank statement (CSV)</h4>
+      <p class="muted">Expected columns: date, amount, description[, reference]. Live bank synchronization is unavailable.</p>
+      <input class="input" type="text" [ngModel]="csvFileName()" (ngModelChange)="csvFileName.set($event)" placeholder="File name" />
+      <textarea class="input" rows="5" [ngModel]="csvContent()" (ngModelChange)="csvContent.set($event)" placeholder="Paste CSV content"></textarea>
+      <button class="btn" type="button" [disabled]="working()" (click)="importCsv()">Import CSV</button>
+    }
+  </section>
+
+  <section class="nalva-panel">
+    <h3>Budgets</h3>
+    <div class="form-row">
+      <input class="input" type="text" [ngModel]="budgetName()" (ngModelChange)="budgetName.set($event)" placeholder="Budget name" />
+      <input class="input" type="text" [ngModel]="budgetCategory()" (ngModelChange)="budgetCategory.set($event)" placeholder="Category name (optional)" />
+      <input class="input" type="number" [ngModel]="budgetAmount()" (ngModelChange)="budgetAmount.set(+$event)" placeholder="Amount" />
+      <input class="input" type="date" [ngModel]="budgetStart()" (ngModelChange)="budgetStart.set($event)" />
+      <input class="input" type="date" [ngModel]="budgetEnd()" (ngModelChange)="budgetEnd.set($event)" />
+      <button class="btn primary" type="button" [disabled]="working()" (click)="saveBudget()">Save budget</button>
+    </div>
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr><th>Name</th><th>Amount</th><th>Actual</th><th>Utilization</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          @for (b of budgets(); track b.id) {
+            <tr [class.over]="b.isOverBudget">
+              <td>{{ b.name }}</td>
+              <td>{{ b.amount | number:'1.2-2' }} {{ b.currency }}</td>
+              <td>{{ b.actualSpend | number:'1.2-2' }}</td>
+              <td>{{ b.utilizationPercent | number:'1.0-1' }}%</td>
+              <td>{{ b.isOverBudget ? 'Over budget' : b.status }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="nalva-panel">
+    <h3>Reports</h3>
+    <div class="form-row">
+      <select [ngModel]="reportType()" (ngModelChange)="reportType.set($event)">
+        <option value="daily-summary">Daily financial summary</option>
+        <option value="weekly-summary">Weekly financial summary</option>
+        <option value="monthly-profit-loss">Monthly profit and loss</option>
+        <option value="expense-analysis">Expense analysis</option>
+        <option value="receivables">Customer receivables</option>
+        <option value="payables">Supplier payables</option>
+        <option value="cash-flow">Cash-flow report</option>
+        <option value="product-profitability">Product profitability</option>
+        <option value="period-comparison">Period comparison</option>
+      </select>
+      <button class="btn primary" type="button" [disabled]="working()" (click)="generateReport()">Generate report</button>
+    </div>
+    @if (report(); as r) {
+      <article class="report-body">
+        <p class="muted">{{ r.calculationBasis }}</p>
+        <pre>{{ r.bodyMarkdown }}</pre>
+        <p class="muted">{{ r.disclaimer }}</p>
+      </article>
+    }
+  </section>
+
+  <section class="nalva-panel">
+    <h3>Reminders &amp; approval</h3>
+    @if (lastReminder(); as rem) {
+      <div class="reminder-card">
+        <p><strong>{{ rem.subject }}</strong></p>
+        <pre>{{ rem.body }}</pre>
+        <p class="muted">{{ rem.summary }} · {{ rem.integrationClassification }}</p>
+        @if (rem.requiresApproval && rem.reminderId) {
+          <button class="btn primary" type="button" [disabled]="working()" (click)="submitReminder()">Approve send attempt</button>
+        }
+      </div>
+    }
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr><th>Invoice</th><th>Customer</th><th>Status</th><th>Amount</th><th>Created</th></tr>
+        </thead>
+        <tbody>
+          @for (row of reminders(); track row.id) {
+            <tr>
+              <td>{{ row.invoiceNumber }}</td>
+              <td>{{ row.customerName }}</td>
+              <td>{{ row.status }}</td>
+              <td>{{ row.outstandingAmount | number:'1.2-2' }}</td>
+              <td>{{ row.createdAt | date:'short' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="nalva-panel">
+    <h3>Alerts &amp; agent activity</h3>
+    <ul class="activity-list">
+      @for (a of alerts(); track a.id) {
+        <li><span class="pill">{{ a.severity }}</span> <strong>{{ a.title }}</strong> — {{ a.summary }}</li>
+      }
+      @for (a of activity(); track a.id) {
+        <li><span class="pill">{{ a.kind }}</span> {{ a.title }} — {{ a.summary }} <span class="muted">{{ a.createdAt | date:'short' }}</span></li>
+      }
+    </ul>
+  </section>
+
+  <section class="nalva-panel">
+    <h3>Automation settings</h3>
+    @if (automation(); as auto) {
+      <div class="automation-grid">
+        <label><input type="checkbox" [ngModel]="auto.dailyFinanceSummary" (ngModelChange)="patchAutomation('dailyFinanceSummary', $event)" /> Daily finance summaries</label>
+        <label><input type="checkbox" [ngModel]="auto.weeklyFinancialReport" (ngModelChange)="patchAutomation('weeklyFinancialReport', $event)" /> Weekly financial reports</label>
+        <label><input type="checkbox" [ngModel]="auto.overdueInvoiceMonitoring" (ngModelChange)="patchAutomation('overdueInvoiceMonitoring', $event)" /> Overdue invoice monitoring</label>
+        <label><input type="checkbox" [ngModel]="auto.paymentReminderPreparation" (ngModelChange)="patchAutomation('paymentReminderPreparation', $event)" /> Payment reminder preparation</label>
+        <label><input type="checkbox" [ngModel]="auto.upcomingPayableAlerts" (ngModelChange)="patchAutomation('upcomingPayableAlerts', $event)" /> Upcoming payable alerts</label>
+        <label><input type="checkbox" [ngModel]="auto.expenseAnomalyDetection" (ngModelChange)="patchAutomation('expenseAnomalyDetection', $event)" /> Expense anomaly detection</label>
+        <label><input type="checkbox" [ngModel]="auto.cashFlowAnalysis" (ngModelChange)="patchAutomation('cashFlowAnalysis', $event)" /> Cash-flow analysis</label>
+        <label><input type="checkbox" [ngModel]="auto.budgetMonitoring" (ngModelChange)="patchAutomation('budgetMonitoring', $event)" /> Budget monitoring</label>
+        <label><input type="checkbox" [ngModel]="auto.reconciliationChecks" (ngModelChange)="patchAutomation('reconciliationChecks', $event)" /> Reconciliation checks</label>
+      </div>
+      <div class="form-row">
+        <label>Reminder schedule days <input class="input" [ngModel]="auto.reminderScheduleDays" (ngModelChange)="patchAutomation('reminderScheduleDays', $event)" /></label>
+        <label>Channel <input class="input" [ngModel]="auto.reminderChannel" (ngModelChange)="patchAutomation('reminderChannel', $event)" /></label>
+        <label>Timezone <input class="input" [ngModel]="auto.timeZoneId" (ngModelChange)="patchAutomation('timeZoneId', $event)" /></label>
+        <label>Anomaly % <input class="input" type="number" [ngModel]="auto.anomalyVariancePercent" (ngModelChange)="patchAutomation('anomalyVariancePercent', +$event)" /></label>
+      </div>
+      <button class="btn primary" type="button" [disabled]="working()" (click)="saveAutomation()">Save automation</button>
+      @if (auto.lastMonitorRunAt) {
+        <p class="muted">Last monitor run: {{ auto.lastMonitorRunAt | date:'short' }}</p>
+      }
+    }
+  </section>
+</section>

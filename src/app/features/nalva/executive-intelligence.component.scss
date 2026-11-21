@@ -1,0 +1,135 @@
+.executive-intelligence {
+  padding: 8px 4px 32px;
+}
+
+.exec-hero {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin: 0 0 6px;
+}
+
+.exec-hero h1 {
+  margin: 0 0 8px;
+  font-size: clamp(1.6rem, 2.5vw, 2.1rem);
+}
+
+.lede {
+  max-width: 52rem;
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: end;
+}
+
+.period-select {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+}
+
+.two-col {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.ask-panel .ask-row {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.ask-panel input[type='text'] {
+  flex: 1;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.preset-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.brief {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+}
+
+.prediction-tag {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-warning, #b45309);
+}
+
+.prediction-banner {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-warning, #b45309) 12%, transparent);
+  font-size: 0.9rem;
+}
+
+.health-healthy { color: var(--color-success, #15803d); }
+.health-watch { color: var(--color-warning, #b45309); }
+.health-at-risk,
+.health-critical { color: var(--color-danger, #b91c1c); }
+
+.rec-card {
+  border-top: 1px solid var(--color-border);
+  padding: 10px 0;
+}
+
+.rec-card:first-of-type {
+  border-top: 0;
+}
+
+.limitations {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.compact {
+  margin-bottom: 12px;
+}
+
+.error {
+  color: var(--color-danger, #b91c1c);
+}
+
+.notice {
+  color: var(--color-success, #15803d);
+}
+
+.btn.primary {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}

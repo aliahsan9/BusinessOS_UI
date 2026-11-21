@@ -1,0 +1,299 @@
+<section class="executive-intelligence">
+  <header class="exec-hero">
+    <div>
+      <p class="eyebrow">Navla Decision Intelligence</p>
+      <h1>Executive Intelligence</h1>
+      <p class="lede">
+        Business health, labeled forecasts, inventory predictions, financial insights, and customer analytics from verified tenant records.
+        Predictions are estimates — never treated as confirmed financial facts.
+      </p>
+    </div>
+    <div class="hero-actions">
+      <label class="period-select">
+        Period
+        <select [ngModel]="period()" (ngModelChange)="period.set($event); reload()">
+          <option value="week">This week</option>
+          <option value="month">This month</option>
+          <option value="quarter">Last 3 months</option>
+          <option value="year">This year</option>
+        </select>
+      </label>
+      <button class="btn primary" type="button" [disabled]="loading()" (click)="reload()">Refresh</button>
+    </div>
+  </header>
+
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+  }
+  @if (notice()) {
+    <p class="notice" role="status">{{ notice() }}</p>
+  }
+  @if (loading()) {
+    <p class="muted" role="status">Loading executive intelligence…</p>
+  }
+
+  @if (dashboard(); as d) {
+    <div class="nalva-grid">
+      <div class="nalva-stat">
+        <span>Business health</span>
+        <strong class="health-{{ d.health.overallHealthLabel }}">{{ d.health.overallHealthLabel }}</strong>
+      </div>
+      <div class="nalva-stat">
+        <span>Sales revenue (actual)</span>
+        <strong>
+          @if (d.health.salesRevenue.available) {
+            {{ d.health.salesRevenue.value | number:'1.0-2' }} {{ d.health.currency }}
+          } @else {
+            n/a
+          }
+        </strong>
+      </div>
+      <div class="nalva-stat">
+        <span>Revenue vs prior</span>
+        <strong>{{ d.periodComparison.revenueChangePercent ?? 0 | number:'1.0-1' }}%</strong>
+      </div>
+      <div class="nalva-stat">
+        <span>Next-month forecast</span>
+        <strong>
+          @if (d.revenueForecast.available) {
+            ~{{ d.revenueForecast.nextPeriodPredicted | number:'1.0-2' }}
+            <small class="prediction-tag">estimate · {{ d.revenueForecast.confidence }}</small>
+          } @else {
+            unavailable
+          }
+        </strong>
+      </div>
+      <div class="nalva-stat"><span>Low / out of stock</span><strong>{{ d.health.lowStockCount }}</strong></div>
+      <div class="nalva-stat"><span>Churn-risk customers</span><strong>{{ d.health.churnRiskCount }}</strong></div>
+      <div class="nalva-stat"><span>Overdue invoices</span><strong>{{ d.health.overdueInvoiceCount }}</strong></div>
+      <div class="nalva-stat">
+        <span>Data</span>
+        <strong>{{ d.dataClassification }}</strong>
+      </div>
+    </div>
+
+    <section class="nalva-panel ask-panel">
+      <h2>Ask Navla</h2>
+      <p class="muted">Data-backed answers with metrics, assumptions, and optional agent tasks.</p>
+      <div class="preset-row">
+        <button class="btn" type="button" (click)="askPreset('How is my business performing?')">Performance</button>
+        <button class="btn" type="button" (click)="askPreset('Which products should I promote?')">Promote</button>
+        <button class="btn" type="button" (click)="askPreset('What problems need immediate attention?')">Problems</button>
+        <button class="btn" type="button" (click)="askPreset('Which customers might stop buying?')">Churn</button>
+        <button class="btn" type="button" (click)="askPreset('How much inventory should I purchase?')">Inventory</button>
+        <button class="btn" type="button" (click)="askPreset('What is my expected revenue next month?')">Revenue forecast</button>
+        <button class="btn" type="button" (click)="askPreset('Where am I losing money?')">Losses</button>
+      </div>
+      <div class="ask-row">
+        <input type="text" [ngModel]="question()" (ngModelChange)="question.set($event)" placeholder="Ask a business question…" />
+        <button class="btn primary" type="button" [disabled]="asking()" (click)="ask()">Ask</button>
+      </div>
+      @if (brief(); as b) {
+        <article class="brief">
+          <h3>{{ b.question }}</h3>
+          <p>{{ b.answer }}</p>
+          @if (b.containsPredictions) {
+            <p class="prediction-banner">Includes labeled predictions — not confirmed financial facts.</p>
+          }
+          <p class="muted">Confidence: {{ b.confidence }} · {{ b.dataClassification }}</p>
+          @if (b.supportingMetrics.length) {
+            <ul>
+              @for (m of b.supportingMetrics; track m) {
+                <li>{{ m }}</li>
+              }
+            </ul>
+          }
+          @if (b.recommendedActions.length) {
+            <div class="actions">
+              @for (a of b.recommendedActions; track a.id) {
+                <button class="btn" type="button" [disabled]="working()" (click)="createTask(a)">
+                  Task: {{ a.title }}{{ a.requiresHumanApproval ? ' (approval)' : '' }}
+                </button>
+              }
+            </div>
+          }
+        </article>
+      }
+    </section>
+
+    <div class="two-col">
+      <section class="nalva-panel">
+        <h2>Revenue: historical vs predicted</h2>
+        @if (revenueChart(); as chart) {
+          <app-chart [data]="chart" [height]="280" />
+        }
+        <p class="muted">
+          Method: {{ d.revenueForecast.method || 'none' }} · Confidence: {{ d.revenueForecast.confidence }}
+          @if (d.revenueForecast.backtestMapePercent != null) {
+            · Backtest MAPE {{ d.revenueForecast.backtestMapePercent }}%
+          }
+        </p>
+        @if (d.revenueForecast.limitations.length) {
+          <ul class="limitations">
+            @for (item of d.revenueForecast.limitations; track item) {
+              <li>{{ item }}</li>
+            }
+          </ul>
+        }
+      </section>
+
+      <section class="nalva-panel">
+        <h2>Sales trends</h2>
+        <p>
+          Completed orders: {{ d.sales.completedOrders }} · AOV:
+          {{ d.sales.averageOrderValue | number:'1.0-2' }} {{ d.sales.currency }}
+        </p>
+        <p>
+          Lead conversion: {{ d.sales.conversion.leadConversionRate | number:'1.0-2' }} ·
+          Order completion: {{ d.sales.conversion.orderCompletionRate | number:'1.0-2' }}
+        </p>
+        <h3>Top products</h3>
+        <ul>
+          @for (p of d.sales.topProducts.slice(0, 5); track p.productId) {
+            <li>{{ p.productName }} — {{ p.revenue | number:'1.0-2' }} ({{ p.trend }})</li>
+          }
+        </ul>
+        <h3>Declining</h3>
+        @if (d.sales.decliningProducts.length === 0) {
+          <p class="muted">No declining products in the comparison window.</p>
+        } @else {
+          <ul>
+            @for (p of d.sales.decliningProducts.slice(0, 5); track p.productId) {
+              <li>{{ p.productName }} −{{ p.declinePercent | number:'1.0-1' }}%</li>
+            }
+          </ul>
+        }
+      </section>
+    </div>
+
+    <div class="two-col">
+      <section class="nalva-panel">
+        <h2>Inventory predictions</h2>
+        @if (d.inventoryRisks.length === 0) {
+          <p class="muted">No stock risks detected.</p>
+        } @else {
+          <ul>
+            @for (r of d.inventoryRisks.slice(0, 8); track r.productId) {
+              <li>
+                <strong>{{ r.productName }}</strong> — {{ r.riskKind }}
+                (stock {{ r.currentStock }}, suggest {{ r.suggestedReorderQuantity }}, {{ r.confidence }})
+              </li>
+            }
+          </ul>
+        }
+        <h3>Demand cover</h3>
+        <ul>
+          @for (x of d.inventoryDemand.slice(0, 5); track x.productId) {
+            <li>
+              {{ x.productName }}:
+              @if (x.forecastAvailable) {
+                ~{{ x.averageDailyDemand | number:'1.0-2' }}/day · cover {{ x.daysOfCover }}d
+                <span class="prediction-tag">estimate</span>
+              } @else {
+                forecast unavailable
+              }
+            </li>
+          }
+        </ul>
+      </section>
+
+      <section class="nalva-panel">
+        <h2>Customer analytics</h2>
+        <div class="nalva-grid compact">
+          <div class="nalva-stat"><span>Active (90d)</span><strong>{{ d.customers.retention.activeCustomers }}</strong></div>
+          <div class="nalva-stat"><span>Repeat rate</span><strong>{{ d.customers.retention.repeatRate | number:'1.0-2' }}</strong></div>
+          <div class="nalva-stat"><span>At risk</span><strong>{{ d.customers.retention.atRiskCustomers }}</strong></div>
+          <div class="nalva-stat"><span>Potentially lost</span><strong>{{ d.customers.retention.lostCustomers }}</strong></div>
+        </div>
+        <h3>Segments</h3>
+        <ul>
+          @for (s of d.customers.segments; track s.segmentKey) {
+            <li>{{ s.label }}: {{ s.customerCount }} customers</li>
+          }
+        </ul>
+        <h3>Churn risks <span class="prediction-tag">estimates</span></h3>
+        <ul>
+          @for (c of d.customers.churnRisks.slice(0, 6); track c.customerId) {
+            <li>{{ c.customerName }} — {{ c.riskLevel }} ({{ c.daysSinceLastOrder }}d)</li>
+          }
+        </ul>
+      </section>
+    </div>
+
+    <div class="two-col">
+      <section class="nalva-panel">
+        <h2>Business risks</h2>
+        @if (d.risks.length === 0) {
+          <p class="muted">No material risks flagged.</p>
+        } @else {
+          <ul>
+            @for (r of d.risks.slice(0, 10); track r.title) {
+              <li>
+                <span class="pill">{{ r.severity }}</span>
+                <strong>{{ r.title }}</strong> — {{ r.explanation }}
+                @if (r.isPrediction) {
+                  <span class="prediction-tag">estimate</span>
+                }
+              </li>
+            }
+          </ul>
+        }
+      </section>
+
+      <section class="nalva-panel">
+        <h2>AI recommendations</h2>
+        @if (d.recommendations.length === 0) {
+          <p class="muted">No recommendations right now.</p>
+        } @else {
+          @for (rec of d.recommendations.slice(0, 8); track rec.id) {
+            <article class="rec-card">
+              <h3>{{ rec.title }}</h3>
+              <p>{{ rec.explanation }}</p>
+              <p class="muted">{{ rec.category }} · {{ rec.confidence }}{{ rec.isPrediction ? ' · prediction' : '' }}</p>
+              <button class="btn" type="button" [disabled]="working()" (click)="createTask(rec)">
+                Create agent task{{ rec.requiresHumanApproval ? ' (approval gated)' : '' }}
+              </button>
+            </article>
+          }
+        }
+      </section>
+    </div>
+
+    <section class="nalva-panel">
+      <h2>Prediction accuracy monitor</h2>
+      <p>
+        Recorded {{ d.predictionAccuracy.totalRecorded }} · Evaluated {{ d.predictionAccuracy.evaluated }} ·
+        Pending {{ d.predictionAccuracy.pending }}
+        @if (d.predictionAccuracy.averageAbsolutePercentError != null) {
+          · Avg abs % error {{ d.predictionAccuracy.averageAbsolutePercentError }}
+        }
+      </p>
+      @if (d.predictionAccuracy.recent.length === 0) {
+        <p class="muted">No forecast snapshots yet. Forecasts are logged when generated and scored after the target period ends.</p>
+      } @else {
+        <ul>
+          @for (row of d.predictionAccuracy.recent.slice(0, 8); track row.id) {
+            <li>
+              {{ row.metricKey }} · predicted {{ row.predictedValue | number:'1.0-2' }}
+              @if (row.actualValue != null) {
+                · actual {{ row.actualValue | number:'1.0-2' }} · err {{ row.absolutePercentError }}%
+              }
+              · {{ row.status }}
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    @if (d.globalLimitations.length) {
+      <section class="nalva-panel">
+        <h2>Assumptions &amp; limitations</h2>
+        <ul class="limitations">
+          @for (item of d.globalLimitations; track item) {
+            <li>{{ item }}</li>
+          }
+        </ul>
+      </section>
+    }
+  }
+</section>

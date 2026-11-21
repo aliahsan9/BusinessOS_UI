@@ -1,0 +1,104 @@
+.finance-workspace {
+  display: grid;
+  gap: 1.25rem;
+  padding: 1rem 0 2rem;
+}
+
+.finance-hero {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.finance-hero h1 {
+  margin: 0.25rem 0;
+  font-size: clamp(1.75rem, 2.5vw, 2.4rem);
+}
+
+.lede {
+  max-width: 46rem;
+  margin: 0;
+  opacity: 0.85;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: end;
+}
+
+.period-select {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+}
+
+.limitations,
+.formula-list,
+.warnings,
+.activity-list {
+  margin: 0.5rem 0 0;
+  padding-left: 1.1rem;
+}
+
+.aging-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.75rem 0;
+}
+
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  align-items: center;
+}
+
+.input,
+select,
+textarea.input {
+  min-width: 10rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--color-border, #d0d5dd);
+  background: var(--color-surface, #fff);
+  color: inherit;
+  border-radius: 0.35rem;
+}
+
+textarea.input {
+  width: 100%;
+  min-width: 100%;
+}
+
+.automation-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 0.5rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.report-body pre,
+.reminder-card pre {
+  white-space: pre-wrap;
+  background: color-mix(in srgb, var(--color-surface, #fff) 88%, #000 12%);
+  padding: 0.75rem;
+  border-radius: 0.4rem;
+  overflow: auto;
+}
+
+.table tr.over {
+  background: color-mix(in srgb, #b42318 12%, transparent);
+}
+
+.nalva-grid.compact {
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+}
+
+.data-class {
+  margin-top: -0.25rem;
+}

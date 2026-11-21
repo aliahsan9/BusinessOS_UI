@@ -1,29 +1,302 @@
-<section class="nalva-grid">
-  <article class="nalva-stat"><span>Active workflows</span><strong>{{ active() }}</strong></article>
-  <article class="nalva-stat"><span>Paused</span><strong>{{ paused() }}</strong></article>
-  <article class="nalva-stat"><span>Scheduled</span><strong>{{ scheduled() }}</strong></article>
-  <article class="nalva-stat"><span>Running</span><strong>{{ count('Running') }}</strong></article>
-  <article class="nalva-stat"><span>Completed</span><strong>{{ count('Completed') }}</strong></article>
-  <article class="nalva-stat"><span>Failed</span><strong>{{ count('Failed') }}</strong></article>
-  <article class="nalva-stat"><span>Pending approvals</span><strong>{{ approvals().length }}</strong></article>
-</section>
+<header class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+  <div>
+    <h2>Automation management</h2>
+    <p class="muted mb-0">Schedules, rules, approvals, execution history, and agent monitors for continuous Nalva work.</p>
+  </div>
+  <div class="actions">
+    <a class="btn" [routerLink]="routes.nalva.builder">Workflow builder</a>
+    <button class="btn" type="button" (click)="load()" [disabled]="loading()">Refresh</button>
+  </div>
+</header>
 
-<section class="nalva-panel">
-  <h2>Execution history</h2>
-  @if (runs().length === 0) {
-    <p class="muted">No workflow runs yet.</p>
-  } @else {
-    <ul>
-      @for (run of runs(); track run.id) {
-        <li>
-          <strong>{{ run.workflowName }}</strong>
-          <span class="pill">{{ run.status }}</span>
-          <span class="muted">{{ run.triggerSource || 'Manual' }}</span>
-          @if (run.isDryRun) { <span class="pill">Dry run</span> }
-          @if (run.error) { <p>{{ run.error }}</p> }
-          @if (run.summary) { <p>{{ run.summary }}</p> }
-        </li>
-      }
-    </ul>
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3" role="tablist" aria-label="Automation sections">
+  @for (item of [
+    { id: 'dashboard', label: 'Dashboard' },
+    { id: 'schedules', label: 'Schedules' },
+    { id: 'rules', label: 'Rules' },
+    { id: 'history', label: 'History' },
+    { id: 'failed', label: 'Failed' },
+    { id: 'approvals', label: 'Approvals' },
+    { id: 'policy', label: 'Approval policy' },
+    { id: 'agents', label: 'Agent activity' }
+  ]; track item.id) {
+    <button class="btn" type="button" role="tab"
+      [class.primary]="tab() === item.id"
+      [attr.aria-selected]="tab() === item.id"
+      (click)="setTab($any(item.id))">{{ item.label }}</button>
   }
-</section>
+</div>
+
+@if (notice()) { <p class="nalva-panel" role="status">{{ notice() }}</p> }
+@if (error()) { <p class="nalva-panel" role="alert">{{ error() }}</p> }
+@if (loading()) { <p class="muted" role="status">Loading automation…</p> }
+
+@if (tab() === 'dashboard' && dashboard(); as dash) {
+  <section class="nalva-grid">
+    <article class="nalva-stat"><span>Active</span><strong>{{ dash.activeAutomations }}</strong></article>
+    <article class="nalva-stat"><span>Paused</span><strong>{{ dash.pausedSchedules }}</strong></article>
+    <article class="nalva-stat"><span>Scheduled</span><strong>{{ dash.scheduledAutomations }}</strong></article>
+    <article class="nalva-stat"><span>Event-driven</span><strong>{{ dash.eventAutomations }}</strong></article>
+    <article class="nalva-stat"><span>Running</span><strong>{{ dash.runningExecutions }}</strong></article>
+    <article class="nalva-stat"><span>Completed today</span><strong>{{ dash.completedToday }}</strong></article>
+    <article class="nalva-stat"><span>Failed today</span><strong>{{ dash.failedToday }}</strong></article>
+    <article class="nalva-stat"><span>Pending approvals</span><strong>{{ dash.pendingApprovals }}</strong></article>
+  </section>
+
+  @if (reliability(); as rel) {
+    <section class="nalva-panel">
+      <h3>Reliability</h3>
+      <p class="muted">Generated {{ rel.generatedAtUtc | date:'medium' }}. Jobs survive restarts via durable SQL claims.</p>
+      <div class="nalva-grid">
+        <article class="nalva-stat"><span>Queued tasks</span><strong>{{ rel.queuedTasks }}</strong></article>
+        <article class="nalva-stat"><span>Dead-letter</span><strong>{{ rel.deadLetterTasks }}</strong></article>
+        <article class="nalva-stat"><span>Stuck tasks</span><strong>{{ rel.stuckRunningTasks }}</strong></article>
+        <article class="nalva-stat"><span>Expired approvals</span><strong>{{ rel.expiredApprovals }}</strong></article>
+      </div>
+    </section>
+  }
+}
+
+@if (tab() === 'schedules') {
+  <section class="nalva-panel mb-3">
+    <h3>Create schedule</h3>
+    <div class="nalva-grid">
+      <label>Name <input [ngModel]="scheduleName()" (ngModelChange)="scheduleName.set($event)" /></label>
+      <label>Recurrence
+        <select [ngModel]="recurrenceKind()" (ngModelChange)="recurrenceKind.set($event)">
+          <option>Once</option><option>Daily</option><option>Weekly</option><option>Monthly</option><option>Custom</option><option>Interval</option>
+        </select>
+      </label>
+      <label>Local time <input [ngModel]="localTime()" (ngModelChange)="localTime.set($event)" placeholder="09:00" /></label>
+      <label>Timezone <input [ngModel]="timeZoneId()" (ngModelChange)="timeZoneId.set($event)" placeholder="UTC" /></label>
+      @if (recurrenceKind() === 'Weekly' || recurrenceKind() === 'Custom') {
+        <label>Days of week <input [ngModel]="daysOfWeek()" (ngModelChange)="daysOfWeek.set($event)" placeholder="Mon,Wed,Fri" /></label>
+      }
+      @if (recurrenceKind() === 'Monthly') {
+        <label>Day of month <input type="number" min="1" max="28" [ngModel]="dayOfMonth()" (ngModelChange)="dayOfMonth.set(+$event)" /></label>
+      }
+      @if (recurrenceKind() === 'Interval') {
+        <label>Interval minutes <input type="number" min="5" [ngModel]="intervalMinutes()" (ngModelChange)="intervalMinutes.set(+$event)" /></label>
+      }
+      <label>Agent
+        <select [ngModel]="scheduleAgentKey()" (ngModelChange)="scheduleAgentKey.set($event)">
+          @for (agent of agents(); track agent.key) {
+            <option [value]="agent.key">{{ agent.name }}</option>
+          }
+        </select>
+      </label>
+      <label>Objective <input [ngModel]="scheduleObjective()" (ngModelChange)="scheduleObjective.set($event)" /></label>
+    </div>
+    <label class="mt-2">Description <textarea rows="2" [ngModel]="scheduleDescription()" (ngModelChange)="scheduleDescription.set($event)"></textarea></label>
+    <div class="actions"><button class="btn primary" type="button" [disabled]="saving()" (click)="createSchedule()">Save schedule</button></div>
+  </section>
+
+  <section class="nalva-panel">
+    <h3>Schedule management</h3>
+    @if (schedules().length === 0) {
+      <p class="muted">No schedules yet.</p>
+    } @else {
+      <ul class="stack">
+        @for (row of schedules(); track row.id) {
+          <li class="nalva-panel">
+            <strong>{{ row.name }}</strong>
+            <span class="pill">{{ row.recurrenceKind }}</span>
+            <span class="pill">{{ row.isCancelled ? 'Cancelled' : (row.isPaused ? 'Paused' : (row.isActive ? 'Active' : 'Inactive')) }}</span>
+            <span class="muted">{{ row.timeZoneId }}@if (row.localTimeOfDay) { · {{ row.localTimeOfDay }} }</span>
+            @if (row.nextRunAt) { <span class="muted">Next {{ row.nextRunAt | date:'short' }}</span> }
+            @if (row.lastFailure) { <p>{{ row.lastFailure }}</p> }
+            @if (!row.isCancelled) {
+              <div class="actions">
+                @if (row.isPaused) {
+                  <button class="btn" type="button" [disabled]="actingId() !== null" (click)="resume(row)">Resume</button>
+                } @else {
+                  <button class="btn" type="button" [disabled]="actingId() !== null" (click)="pause(row)">Pause</button>
+                }
+                <button class="btn" type="button" [disabled]="actingId() !== null" (click)="cancel(row)">Cancel</button>
+              </div>
+            }
+          </li>
+        }
+      </ul>
+    }
+  </section>
+}
+
+@if (tab() === 'rules') {
+  <section class="nalva-panel mb-3">
+    <h3>Create automation rule</h3>
+    <div class="nalva-grid">
+      <label>Name <input [ngModel]="ruleName()" (ngModelChange)="ruleName.set($event)" /></label>
+      <label>Trigger
+        <select [ngModel]="ruleTrigger()" (ngModelChange)="ruleTrigger.set($event)">
+          <option>Event</option><option>Scheduled</option><option>Manual</option>
+        </select>
+      </label>
+      @if (ruleTrigger() === 'Event') {
+        <label>Event
+          <select [ngModel]="ruleEvent()" (ngModelChange)="ruleEvent.set($event)">
+            <option>LeadCreated</option>
+            <option>StockBelowThreshold</option>
+            <option>InvoiceOverdue</option>
+            <option>SupportTicketCreated</option>
+            <option>TaskOverdue</option>
+            <option>DeliveryDelayed</option>
+            <option>PaymentReceived</option>
+          </select>
+        </label>
+      }
+      <label>Condition <input [ngModel]="ruleCondition()" (ngModelChange)="ruleCondition.set($event)" placeholder="optional expression" /></label>
+      <label>Agent
+        <select [ngModel]="ruleAgentKey()" (ngModelChange)="ruleAgentKey.set($event)">
+          @for (agent of agents(); track agent.key) {
+            <option [value]="agent.key">{{ agent.name }}</option>
+          }
+        </select>
+      </label>
+      <label>Action objective <input [ngModel]="ruleObjective()" (ngModelChange)="ruleObjective.set($event)" /></label>
+    </div>
+    <div class="actions"><button class="btn primary" type="button" [disabled]="saving()" (click)="createRule()">Save rule</button></div>
+  </section>
+
+  <section class="nalva-panel">
+    <h3>Automation rules</h3>
+    @if (rules().length === 0) {
+      <p class="muted">No automation rules yet.</p>
+    } @else {
+      <ul class="stack">
+        @for (row of rules(); track row.id) {
+          <li class="nalva-panel">
+            <strong>{{ row.name }}</strong>
+            <span class="pill">{{ row.triggerKind }}</span>
+            @if (row.triggerEvent) { <span class="pill">{{ row.triggerEvent }}</span> }
+            <span class="pill">{{ row.isEnabled ? 'Enabled' : 'Disabled' }}</span>
+            <span class="muted">Agents: {{ row.agentKeys.join(', ') }}</span>
+            <div class="actions">
+              @if (row.isEnabled) {
+                <button class="btn" type="button" [disabled]="actingId() !== null" (click)="enableRule(row, false)">Disable</button>
+              } @else {
+                <button class="btn" type="button" [disabled]="actingId() !== null" (click)="enableRule(row, true)">Enable</button>
+              }
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+}
+
+@if (tab() === 'history') {
+  <section class="nalva-panel">
+    <h3>Execution history</h3>
+    @if (history().length === 0) {
+      <p class="muted">No workflow runs yet.</p>
+    } @else {
+      <ul>
+        @for (run of history(); track run.id) {
+          <li>
+            <strong>{{ run.workflowName }}</strong>
+            <span class="pill">{{ run.status }}</span>
+            <span class="muted">{{ run.triggerSource || 'Manual' }} · {{ run.startedAt | date:'short' }}</span>
+            @if (run.summary) { <p>{{ run.summary }}</p> }
+            @if (run.error) { <p>{{ run.error }}</p> }
+          </li>
+        }
+      </ul>
+    }
+  </section>
+}
+
+@if (tab() === 'failed') {
+  <section class="nalva-panel">
+    <h3>Failed tasks</h3>
+    @if (failures().length === 0) {
+      <p class="muted">No failed automations recorded.</p>
+    } @else {
+      <ul>
+        @for (row of failures(); track row.id) {
+          <li>
+            <strong>{{ row.name }}</strong>
+            <span class="pill">{{ row.kind }}</span>
+            <span class="pill">{{ row.status }}</span>
+            <span class="muted">{{ row.occurredAt | date:'short' }}</span>
+            @if (row.error) { <p>{{ row.error }}</p> }
+          </li>
+        }
+      </ul>
+    }
+  </section>
+}
+
+@if (tab() === 'approvals') {
+  <section class="nalva-panel">
+    <h3>Pending approvals</h3>
+    <p class="muted mb-2">Sensitive external actions wait here. Rejected and expired approvals are never executed. <a [routerLink]="routes.nalva.approvals">Open full inbox</a></p>
+    @if (approvals().length === 0) {
+      <p class="muted">No pending approvals.</p>
+    } @else {
+      <ul>
+        @for (row of approvals(); track row.id) {
+          <li>
+            <strong>{{ row.action || row.toolName }}</strong>
+            <span class="pill">{{ row.agentKey }}</span>
+            <span class="pill">{{ row.risk }}</span>
+            <span class="muted">{{ row.requestedAt | date:'short' }}</span>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+}
+
+@if (tab() === 'policy') {
+  <section class="nalva-panel">
+    <h3>Approval policy</h3>
+    @if (policy(); as pol) {
+      <div class="nalva-grid">
+        <label>Expiry days
+          <input type="number" min="1" max="30" [ngModel]="pol.approvalExpiryDays"
+            (ngModelChange)="patchPolicy('approvalExpiryDays', +$event)" />
+        </label>
+        <label class="d-flex align-items-center gap-2">
+          <input type="checkbox" [ngModel]="pol.notifyPendingApprovals"
+            (ngModelChange)="patchPolicy('notifyPendingApprovals', $event)" />
+          Notify on pending approvals
+        </label>
+        <label class="d-flex align-items-center gap-2">
+          <input type="checkbox" [ngModel]="pol.autoExpireApprovals"
+            (ngModelChange)="patchPolicy('autoExpireApprovals', $event)" />
+          Auto-expire overdue approvals
+        </label>
+        <label class="d-flex align-items-center gap-2">
+          <input type="checkbox" [ngModel]="pol.requireApprovalForExternalActions"
+            (ngModelChange)="patchPolicy('requireApprovalForExternalActions', $event)" />
+          Require approval for external actions
+        </label>
+      </div>
+      <p class="muted mt-2">Catalog tools that always require approval: {{ pol.catalogApprovalTools.join(', ') || 'none listed' }}</p>
+      <div class="actions"><button class="btn primary" type="button" [disabled]="saving()" (click)="savePolicy()">Save policy</button></div>
+    } @else {
+      <p class="muted">Approval policy could not be loaded.</p>
+    }
+  </section>
+}
+
+@if (tab() === 'agents') {
+  <section class="nalva-panel">
+    <h3>Agent activity monitoring</h3>
+    @if (activity().length === 0) {
+      <p class="muted">No agent activity yet.</p>
+    } @else {
+      <ul>
+        @for (row of activity(); track row.agentKey) {
+          <li>
+            <strong>{{ row.displayName }}</strong>
+            <span class="pill">{{ row.status }}</span>
+            <span class="muted">{{ row.executionsToday }} runs · {{ row.failuresToday }} failures · {{ row.pendingApprovals }} approvals</span>
+            @if (row.lastActivityAt) { <span class="muted">Last {{ row.lastActivityAt | date:'short' }}</span> }
+          </li>
+        }
+      </ul>
+    }
+  </section>
+}

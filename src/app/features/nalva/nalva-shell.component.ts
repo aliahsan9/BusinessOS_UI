@@ -13,6 +13,7 @@ import { ROUTES } from '../../core/constants/route.constants';
 export class NalvaShellComponent {
   readonly links = [
     { label: 'Overview', route: ROUTES.nalva.base },
+    { label: 'Workforce', route: ROUTES.nalva.workforce },
     { label: 'Command', route: ROUTES.nalva.command },
     { label: 'Marketplace', route: ROUTES.nalva.marketplace },
     { label: 'My agents', route: ROUTES.nalva.agents },
@@ -26,6 +27,8 @@ export class NalvaShellComponent {
     { label: 'Support', route: ROUTES.nalva.support },
     { label: 'Sales Agent', route: ROUTES.nalva.salesAgent },
     { label: 'Procurement', route: ROUTES.nalva.procurement },
+    { label: 'Finance', route: ROUTES.nalva.finance },
+    { label: 'Executive Intelligence', route: ROUTES.nalva.executiveIntelligence },
     { label: 'Knowledge', route: ROUTES.nalva.knowledge },
     { label: 'History', route: ROUTES.nalva.history },
     { label: 'Audit history', route: ROUTES.nalva.base + '/audit-history' },

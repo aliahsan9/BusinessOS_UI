@@ -19,6 +19,16 @@ import {
   NalvaWorkflow,
   NalvaWorkflowRun,
   NalvaWorkforceRecommendation,
+  NalvaObjectivePlan,
+  NalvaWorkforceBoard,
+  NalvaWorkflowDetail,
+  NalvaReliabilitySnapshot,
+  NalvaAutomationDashboard,
+  NalvaSchedule,
+  NalvaFailedAutomation,
+  NalvaAgentActivity,
+  NalvaAutomationRule,
+  NalvaApprovalPolicy,
 } from '../models/nalva.model';
 import {
   SupportChannel,
@@ -51,6 +61,31 @@ import {
   SubmitPreparedPurchaseRequest,
   SupplierOption,
 } from '../models/procurement-agent.model';
+import {
+  BudgetAlert,
+  CashFlowIntelligence,
+  ExpenseIntelligence,
+  FinanceActivity,
+  FinanceAlert,
+  FinanceAutomationSettings,
+  FinanceAutomationSettingsWrite,
+  FinanceBudget,
+  FinanceBudgetWrite,
+  FinanceIntelligence,
+  FinanceOverview,
+  FinanceReminder,
+  FinanceReport,
+  PayablesIntelligence,
+  PreparedReminder,
+  ReceivablesIntelligence,
+  ReconciliationSummary,
+} from '../models/finance-agent.model';
+import {
+  BiRecommendation,
+  DecisionBrief,
+  ExecutiveDashboard,
+  RecommendedTaskResult,
+} from '../models/executive-intelligence.model';
 
 @Injectable({ providedIn: 'root' })
 export class NalvaService extends BaseApiService {
@@ -138,8 +173,68 @@ export class NalvaService extends BaseApiService {
     return this.get<NalvaApproval[]>('/nalva/approvals', { status });
   }
 
-  decide(id: string, decision: 'approve' | 'reject' | 'changes', note?: string): Observable<NalvaRunResult> {
-    return this.post<NalvaRunResult>(`/nalva/approvals/${id}/${decision}`, { note });
+  decide(id: string, decision: 'approve' | 'reject' | 'changes', note?: string, modifiedArgsJson?: string): Observable<NalvaRunResult> {
+    return this.post<NalvaRunResult>(`/nalva/approvals/${id}/${decision}`, { note, modifiedArgsJson });
+  }
+
+  reliability(): Observable<NalvaReliabilitySnapshot> {
+    return this.get<NalvaReliabilitySnapshot>('/nalva/reliability');
+  }
+
+  automationDashboard(): Observable<NalvaAutomationDashboard> {
+    return this.get<NalvaAutomationDashboard>('/nalva/automation/dashboard');
+  }
+
+  automationSchedules(): Observable<NalvaSchedule[]> {
+    return this.get<NalvaSchedule[]>('/nalva/automation/schedules');
+  }
+
+  saveSchedule(body: Record<string, unknown>): Observable<NalvaSchedule> {
+    return this.post<NalvaSchedule>('/nalva/automation/schedules', body);
+  }
+
+  pauseSchedule(id: string): Observable<NalvaSchedule> {
+    return this.post<NalvaSchedule>(`/nalva/automation/schedules/${id}/pause`, {});
+  }
+
+  resumeSchedule(id: string): Observable<NalvaSchedule> {
+    return this.post<NalvaSchedule>(`/nalva/automation/schedules/${id}/resume`, {});
+  }
+
+  cancelSchedule(id: string): Observable<NalvaSchedule> {
+    return this.post<NalvaSchedule>(`/nalva/automation/schedules/${id}/cancel`, {});
+  }
+
+  automationRules(): Observable<NalvaAutomationRule[]> {
+    return this.get<NalvaAutomationRule[]>('/nalva/automation/rules');
+  }
+
+  saveAutomationRule(body: Record<string, unknown>): Observable<NalvaAutomationRule> {
+    return this.post<NalvaAutomationRule>('/nalva/automation/rules', body);
+  }
+
+  setRuleEnabled(id: string, enabled: boolean): Observable<NalvaAutomationRule> {
+    return this.post<NalvaAutomationRule>(`/nalva/automation/rules/${id}/${enabled ? 'enable' : 'disable'}`, {});
+  }
+
+  automationHistory(status?: string, take = 50): Observable<NalvaWorkflowRun[]> {
+    return this.get<NalvaWorkflowRun[]>('/nalva/automation/history', { status, take });
+  }
+
+  automationFailed(): Observable<NalvaFailedAutomation[]> {
+    return this.get<NalvaFailedAutomation[]>('/nalva/automation/failed');
+  }
+
+  automationAgentActivity(): Observable<NalvaAgentActivity[]> {
+    return this.get<NalvaAgentActivity[]>('/nalva/automation/agent-activity');
+  }
+
+  approvalPolicy(): Observable<NalvaApprovalPolicy> {
+    return this.get<NalvaApprovalPolicy>('/nalva/automation/approval-policy');
+  }
+
+  saveApprovalPolicy(body: Record<string, unknown>): Observable<NalvaApprovalPolicy> {
+    return this.put<NalvaApprovalPolicy>('/nalva/automation/approval-policy', body);
   }
 
   knowledge(agentKey?: string): Observable<NalvaKnowledge[]> {
@@ -194,6 +289,42 @@ export class NalvaService extends BaseApiService {
     return this.post('/nalva/workforce/apply', body ?? { activateRecommendedAgents: true, activateRecommendedWorkflows: false });
   }
 
+  workforceBoard(): Observable<NalvaWorkforceBoard> {
+    return this.get<NalvaWorkforceBoard>('/nalva/workforce/board');
+  }
+
+  planObjective(objective: string, argumentsJson?: string): Observable<NalvaObjectivePlan> {
+    return this.post<NalvaObjectivePlan>('/nalva/objectives/plan', { objective, argumentsJson });
+  }
+
+  startObjective(objective: string, options?: {
+    argumentsJson?: string;
+    activateMissingAgents?: boolean;
+    activateWorkflow?: boolean;
+    idempotencyKey?: string;
+  }): Observable<NalvaObjectivePlan> {
+    return this.post<NalvaObjectivePlan>('/nalva/objectives/start', {
+      objective,
+      argumentsJson: options?.argumentsJson,
+      activateMissingAgents: options?.activateMissingAgents ?? true,
+      activateWorkflow: options?.activateWorkflow ?? true,
+      idempotencyKey: options?.idempotencyKey,
+      startImmediately: true,
+    });
+  }
+
+  workflowDetail(runId: string): Observable<NalvaWorkflowDetail> {
+    return this.get<NalvaWorkflowDetail>(`/nalva/workflows/runs/${runId}`);
+  }
+
+  sharedContext(kind?: string): Observable<NalvaMemory[]> {
+    return this.get<NalvaMemory[]>('/nalva/shared-context', { kind });
+  }
+
+  storeSharedDecision(title: string, content: string): Observable<NalvaMemory> {
+    return this.post<NalvaMemory>('/nalva/shared-context', { title, content });
+  }
+
   settings(): Observable<NalvaSettings> {
     return this.get<NalvaSettings>('/nalva/settings');
   }
@@ -208,6 +339,22 @@ export class NalvaService extends BaseApiService {
 
   integrationMarketplace(): Observable<IntegrationProviderCard[]> {
     return this.get<IntegrationProviderCard[]>('/integrations/marketplace');
+  }
+
+  integrationConnections(): Observable<IntegrationConnectionRow[]> {
+    return this.get<IntegrationConnectionRow[]>('/integrations/connections');
+  }
+
+  integrationLogs(connectionId?: string): Observable<IntegrationLogRow[]> {
+    return this.get<IntegrationLogRow[]>('/integrations/logs', { connectionId });
+  }
+
+  setIntegrationWebhookSecret(id: string, secret: string): Observable<IntegrationConnectionRow> {
+    return this.post<IntegrationConnectionRow>(`/integrations/connections/${id}/webhook-secret`, { secret });
+  }
+
+  updateIntegrationMetadata(id: string, metadataJson: string | null): Observable<IntegrationConnectionRow> {
+    return this.put<IntegrationConnectionRow>(`/integrations/connections/${id}/metadata`, { metadataJson });
   }
 
   beginIntegration(provider: string, redirectUri: string, shopDomain?: string): Observable<{ serverConfigured: boolean; authorizationUrl?: string; message: string }> {
@@ -364,6 +511,107 @@ export class NalvaService extends BaseApiService {
   procurementMonitorRun(): Observable<{ ran: boolean }> {
     return this.post<{ ran: boolean }>('/nalva/procurement/monitor/run', {});
   }
+
+  financeOverview(params?: { startDate?: string; endDate?: string; period?: string }): Observable<FinanceOverview> {
+    return this.get<FinanceOverview>('/nalva/finance/overview', params);
+  }
+
+  financeIntelligence(params?: { startDate?: string; endDate?: string; period?: string }): Observable<FinanceIntelligence> {
+    return this.get<FinanceIntelligence>('/nalva/finance/intelligence', params);
+  }
+
+  financeExpenses(params?: { startDate?: string; endDate?: string; period?: string }): Observable<ExpenseIntelligence> {
+    return this.get<ExpenseIntelligence>('/nalva/finance/expenses/analyze', params);
+  }
+
+  financeReceivables(): Observable<ReceivablesIntelligence> {
+    return this.get<ReceivablesIntelligence>('/nalva/finance/receivables');
+  }
+
+  financePayables(): Observable<PayablesIntelligence> {
+    return this.get<PayablesIntelligence>('/nalva/finance/payables');
+  }
+
+  financeCashFlow(params?: { startDate?: string; endDate?: string; projectionDays?: number; period?: string }): Observable<CashFlowIntelligence> {
+    return this.get<CashFlowIntelligence>('/nalva/finance/cash-flow', params);
+  }
+
+  financeReconciliation(): Observable<ReconciliationSummary> {
+    return this.get<ReconciliationSummary>('/nalva/finance/reconciliation');
+  }
+
+  financeReport(body: { reportType: string; startDate?: string; endDate?: string; period?: string }): Observable<FinanceReport> {
+    return this.post<FinanceReport>('/nalva/finance/reports', body);
+  }
+
+  financeBudgets(): Observable<FinanceBudget[]> {
+    return this.get<FinanceBudget[]>('/nalva/finance/budgets');
+  }
+
+  saveFinanceBudget(body: FinanceBudgetWrite): Observable<FinanceBudget> {
+    return this.post<FinanceBudget>('/nalva/finance/budgets', body);
+  }
+
+  financeBudgetAlerts(): Observable<BudgetAlert[]> {
+    return this.get<BudgetAlert[]>('/nalva/finance/budgets/alerts');
+  }
+
+  financeAlerts(): Observable<FinanceAlert[]> {
+    return this.get<FinanceAlert[]>('/nalva/finance/alerts');
+  }
+
+  financeReminders(): Observable<FinanceReminder[]> {
+    return this.get<FinanceReminder[]>('/nalva/finance/reminders');
+  }
+
+  prepareFinanceReminder(body: { invoiceId: string; channel?: string; customMessage?: string; idempotencyKey?: string }): Observable<PreparedReminder> {
+    return this.post<PreparedReminder>('/nalva/finance/reminders/prepare', body);
+  }
+
+  submitFinanceReminder(reminderId: string, body: { approved: boolean; approvalFingerprint?: string; idempotencyKey?: string }): Observable<PreparedReminder> {
+    return this.post<PreparedReminder>(`/nalva/finance/reminders/${reminderId}/submit`, body);
+  }
+
+  financeActivity(): Observable<FinanceActivity[]> {
+    return this.get<FinanceActivity[]>('/nalva/finance/activity');
+  }
+
+  financeAutomation(): Observable<FinanceAutomationSettings> {
+    return this.get<FinanceAutomationSettings>('/nalva/finance/automation');
+  }
+
+  saveFinanceAutomation(body: FinanceAutomationSettingsWrite): Observable<FinanceAutomationSettings> {
+    return this.put<FinanceAutomationSettings>('/nalva/finance/automation', body);
+  }
+
+  financeMonitorRun(): Observable<{ ran: boolean }> {
+    return this.post<{ ran: boolean }>('/nalva/finance/monitor/run', {});
+  }
+
+  importFinanceBankStatement(body: { fileName: string; csvContent: string; notes?: string }): Observable<{ batchId: string; imported: number; duplicatesSkipped: number; classification: string; summary: string }> {
+    return this.post('/nalva/finance/bank-statements/import', body);
+  }
+
+  executiveDashboard(params?: { period?: string }): Observable<ExecutiveDashboard> {
+    return this.get<ExecutiveDashboard>('/nalva/intelligence/dashboard', params);
+  }
+
+  executiveAsk(question: string): Observable<DecisionBrief> {
+    return this.post<DecisionBrief>('/nalva/intelligence/ask', { question });
+  }
+
+  executiveRecommendations(): Observable<BiRecommendation[]> {
+    return this.get<BiRecommendation[]>('/nalva/intelligence/recommendations');
+  }
+
+  createIntelligenceTask(body: {
+    agentKey?: string;
+    objective: string;
+    recommendationId?: string;
+    requiresApproval?: boolean;
+  }): Observable<RecommendedTaskResult> {
+    return this.post<RecommendedTaskResult>('/nalva/intelligence/tasks', body);
+  }
 }
 
 export interface IntegrationProviderCard {
@@ -374,8 +622,32 @@ export interface IntegrationProviderCard {
   implementationStatus: string;
   serverConfigured: boolean;
   providerVerified: boolean;
+  supportsOAuth?: boolean;
+  supportsWebhooks?: boolean;
   readOperations: string[];
   writeOperations: string[];
   connectionStatus: string;
   connectionId?: string;
+}
+
+export interface IntegrationConnectionRow {
+  id: string;
+  providerKey: string;
+  status: string;
+  externalAccountLabel?: string;
+  tokenExpiresAt?: string;
+  lastSuccessAt?: string;
+  lastError?: string;
+  ownerUserId: string;
+  scopes: string[];
+}
+
+export interface IntegrationLogRow {
+  id: string;
+  providerKey: string;
+  operation: string;
+  success: boolean;
+  durationMs: number;
+  errorRedacted?: string;
+  createdAt: string;
 }

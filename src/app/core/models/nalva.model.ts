@@ -81,6 +81,9 @@ export interface NalvaWorkflowStep {
   agentKey: string;
   objective: string;
   tools: string[];
+  condition?: string;
+  parallelGroup?: number;
+  outputKey?: string;
 }
 
 export interface NalvaWorkflow {
@@ -95,6 +98,120 @@ export interface NalvaWorkflow {
   steps: NalvaWorkflowStep[];
   version?: number;
   timeZoneId?: string;
+  recurrenceKind?: string;
+  localTimeOfDay?: string;
+  daysOfWeek?: string;
+  dayOfMonth?: number;
+  isPaused?: boolean;
+  maxConcurrentRuns?: number;
+  nextRunAt?: string;
+  lastRunAt?: string;
+  isCancelled?: boolean;
+  consecutiveFailures?: number;
+  lastFailure?: string;
+}
+
+export interface NalvaReliabilitySnapshot {
+  queuedTasks: number;
+  runningTasks: number;
+  deadLetterTasks: number;
+  failedTasks: number;
+  pendingApprovals: number;
+  expiredApprovals: number;
+  pendingEvents: number;
+  deadLetterEvents: number;
+  stuckRunningTasks: number;
+  stuckRunningExecutions: number;
+  stuckRunningEvents: number;
+  failedWorkflowRunsToday: number;
+  generatedAtUtc: string;
+}
+
+export interface NalvaAutomationDashboard {
+  activeAutomations: number;
+  pausedSchedules: number;
+  scheduledAutomations: number;
+  eventAutomations: number;
+  runningExecutions: number;
+  completedToday: number;
+  failedToday: number;
+  pendingApprovals: number;
+  expiredApprovals: number;
+  deadLetterTasks: number;
+  agentActivity: NalvaAgentActivity[];
+  upcomingSchedules: NalvaSchedule[];
+  recentFailures: NalvaFailedAutomation[];
+}
+
+export interface NalvaSchedule {
+  id: string;
+  key: string;
+  name: string;
+  description: string;
+  recurrenceKind: string;
+  intervalMinutes?: number;
+  timeZoneId: string;
+  localTimeOfDay?: string;
+  daysOfWeek?: string;
+  dayOfMonth?: number;
+  nextRunAt?: string;
+  lastRunAt?: string;
+  isActive: boolean;
+  isPaused: boolean;
+  isCancelled: boolean;
+  maxConcurrentRuns: number;
+  consecutiveFailures: number;
+  lastFailure?: string;
+}
+
+export interface NalvaFailedAutomation {
+  id: string;
+  kind: string;
+  name: string;
+  agentKey?: string;
+  status: string;
+  error?: string;
+  occurredAt: string;
+  definitionId?: string;
+  taskId?: string;
+}
+
+export interface NalvaAgentActivity {
+  agentKey: string;
+  displayName: string;
+  status: string;
+  executionsToday: number;
+  failuresToday: number;
+  pendingApprovals: number;
+  lastActivityAt?: string;
+}
+
+export interface NalvaAutomationRule {
+  id: string;
+  key: string;
+  name: string;
+  description: string;
+  triggerKind: string;
+  triggerEvent?: string;
+  condition?: string;
+  recurrenceKind: string;
+  intervalMinutes?: number;
+  timeZoneId: string;
+  isEnabled: boolean;
+  isPaused: boolean;
+  agentKeys: string[];
+  steps: NalvaWorkflowStep[];
+  version: number;
+  nextRunAt?: string;
+}
+
+export interface NalvaApprovalPolicy {
+  approvalExpiryDays: number;
+  notifyPendingApprovals: boolean;
+  autoExpireApprovals: boolean;
+  requireApprovalForExternalActions: boolean;
+  extraApprovalTools: string[];
+  catalogApprovalTools: string[];
 }
 
 export interface NalvaWorkflowRun {
@@ -127,6 +244,73 @@ export interface NalvaApproval {
   decidedAt?: string;
   decisionNote?: string;
   executionResult?: string;
+  workflowRunId?: string;
+  workflowName?: string;
+  taskObjective?: string;
+  relatedEntitySummary?: string;
+  amountSummary?: string;
+  riskSummary?: string;
+  expiresAt?: string;
+  argsFingerprint?: string;
+  exactActionParametersJson?: string;
+}
+
+export interface NalvaObjectivePlan {
+  objective: string;
+  workflowKey: string;
+  workflowName: string;
+  description: string;
+  confidence: number;
+  requiredAgents: string[];
+  missingAgents: string[];
+  steps: NalvaWorkflowStep[];
+  clarifyingQuestions: string[];
+  canStart: boolean;
+  blockReason?: string;
+  workflowDefinitionId?: string;
+  workflowRunId?: string;
+  runStatus?: string;
+  reportSummary?: string;
+}
+
+export interface NalvaCollaborationWorkflowInfo {
+  key: string;
+  name: string;
+  description: string;
+  category: string;
+  agents: string[];
+  isActive: boolean;
+  definitionId?: string;
+}
+
+export interface NalvaWorkforceBoard {
+  overview: NalvaOverview;
+  agents: NalvaAgentCard[];
+  activeWorkflows: NalvaWorkflowRun[];
+  recentWorkflows: NalvaWorkflowRun[];
+  failedOrBlockedTasks: NalvaTask[];
+  pendingApprovals: NalvaApproval[];
+  recentExecutions: NalvaExecution[];
+  collaborationWorkflows: NalvaCollaborationWorkflowInfo[];
+  estimatedCostUsdThisMonth: number;
+  costIsEstimate: boolean;
+}
+
+export interface NalvaWorkflowDetail {
+  run: NalvaWorkflowRun;
+  steps: NalvaWorkflowStep[];
+  contextJson: string;
+  stepLogJson: string;
+  executions: NalvaExecution[];
+  approvals: NalvaApproval[];
+  agentResults: Array<{
+    taskId: string;
+    agentKey: string;
+    status: string;
+    verified: boolean;
+    summary: string;
+  }>;
+  finalReport: string;
 }
 
 export interface NalvaKnowledge {

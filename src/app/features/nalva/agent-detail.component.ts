@@ -9,6 +9,7 @@ import { ROUTES } from '../../core/constants/route.constants';
 
 const AGENT_WORKSPACES: Record<string, { label: string; route: string }> = {
   procurement: { label: 'Open Inventory & Procurement workspace', route: ROUTES.nalva.procurement },
+  finance: { label: 'Open Finance Agent workspace', route: ROUTES.nalva.finance },
   support: { label: 'Open Customer Support workspace', route: ROUTES.nalva.support },
   sales: { label: 'Open Sales Agent command center', route: ROUTES.nalva.salesAgent },
 };

@@ -26,6 +26,37 @@
         <option value="Event">Event</option>
       </select>
     </label>
+    @if (triggerKind() === 'Scheduled') {
+      <label class="d-flex flex-column gap-1">
+        <span>Recurrence</span>
+        <select [ngModel]="recurrenceKind()" (ngModelChange)="recurrenceKind.set($event)">
+          <option value="Interval">Interval</option>
+          <option value="Daily">Daily</option>
+          <option value="Weekly">Weekly</option>
+          <option value="Monthly">Monthly</option>
+          <option value="Once">Once</option>
+          <option value="Custom">Custom</option>
+        </select>
+      </label>
+      <label class="d-flex flex-column gap-1">
+        <span>Interval minutes</span>
+        <input type="number" min="5" max="43200" [ngModel]="intervalMinutes()" (ngModelChange)="intervalMinutes.set(+$event || 1440)" />
+      </label>
+      <label class="d-flex flex-column gap-1">
+        <span>Timezone</span>
+        <input type="text" maxlength="80" [ngModel]="timeZoneId()" (ngModelChange)="timeZoneId.set($event)" placeholder="UTC" />
+      </label>
+      <label class="d-flex flex-column gap-1">
+        <span>Local time (HH:mm)</span>
+        <input type="text" maxlength="8" [ngModel]="localTimeOfDay()" (ngModelChange)="localTimeOfDay.set($event)" placeholder="09:00" />
+      </label>
+      @if (recurrenceKind() === 'Weekly' || recurrenceKind() === 'Custom') {
+        <label class="d-flex flex-column gap-1">
+          <span>Days of week (0=Sun…6=Sat)</span>
+          <input type="text" maxlength="64" [ngModel]="daysOfWeek()" (ngModelChange)="daysOfWeek.set($event)" placeholder="1,2,3,4,5" />
+        </label>
+      }
+    }
     <label class="d-flex flex-column gap-1">
       <span>First step agent</span>
       <select [ngModel]="stepAgentKey()" (ngModelChange)="stepAgentKey.set($event)">
