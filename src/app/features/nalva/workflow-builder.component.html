@@ -1,5 +1,89 @@
-<section class="nalva-panel">
-  <h2>Automation workflow builder</h2>
-  <p>Reusable workflow definitions, triggers, scheduling, activation and dry-run APIs are not yet implemented in the backend.</p>
-  <p class="muted mb-0">The current backend supports reading persisted agent execution workflows only. Those execution records are not saved automation definitions, so this builder is intentionally unavailable rather than submitting unsupported requests.</p>
+<header class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+  <div>
+    <h2>Automation workflow builder</h2>
+    <p class="muted mb-0">Create and manage reusable Navla workflow definitions for this company.</p>
+  </div>
+  <a class="btn" [routerLink]="routes.nalva.automation">Open automation dashboard</a>
+</header>
+
+<section class="nalva-panel mb-3">
+  <h3>Save a simple workflow</h3>
+  <p class="muted">Creates a one-step definition via <code>POST /nalva/workflows</code>. Activate it before expecting scheduled or event-driven runs.</p>
+  <div class="d-flex flex-column gap-2">
+    <label class="d-flex flex-column gap-1">
+      <span>Name</span>
+      <input type="text" maxlength="120" [ngModel]="name()" (ngModelChange)="name.set($event)" />
+    </label>
+    <label class="d-flex flex-column gap-1">
+      <span>Description</span>
+      <input type="text" maxlength="400" [ngModel]="description()" (ngModelChange)="description.set($event)" />
+    </label>
+    <label class="d-flex flex-column gap-1">
+      <span>Trigger</span>
+      <select [ngModel]="triggerKind()" (ngModelChange)="triggerKind.set($event)">
+        <option value="Manual">Manual</option>
+        <option value="Scheduled">Scheduled</option>
+        <option value="Event">Event</option>
+      </select>
+    </label>
+    <label class="d-flex flex-column gap-1">
+      <span>First step agent</span>
+      <select [ngModel]="stepAgentKey()" (ngModelChange)="stepAgentKey.set($event)">
+        @for (agent of agents(); track agent.key) {
+          <option [value]="agent.key">{{ agent.name }}</option>
+        }
+      </select>
+    </label>
+    <label class="d-flex flex-column gap-1">
+      <span>First step objective</span>
+      <textarea rows="2" maxlength="500" [ngModel]="stepObjective()" (ngModelChange)="stepObjective.set($event)"></textarea>
+    </label>
+    <div>
+      <button class="btn primary" type="button" (click)="save()"
+        [disabled]="saving() || !name().trim() || !stepAgentKey() || !stepObjective().trim()">
+        {{ saving() ? 'Saving…' : 'Save workflow' }}
+      </button>
+    </div>
+  </div>
 </section>
+
+@if (notice()) { <p class="nalva-panel" role="status">{{ notice() }}</p> }
+@if (error()) { <p class="nalva-panel" role="alert">{{ error() }}</p> }
+@if (loading()) { <p class="muted" role="status">Loading workflows…</p> }
+
+@if (!loading() && !error()) {
+  @if (workflows().length === 0) {
+    <p class="muted">No saved workflow definitions yet.</p>
+  } @else {
+    <section class="stack" aria-label="Saved workflows">
+      @for (workflow of workflows(); track workflow.id) {
+        <article class="nalva-panel">
+          <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+            <div>
+              <h3>{{ workflow.name }}</h3>
+              <p class="muted mb-1">{{ workflow.description || 'No description' }}</p>
+              <div class="pills">
+                <span class="pill">{{ workflow.triggerKind }}</span>
+                <span class="pill">{{ workflow.isActive ? 'Active' : 'Inactive' }}</span>
+                <span class="pill">{{ workflow.steps.length || 0 }} step(s)</span>
+              </div>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+              <button class="btn btn-sm" type="button"
+                [disabled]="actingId() !== null"
+                (click)="setActive(workflow, !workflow.isActive)">
+                {{ workflow.isActive ? 'Deactivate' : 'Activate' }}
+              </button>
+              <button class="btn btn-sm" type="button"
+                [disabled]="actingId() !== null"
+                (click)="run(workflow, true)">Dry run</button>
+              <button class="btn btn-sm primary" type="button"
+                [disabled]="actingId() !== null || !workflow.isActive"
+                (click)="run(workflow, false)">Run</button>
+            </div>
+          </div>
+        </article>
+      }
+    </section>
+  }
+}

@@ -133,6 +133,10 @@ export class NalvaService extends BaseApiService {
     return this.get<NalvaExecution[]>('/nalva/executions', { agentKey, status });
   }
 
+  /**
+   * @deprecated Dedicated /agents/audit-history is not implemented.
+   * Prefer executions() for the verified tenant-scoped audit trail.
+   */
   agentAuditHistory(limit = 50): Observable<NalvaAuditEntry[]> {
     return this.get<NalvaAuditEntry[]>('/agents/audit-history', { limit });
   }

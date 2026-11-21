@@ -130,7 +130,9 @@ export class ProductListComponent implements OnInit {
 
   onStatusFilter(status: string): void {
     this.statusFilter.set(status);
-    this.productState.load({ page: 1 });
+    const isActive =
+      status === 'active' ? true : status === 'inactive' ? false : undefined;
+    this.productState.load({ page: 1, isActive });
   }
 
   onSort(column: string): void {
@@ -251,9 +253,8 @@ export class ProductListComponent implements OnInit {
 
   filteredItems(): ProductDto[] {
     const status = this.statusFilter();
-    if (!status) return this.items();
-    if (status === 'active') return this.items().filter((p) => p.isActive);
-    if (status === 'inactive') return this.items().filter((p) => !p.isActive);
+    // Active/inactive are filtered server-side; keep low/out as page-local stock filters.
+    if (!status || status === 'active' || status === 'inactive') return this.items();
     if (status === 'low') return this.items().filter((p) => p.currentStock > 0 && p.currentStock <= p.reorderLevel);
     if (status === 'out') return this.items().filter((p) => p.currentStock <= 0);
     return this.items();

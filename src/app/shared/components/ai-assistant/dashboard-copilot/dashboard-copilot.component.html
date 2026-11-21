@@ -44,6 +44,11 @@
             </article>
           }
         </div>
+      } @else if (loadFailed()) {
+        <div class="copilot__all-clear" role="status">
+          <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+          <p>Navla insights could not be loaded. This does not mean the business is clear of issues.</p>
+        </div>
       } @else {
         <div class="copilot__all-clear">
           <i class="bi bi-emoji-smile" aria-hidden="true"></i>

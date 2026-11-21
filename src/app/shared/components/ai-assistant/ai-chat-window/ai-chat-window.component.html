@@ -182,10 +182,24 @@
             </div>
           }
 
+          @if (msg.specialistLabel) {
+            <div class="ai-chat__tools">
+              <strong>Agent</strong>
+              {{ msg.specialistLabel }}
+            </div>
+          }
+
           @if (msg.actionResult?.success && msg.toolsUsed && msg.toolsUsed.length > 0) {
             <div class="ai-chat__tools">
               <strong>Done via</strong>
               {{ formatTools(msg.toolsUsed) }}
+            </div>
+          }
+
+          @if (msg.actionResult && !msg.actionResult.success) {
+            <div class="ai-chat__tools" role="status">
+              <strong>Failed</strong>
+              {{ msg.actionResult.message || 'The operation did not complete.' }}
             </div>
           }
 

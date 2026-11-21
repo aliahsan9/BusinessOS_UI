@@ -1,43 +1,70 @@
 <header class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
   <div>
-    <h2>AI employee details</h2>
-    <p class="muted mb-0">Catalog information and persisted execution history.</p>
+    <h2>Navla agent details</h2>
+    <p class="muted mb-0">Tenant-scoped agent configuration, tools, and recent executions.</p>
   </div>
   <button class="btn" type="button" (click)="reload()" [disabled]="loading()">Refresh</button>
 </header>
 
-@if (loading()) { <p class="muted" role="status">Loading employee details…</p> }
+@if (loading()) { <p class="muted" role="status">Loading agent details…</p> }
 @if (error()) { <p class="nalva-panel" role="alert">{{ error() }}</p> }
 
-@if (agent(); as employee) {
+@if (agent(); as detail) {
   <section class="nalva-panel">
-    <h3>{{ employee.displayName }}</h3>
-    <p>{{ employee.roleTitle }}</p>
+    <h3>{{ detail.name }}</h3>
+    <p>{{ detail.role }}</p>
+    <p class="muted">{{ detail.description }}</p>
     <div class="pills">
-      <span class="pill">{{ employee.specialty }}</span>
-      <span class="pill">{{ employee.defaultLanguage }}</span>
-      <span class="pill">{{ employee.isActive ? 'Enabled in catalog' : 'Unavailable' }}</span>
-      @if (employee.isDefault) { <span class="pill">Default assistant</span> }
+      <span class="pill">{{ detail.category }}</span>
+      <span class="pill">{{ detail.status }}</span>
+      <span class="pill">Health: {{ detail.health }}</span>
+      <span class="pill">Autonomy {{ detail.autonomyLevel }}</span>
+      @if (detail.isCore) { <span class="pill">Core</span> }
+      @if (detail.isCustom) { <span class="pill">Custom</span> }
     </div>
-    <p class="muted mt-3">The current backend exposes employee catalog reads and execution history only. Tenant activation, configuration, direct execution controls, memory management and agent health are not available through this API yet.</p>
+    @if (detail.healthMessage) {
+      <p class="muted mt-3 mb-0">{{ detail.healthMessage }}</p>
+    }
+    @if (!detail.executionAvailable && detail.unavailableReason) {
+      <p class="nalva-panel mt-3 mb-0" role="status">{{ detail.unavailableReason }}</p>
+    }
   </section>
 
   <section class="nalva-panel mt-3">
-    <h3>Recent execution workflows</h3>
+    <h3>Tools</h3>
+    @if (detail.tools.length === 0) {
+      <p class="muted">No tools are configured for this agent.</p>
+    } @else {
+      <ul>
+        @for (tool of detail.tools; track tool.name) {
+          <li>
+            <strong>{{ tool.name }}</strong>
+            <span class="muted"> — {{ tool.description }}</span>
+            @if (tool.requiresApproval) { <span class="pill">Requires approval</span> }
+            @if (tool.isWrite) { <span class="pill">Write</span> }
+          </li>
+        }
+      </ul>
+    }
+  </section>
+
+  <section class="nalva-panel mt-3">
+    <h3>Recent executions</h3>
     @if (history().length === 0) {
-      <p class="muted">No persisted workflows for this employee were found in the latest 100 records.</p>
+      <p class="muted">No executions have been recorded for this agent yet.</p>
     } @else {
       <div class="table-responsive">
         <table class="table align-middle">
-          <thead><tr><th>Workflow</th><th>Status</th><th>Progress</th><th>Started</th><th>Completed</th></tr></thead>
+          <thead><tr><th>Status</th><th>Model</th><th>Started</th><th>Tokens</th><th>Cost</th><th>Summary</th></tr></thead>
           <tbody>
-            @for (workflow of history(); track workflow.id) {
+            @for (row of history(); track row.id) {
               <tr>
-                <td>{{ workflow.title }}</td>
-                <td>{{ workflowStatus(workflow.status) }}</td>
-                <td>{{ workflow.currentStepIndex }} / {{ workflow.totalSteps }}</td>
-                <td>{{ workflow.startedAt | date:'medium' }}</td>
-                <td>{{ workflow.completedAt ? (workflow.completedAt | date:'medium') : '—' }}</td>
+                <td>{{ row.status }}</td>
+                <td>{{ row.model }}</td>
+                <td>{{ row.startedAt | date:'medium' }}</td>
+                <td>{{ row.inputTokens + row.outputTokens }}</td>
+                <td>{{ row.estimatedCostUsd }}@if (row.costIsEstimate) { * }</td>
+                <td>{{ row.summary || row.error || '—' }}</td>
               </tr>
             }
           </tbody>

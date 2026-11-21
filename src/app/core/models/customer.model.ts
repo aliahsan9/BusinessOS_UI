@@ -65,6 +65,7 @@ export interface CustomerAnalytics {
   totalOrders: number;
   totalSpending: number;
   averageOrderValue: number;
+  outstandingBalance: number;
   lastOrderDate?: string | null;
   totalCompletedOrders: number;
 }

@@ -6,7 +6,7 @@
   <button class="btn" type="button" (click)="load()" [disabled]="loading()">Refresh</button>
 </header>
 
-<p class="nalva-panel">These are agent execution records, not reusable automation definitions. The backend does not yet expose saved workflow builder, activation or scheduling endpoints.</p>
+<p class="nalva-panel">These are chat/agent execution workflow records from <code>/agents/workflows</code>. Reusable automation definitions are managed under Automation and the Workflow builder (<code>/nalva/workflows</code>).</p>
 @if (loading()) { <p class="muted" role="status">Loading execution history…</p> }
 @if (error()) { <p class="nalva-panel" role="alert">{{ error() }}</p> }
 @if (!loading() && !error()) {

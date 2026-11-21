@@ -12,6 +12,7 @@ export interface ProductListState {
   totalPages: number;
   search: string;
   categoryId: string | null | undefined;
+  isActive: boolean | null | undefined;
   sortBy: string;
   sortDirection: 'asc' | 'desc';
   loading: boolean;
@@ -26,6 +27,7 @@ const initialState: ProductListState = {
   totalPages: 0,
   search: '',
   categoryId: null,
+  isActive: null,
   sortBy: 'name',
   sortDirection: 'asc',
   loading: false,
@@ -53,10 +55,11 @@ export class ProductStateService {
     const pageSize = PaginationHelper.normalizePageSize(params?.pageSize ?? current.pageSize);
     const search = params?.search ?? current.search;
     const categoryId = params?.categoryId !== undefined ? params.categoryId : current.categoryId;
+    const isActive = params?.isActive !== undefined ? params.isActive : current.isActive;
     const sortBy = params?.sortBy ?? current.sortBy;
     const sortDirection = params?.sortDirection ?? params?.sortOrder ?? current.sortDirection;
 
-    this.patchState({ loading: true, error: null, page, pageSize, search, categoryId, sortBy, sortDirection });
+    this.patchState({ loading: true, error: null, page, pageSize, search, categoryId, isActive, sortBy, sortDirection });
 
     this.productService
       .getAll({
@@ -64,6 +67,7 @@ export class ProductStateService {
         pageSize,
         search: search || undefined,
         categoryId: categoryId || undefined,
+        isActive: isActive === null || isActive === undefined ? undefined : isActive,
         sortBy,
         sortDirection,
       })

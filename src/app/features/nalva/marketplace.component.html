@@ -1,16 +1,20 @@
 <header class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
   <div>
-    <h2>AI employee catalog</h2>
-    <p class="muted mb-0">Browse the AI employee personas currently exposed by your BusinessOS backend.</p>
+    <h2>{{ mine() ? 'My Navla agents' : 'Navla marketplace' }}</h2>
+    <p class="muted mb-0">
+      {{ mine()
+        ? 'Agents activated for this company. Activation and tool configuration use the /nalva APIs.'
+        : 'Browse the Navla workforce catalog available to your business.' }}
+    </p>
   </div>
   <button class="btn" type="button" (click)="load()" [disabled]="loading()">Refresh</button>
 </header>
 
 @if (mine()) {
-  <p class="nalva-panel" role="note">Manage which AI employees are available to your business. Changes are tenant-specific; the shared system catalog is not modified.</p>
+  <p class="nalva-panel" role="note">Manage which agents are active for this company. Changes are tenant-specific.</p>
 }
 @if (loading()) {
-  <p class="muted" role="status">Loading AI employees…</p>
+  <p class="muted" role="status">Loading agents…</p>
 }
 @if (error()) {
   <p class="nalva-panel" role="alert">{{ error() }}</p>
@@ -20,7 +24,7 @@
 
 @if (!loading() && !error()) {
   <label class="d-inline-flex flex-column gap-1 mb-3">
-    <span>Specialty</span>
+    <span>Category</span>
     <select [value]="category()" (change)="category.set($any($event.target).value)">
       @for (item of categories(); track item) {
         <option [value]="item">{{ item }}</option>
@@ -29,113 +33,67 @@
   </label>
 
   @if (visible().length === 0) {
-    <p class="muted">No AI employees are available in this category.</p>
+    <p class="muted">{{ mine() ? 'No agents are activated for this company yet.' : 'No agents are available in this category.' }}</p>
   } @else {
     <section class="nalva-cards">
-      @for (employee of visible(); track employee.key) {
+      @for (agent of visible(); track agent.key) {
         <article class="nalva-card">
-          <h3>{{ employee.displayName }}</h3>
-          <p>{{ employee.roleTitle }}</p>
+          <h3>{{ agent.name }}</h3>
+          <p>{{ agent.role }}</p>
+          <p class="muted">{{ agent.description }}</p>
           <div class="pills">
-            <span class="pill">{{ employee.specialty }}</span>
-            <span class="pill">{{ employee.defaultLanguage }}</span>
-            @if (employee.isDefault) { <span class="pill">Default assistant</span> }
-            <span class="pill">{{ employee.isActive ? 'Active for this business' : 'Inactive for this business' }}</span>
+            <span class="pill">{{ agent.category }}</span>
+            <span class="pill">{{ agent.status }}</span>
+            <span class="pill">Health: {{ agent.health }}</span>
+            @if (agent.isCore) { <span class="pill">Core</span> }
+            @if (agent.isCustom) { <span class="pill">Custom</span> }
           </div>
           @if (mine()) {
             <div class="mt-3 d-flex flex-wrap gap-2">
               <button class="btn btn-sm" type="button"
                 [disabled]="savingKey() !== null"
-                (click)="startConfiguration(employee)">
-                Configure
+                (click)="startConfiguration(agent)">
+                Configure tools
               </button>
               <button class="btn btn-sm" type="button"
-                [disabled]="employee.isDefault || savingKey() !== null"
-                (click)="toggleActivation(employee)">
-                @if (savingKey() === employee.key) { Saving… }
-                @else if (employee.isDefault) { Default employee }
-                @else { {{ employee.isActive ? 'Deactivate' : 'Activate' }} }
-              </button>
-              <button class="btn btn-sm" type="button"
-                [disabled]="permissionsLoadingKey() !== null || permissionsSavingKey() !== null"
-                (click)="startToolPermissions(employee)">
-                @if (permissionsLoadingKey() === employee.key) { Loading tools… }
-                @else { Manage tool access }
+                [disabled]="savingKey() !== null"
+                (click)="toggleActivation(agent)">
+                @if (savingKey() === agent.key) { Saving… }
+                @else { {{ agent.status === 'Active' ? 'Deactivate' : 'Activate' }} }
               </button>
             </div>
-            @if (editingKey() === employee.key) {
-              <form class="nalva-panel mt-3" (submit)="$event.preventDefault(); saveConfiguration(employee)">
-                <h4>Configure {{ employee.displayName }}</h4>
-                <label class="d-flex flex-column gap-1 mb-2">
-                  <span>Display name</span>
-                  <input type="text" maxlength="100" required
-                    [value]="configurationDraft().displayName"
-                    (input)="updateDraft('displayName', $any($event.target).value)" />
-                </label>
-                <label class="d-flex flex-column gap-1 mb-2">
-                  <span>Job title</span>
-                  <input type="text" maxlength="150" required
-                    [value]="configurationDraft().roleTitle"
-                    (input)="updateDraft('roleTitle', $any($event.target).value)" />
-                </label>
-                <label class="d-flex flex-column gap-1 mb-2">
-                  <span>Specialty</span>
-                  <textarea maxlength="300" required rows="2"
-                    [value]="configurationDraft().specialty"
-                    (input)="updateDraft('specialty', $any($event.target).value)"></textarea>
-                </label>
-                <label class="d-flex flex-column gap-1 mb-3">
-                  <span>Default language</span>
-                  <select [value]="configurationDraft().defaultLanguage"
-                    (change)="updateDraft('defaultLanguage', $any($event.target).value)">
-                    <option value="en">English</option>
-                    <option value="ur">Urdu</option>
-                    <option value="ur-Latn">Roman Urdu</option>
-                    <option value="ar">Arabic</option>
-                  </select>
-                </label>
-                <div class="d-flex gap-2">
-                  <button class="btn btn-sm" type="submit" [disabled]="savingKey() !== null">
-                    {{ savingKey() === employee.key ? 'Saving…' : 'Save configuration' }}
-                  </button>
-                  <button class="btn btn-sm" type="button" [disabled]="savingKey() !== null" (click)="cancelConfiguration()">Cancel</button>
-                </div>
-                <p class="muted small mt-2 mb-0">System instructions, tool permissions and module access cannot be changed here.</p>
-              </form>
-            }
-            @if (permissionsEditingKey() === employee.key) {
-              <section class="nalva-panel mt-3" aria-label="AI employee tool permissions">
-                <h4>Tool access — {{ employee.displayName }}</h4>
-                <p class="muted small">Choose which BusinessOS tools this employee may invoke. Your own user permissions still apply, and write actions retain their confirmation requirements.</p>
+            @if (editingKey() === agent.key && detail(); as detail) {
+              <section class="nalva-panel mt-3" aria-label="Agent tool configuration">
+                <h4>Tools — {{ detail.name }}</h4>
+                <p class="muted small">Choose which tools this agent may invoke. Write tools still require confirmation or approval when the backend marks them as guarded.</p>
                 <div class="d-flex flex-column gap-2">
-                  @for (tool of availableTools(); track tool) {
+                  @for (tool of detail.tools; track tool.name) {
                     <label class="d-flex align-items-center gap-2">
                       <input type="checkbox"
-                        [checked]="isToolAllowed(tool)"
-                        (change)="toggleToolPermission(tool, $any($event.target).checked)" />
-                      <span>{{ tool }}</span>
+                        [checked]="isToolAllowed(tool.name)"
+                        (change)="toggleToolPermission(tool.name, $any($event.target).checked)" />
+                      <span>{{ tool.name }}@if (tool.requiresApproval) { <span class="muted"> (approval)</span> }</span>
                     </label>
                   }
                 </div>
-                @if (availableTools().length === 0) {
-                  <p class="muted small">No tool definitions were returned by the backend.</p>
+                @if (detail.tools.length === 0) {
+                  <p class="muted">No tools are listed for this agent.</p>
                 }
-                <div class="d-flex flex-wrap gap-2 mt-3">
-                  <button class="btn btn-sm" type="button"
-                    [disabled]="permissionsSavingKey() !== null"
-                    (click)="saveToolPermissions(employee)">
-                    {{ permissionsSavingKey() === employee.key ? 'Saving…' : 'Save tool access' }}
+                <div class="d-flex gap-2 mt-3">
+                  <button class="btn btn-sm" type="button" [disabled]="savingKey() !== null"
+                    (click)="saveConfiguration(agent)">
+                    {{ savingKey() === agent.key ? 'Saving…' : 'Save tools' }}
                   </button>
-                  <button class="btn btn-sm" type="button"
-                    [disabled]="permissionsSavingKey() !== null"
-                    (click)="cancelToolPermissions()">Cancel</button>
+                  <button class="btn btn-sm" type="button" [disabled]="savingKey() !== null"
+                    (click)="cancelConfiguration()">Cancel</button>
                 </div>
               </section>
             }
+          } @else {
+            <p class="muted small mt-3 mb-0">Activate agents from My agents after reviewing their tools and approval requirements.</p>
           }
         </article>
       }
     </section>
   }
-  <p class="muted small mt-3">Activation is tenant-scoped and restricted by the backend to business Owners and Admins. The default employee remains active until a default-switch feature is added. Advanced configuration and usage analytics are separate future capabilities.</p>
 }

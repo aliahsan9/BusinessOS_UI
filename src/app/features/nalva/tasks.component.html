@@ -1,5 +1,99 @@
-<section class="nalva-panel">
-  <h2>Agent task queue</h2>
-  <p>The backend does not currently expose persistent agent-task endpoints. Task creation, scheduling, pause, resume and cancellation are therefore unavailable in this release.</p>
-  <p class="muted mb-0">No task has been queued by this screen. This message is informational and does not represent a task status.</p>
+<header class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+  <div>
+    <h2>Agent task queue</h2>
+    <p class="muted mb-0">Queued, running, and completed Navla workforce tasks for this company.</p>
+  </div>
+  <button class="btn" type="button" (click)="load()" [disabled]="loading() || savingId() !== null">Refresh</button>
+</header>
+
+<section class="nalva-panel mb-3">
+  <h3>Queue a task</h3>
+  <p class="muted">Requires Navla manage permission. Destructive tool calls still need separate approval when the agent requests them.</p>
+  <div class="d-flex flex-wrap gap-2 align-items-end">
+    <label class="d-flex flex-column gap-1">
+      <span>Agent</span>
+      <select [ngModel]="agentKey()" (ngModelChange)="agentKey.set($event)">
+        @for (agent of agents(); track agent.key) {
+          <option [value]="agent.key">{{ agent.name }} ({{ agent.key }})</option>
+        }
+      </select>
+    </label>
+    <label class="d-flex flex-column gap-1 flex-grow-1">
+      <span>Objective</span>
+      <input type="text" maxlength="500" [ngModel]="objective()" (ngModelChange)="objective.set($event)"
+        placeholder="Describe the work for the selected agent" />
+    </label>
+    <button class="btn primary" type="button" (click)="enqueue()"
+      [disabled]="enqueueing() || !agentKey() || !objective().trim()">
+      {{ enqueueing() ? 'Queuing…' : 'Queue task' }}
+    </button>
+  </div>
 </section>
+
+<div class="d-flex flex-wrap gap-2 mb-3">
+  <label class="d-flex flex-column gap-1">
+    <span>Status filter</span>
+    <select [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event); load()">
+      <option value="">All</option>
+      <option value="Queued">Queued</option>
+      <option value="Running">Running</option>
+      <option value="Paused">Paused</option>
+      <option value="Completed">Completed</option>
+      <option value="Failed">Failed</option>
+      <option value="Cancelled">Cancelled</option>
+    </select>
+  </label>
+</div>
+
+@if (notice()) { <p class="nalva-panel" role="status">{{ notice() }}</p> }
+@if (error()) { <p class="nalva-panel" role="alert">{{ error() }}</p> }
+@if (loading()) { <p class="muted" role="status">Loading tasks…</p> }
+
+@if (!loading() && !error()) {
+  @if (tasks().length === 0) {
+    <p class="muted">No tasks match this filter for the current company.</p>
+  } @else {
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead>
+          <tr>
+            <th>Agent</th>
+            <th>Objective</th>
+            <th>Status</th>
+            <th>Priority</th>
+            <th>Attempt</th>
+            <th>Created</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (task of tasks(); track task.id) {
+            <tr>
+              <td>{{ task.agentKey }}</td>
+              <td>
+                {{ task.objective }}
+                @if (task.lastError) { <div class="muted small">{{ task.lastError }}</div> }
+              </td>
+              <td><span class="pill">{{ task.status }}</span></td>
+              <td>{{ task.priority }}</td>
+              <td>{{ task.attempt }}</td>
+              <td>{{ task.createdAt | date:'short' }}</td>
+              <td>
+                <div class="d-flex flex-wrap gap-1">
+                  <button class="btn btn-sm" type="button" (click)="act(task, 'pause')"
+                    [disabled]="savingId() !== null || task.status !== 'Queued' && task.status !== 'Running'">Pause</button>
+                  <button class="btn btn-sm" type="button" (click)="act(task, 'resume')"
+                    [disabled]="savingId() !== null || task.status !== 'Paused'">Resume</button>
+                  <button class="btn btn-sm" type="button" (click)="act(task, 'retry')"
+                    [disabled]="savingId() !== null || task.status !== 'Failed'">Retry</button>
+                  <button class="btn btn-sm" type="button" (click)="act(task, 'cancel')"
+                    [disabled]="savingId() !== null || task.status === 'Completed' || task.status === 'Cancelled'">Cancel</button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+}

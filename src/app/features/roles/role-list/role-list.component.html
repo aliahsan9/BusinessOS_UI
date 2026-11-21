@@ -22,6 +22,7 @@
         <tr>
           <th>Name</th>
           <th>Description</th>
+          <th>Type</th>
           <th>Permissions</th>
           <th>Status</th>
           <th>Created</th>
@@ -33,15 +34,16 @@
           <tr>
             <td data-label="Name"><a [routerLink]="[routes.roles.base, role.id]" class="link-primary">{{ role.name }}</a></td>
             <td data-label="Description">{{ role.description || '—' }}</td>
+            <td data-label="Type"><app-badge [label]="role.isSystem ? 'System' : 'Custom'" [variant]="role.isSystem ? 'neutral' : 'info'" /></td>
             <td data-label="Permissions">{{ role.permissions.length }}</td>
             <td data-label="Status"><app-badge [label]="role.isActive ? 'Active' : 'Inactive'" [variant]="role.isActive ? 'success' : 'neutral'" /></td>
             <td data-label="Created">{{ role.createdAt | date: 'mediumDate' }}</td>
             <td data-label="" class="bos-table__actions">
               <a [routerLink]="[routes.roles.base, role.id]">View</a>
-              @if (canUpdate) {
+              @if (canUpdate && !role.isSystem) {
                 <a [routerLink]="[routes.roles.base, role.id, 'edit']">Edit</a>
               }
-              @if (canDelete) {
+              @if (canDelete && !role.isSystem) {
                 <button type="button" class="link-danger" (click)="confirmDelete(role)">Delete</button>
               }
             </td>

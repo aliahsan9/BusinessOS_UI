@@ -14,6 +14,7 @@ import { ROUTES } from '../../../core/constants/route.constants';
 import { AppPageHeaderComponent } from '../../../shared/components/app-page-header/app-page-header.component';
 import { AppSkeletonComponent } from '../../../shared/components/app-skeleton/app-skeleton.component';
 import { AppAlertComponent } from '../../../shared/components/app-alert/app-alert.component';
+import { environment } from '../../../../environments/environment';
 @Component({
   selector: 'app-pricing-page',
   standalone: true,
@@ -174,6 +175,14 @@ export class PricingPageComponent implements OnInit {
       return;
     }
     if (checkout?.requiresServerConfirmation) {
+      if (environment.production) {
+        this.error.set(
+          'Stripe is not connected in this environment. Live checkout cannot continue without payment credentials.',
+        );
+        this.actionLoading.set(null);
+        return;
+      }
+
       const amount = this.money(checkout.amount, checkout.currency);
       if (!confirm(`Stripe is not configured. Confirm a development sandbox charge of ${amount}? This does not create a live payment.`)) {
         this.actionLoading.set(null);
@@ -182,7 +191,7 @@ export class PricingPageComponent implements OnInit {
       this.billingService.confirmCheckout(checkout.sessionId).subscribe({
         next: (plan) => {
           this.currentPlan.set(plan);
-          this.notice.set('Sandbox checkout confirmed. The subscription is active.');
+          this.notice.set('Sandbox checkout confirmed. The subscription is active for development only.');
           this.actionLoading.set(null);
         },
         error: () => {

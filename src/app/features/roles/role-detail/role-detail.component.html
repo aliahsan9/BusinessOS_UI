@@ -8,23 +8,24 @@
 
   <app-card title="Role Information">
     <dl class="detail-list">
+      <div><dt>Type</dt><dd><app-badge [label]="r.isSystem ? 'System' : 'Custom'" [variant]="r.isSystem ? 'neutral' : 'info'" /></dd></div>
       <div><dt>Status</dt><dd><app-badge [label]="r.isActive ? 'Active' : 'Inactive'" [variant]="r.isActive ? 'success' : 'neutral'" /></dd></div>
       <div><dt>Created</dt><dd>{{ r.createdAt | date: 'medium' }}</dd></div>
       <div><dt>Assigned Permissions</dt><dd>{{ r.permissions.length }}</dd></div>
     </dl>
   </app-card>
 
-  <app-card title="Permission Matrix" subtitle="Toggle permissions grouped by category">
+  <app-card title="Permission Matrix" [subtitle]="r.isSystem ? 'System roles are shared and cannot be edited.' : 'Toggle permissions grouped by category'">
     @for (group of groupedPermissions(); track group[0]) {
       <div class="permission-group">
         <h4 class="permission-group__title">{{ group[0] }}</h4>
         <div class="permission-grid">
           @for (permission of group[1]; track permission.id) {
-            <label class="permission-item" [class.permission-item--readonly]="!canUpdate">
+            <label class="permission-item" [class.permission-item--readonly]="!canUpdate || r.isSystem">
               <input
                 type="checkbox"
                 [checked]="hasPermission(permission.code)"
-                [disabled]="!canUpdate || saving()"
+                [disabled]="!canUpdate || r.isSystem || saving()"
                 (change)="togglePermission(permission)"
               />
               <span>

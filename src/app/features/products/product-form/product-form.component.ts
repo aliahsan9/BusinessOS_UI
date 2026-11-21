@@ -143,7 +143,8 @@ export class ProductFormComponent implements OnInit {
         },
       });
     } else {
-      this.productService.create(value).subscribe({
+      const { isActive: _ignored, ...createPayload } = value;
+      this.productService.create(createPayload).subscribe({
         next: (res) => {
           this.notification.success('Product created.');
           this.router.navigate([ROUTES.products.base, res.id]);

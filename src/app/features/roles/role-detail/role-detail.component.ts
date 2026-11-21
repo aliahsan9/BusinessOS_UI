@@ -75,11 +75,12 @@ export class RoleDetailComponent implements OnInit {
   }
 
   headerActions() {
-    if (!this.canUpdate) return [];
+    const role = this.role();
+    if (!this.canUpdate || !role || role.isSystem) return [];
     return [
       {
         label: 'Edit',
-        route: `${ROUTES.roles.base}/${this.role()?.id}/edit`,
+        route: `${ROUTES.roles.base}/${role.id}/edit`,
         icon: 'bi-pencil',
         variant: ButtonVariant.Outline,
       },
@@ -92,7 +93,7 @@ export class RoleDetailComponent implements OnInit {
 
   togglePermission(permission: PermissionDto): void {
     const role = this.role();
-    if (!role || !this.canUpdate) return;
+    if (!role || !this.canUpdate || role.isSystem) return;
 
     this.saving.set(true);
     const assigned = this.hasPermission(permission.code);

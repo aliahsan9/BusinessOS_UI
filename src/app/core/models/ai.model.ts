@@ -133,6 +133,8 @@ export interface AiChatMessage {
   language?: string | null;
   textDirection?: 'ltr' | 'rtl' | string | null;
   pendingConfirmation?: import('./agent.model').AiPendingConfirmation | null;
+  specialistAgents?: string[] | null;
+  specialistLabel?: string | null;
 }
 
 export interface AiConversationSession {

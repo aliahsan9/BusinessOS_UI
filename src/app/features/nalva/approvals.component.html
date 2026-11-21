@@ -1,99 +1,68 @@
 <header class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
   <div>
-    <h2>Sales Agent approvals</h2>
-    <p class="muted mb-0">Review proposed customer actions before any external action is taken.</p>
+    <h2>Navla approvals</h2>
+    <p class="muted mb-0">Review guarded tool actions before they change business data or leave the workspace.</p>
   </div>
   <button class="btn" type="button" (click)="load()" [disabled]="loading() || savingId() !== null">Refresh</button>
 </header>
 
 <div class="nalva-panel mb-3" role="note">
   <strong>Human approval required.</strong>
-  Approval records consent. A separate Execute action sends the approved plain-text customer follow-up email. It does not create orders or modify customer or inventory data. Delivery attempts are one-time; failed or interrupted attempts require manual review.
+  Pending items come from <code>GET /nalva/approvals</code>. Approving or rejecting records the decision through the backend.
+  Do not assume a write completed unless the response summary confirms it.
 </div>
 
-<section class="nalva-panel mb-3" aria-labelledby="follow-up-capability-title">
-  <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
-    <div>
-      <h3 id="follow-up-capability-title">Emma’s customer follow-up capability</h3>
-      <p class="muted mb-1">This tenant-level permission controls whether Emma may propose customer follow-up emails.</p>
-      <p class="muted small mb-0">It is separate from approval. Every email still requires a manager’s approval and a separate Execute action.</p>
-    </div>
-    <label class="d-flex align-items-center gap-2">
-      <input type="checkbox"
-        [checked]="followUpCapabilityEnabled()"
-        [disabled]="capabilityLoading() || capabilitySaving() || !capabilityAvailable()"
-        (change)="setFollowUpCapability($any($event.target).checked)" />
-      <span>{{ capabilitySaving() ? 'Saving…' : followUpCapabilityEnabled() ? 'Enabled' : 'Disabled' }}</span>
-    </label>
-  </div>
-  @if (capabilityLoading()) {
-    <p class="muted small mt-2 mb-0">Loading employee capability…</p>
-  }
-  @if (capabilityError()) {
-    <p class="muted small mt-2 mb-0" role="status">{{ capabilityError() }}</p>
-  }
-</section>
-
-<div class="d-flex flex-wrap align-items-center gap-2 mb-3" role="group" aria-label="Proposal filter">
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3" role="group" aria-label="Approval filter">
   <button class="btn" type="button" [class.primary]="filter() === 'pending'"
     [attr.aria-pressed]="filter() === 'pending'" (click)="setFilter('pending')" [disabled]="loading()">
-    Pending review
+    Pending
   </button>
   <button class="btn" type="button" [class.primary]="filter() === 'all'"
     [attr.aria-pressed]="filter() === 'all'" (click)="setFilter('all')" [disabled]="loading()">
-    All proposals
+    All
   </button>
-  <span class="muted small">{{ rows().length }} proposal(s)</span>
+  <span class="muted small">{{ rows().length }} request(s)</span>
 </div>
 
 @if (notice()) { <p class="nalva-panel" role="status">{{ notice() }}</p> }
 @if (error()) { <p class="nalva-panel" role="alert">{{ error() }}</p> }
-@if (loading()) { <p class="muted" role="status">Loading proposals…</p> }
+@if (loading()) { <p class="muted" role="status">Loading approvals…</p> }
 
 @if (!loading() && !error()) {
-  <section class="stack" aria-label="Sales Agent proposals">
+  <section class="stack" aria-label="Navla approvals">
     @for (row of rows(); track row.id) {
       <article class="nalva-panel">
         <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
           <div>
-            <h3>{{ row.title }}</h3>
-            <p class="muted mb-1">{{ actionLabel(row.actionType) }} · {{ row.agentKey }}</p>
+            <h3>{{ row.action || row.toolName }}</h3>
+            <p class="muted mb-1">{{ row.toolName }} · {{ row.agentKey }} · risk {{ row.risk }}</p>
           </div>
-          <span class="pill">{{ status(row.status) }}</span>
+          <span class="pill">{{ row.status }}</span>
         </div>
-
-        <p>{{ row.summary }}</p>
 
         <div class="d-flex flex-wrap gap-3 muted small">
-          <span>Created: {{ row.createdAt | date:'medium' }}</span>
-          @if (row.expiresAt) { <span>Expires: {{ row.expiresAt | date:'medium' }}</span> }
-          @if (row.decidedAt) { <span>Decision: {{ row.decidedAt | date:'medium' }}</span> }
+          <span>Requested: {{ row.requestedAt | date:'medium' }}</span>
+          @if (row.decidedAt) { <span>Decided: {{ row.decidedAt | date:'medium' }}</span> }
         </div>
 
-        <details class="mt-3">
-          <summary>Review proposed action payload</summary>
-          <pre class="nalva-payload mt-2">{{ row.payloadJson }}</pre>
-        </details>
-
-        @if (row.decisionComment) {
-          <p class="muted mt-2 mb-0">Reviewer comment: {{ row.decisionComment }}</p>
+        @if (row.contextJson) {
+          <details class="mt-3">
+            <summary>Review action context</summary>
+            <pre class="nalva-payload mt-2">{{ row.contextJson }}</pre>
+          </details>
         }
 
-        @if (status(row.status) === 'Approved') {
-          <div class="actions mt-3">
-            <button class="btn primary" type="button"
-              [disabled]="savingId() !== null"
-              (click)="execute(row)">
-              {{ savingId() === row.id ? 'Sending…' : 'Execute approved follow-up' }}
-            </button>
-          </div>
-          <p class="muted small mt-2 mb-0">This sends an email to the customer. The action cannot be automatically retried.</p>
+        @if (row.decisionNote) {
+          <p class="muted mt-2 mb-0">Decision note: {{ row.decisionNote }}</p>
+        }
+        @if (row.executionResult) {
+          <p class="muted mt-2 mb-0">Execution result: {{ row.executionResult }}</p>
         }
 
         @if (isPending(row)) {
           <div class="mt-3">
             <label>
-              Reviewer comment (optional)
+              Reviewer note (optional)
               <textarea rows="2" maxlength="500" [value]="commentDrafts()[row.id] || ''"
                 (input)="setComment(row.id, $any($event.target).value)"
                 placeholder="Add context for this decision"></textarea>
@@ -101,12 +70,17 @@
             <div class="actions">
               <button class="btn primary" type="button"
                 [disabled]="savingId() !== null"
-                (click)="decide(row, 'approved')">
-                {{ savingId() === row.id ? 'Saving…' : 'Approve proposal' }}
+                (click)="decide(row, 'approve')">
+                {{ savingId() === row.id ? 'Saving…' : 'Approve' }}
               </button>
               <button class="btn" type="button"
                 [disabled]="savingId() !== null"
-                (click)="decide(row, 'rejected')">
+                (click)="decide(row, 'changes')">
+                Request changes
+              </button>
+              <button class="btn" type="button"
+                [disabled]="savingId() !== null"
+                (click)="decide(row, 'reject')">
                 Reject
               </button>
             </div>
@@ -114,7 +88,7 @@
         }
       </article>
     } @empty {
-      <p class="muted">No proposals found for this view.</p>
+      <p class="muted">No approvals found for this view.</p>
     }
   </section>
 }

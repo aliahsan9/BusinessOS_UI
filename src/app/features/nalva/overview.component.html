@@ -1,7 +1,7 @@
 <header class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
   <div>
     <h2>AI workforce overview</h2>
-    <p class="muted mb-0">Live data from your configured AI employees and recent execution workflows.</p>
+    <p class="muted mb-0">Live tenant-scoped metrics from the Navla workforce API.</p>
   </div>
   <button class="btn" type="button" (click)="load()" [disabled]="loading()">Refresh</button>
 </header>
@@ -13,52 +13,68 @@
   <p class="nalva-panel" role="alert">{{ error() }}</p>
 }
 
-@if (!loading() && !error()) {
+@if (!loading() && !error() && overview(); as data) {
   <section class="nalva-grid">
+    <article class="nalva-stat"><span>Activated agents</span><strong>{{ data.activatedAgents }}</strong></article>
+    <article class="nalva-stat"><span>Active agents</span><strong>{{ data.activeAgents }}</strong></article>
+    <article class="nalva-stat"><span>Running executions</span><strong>{{ data.runningExecutions }}</strong></article>
+    <article class="nalva-stat"><span>Pending approvals</span><strong>{{ data.pendingApprovals }}</strong></article>
+    <article class="nalva-stat"><span>Completed tasks</span><strong>{{ data.completedTasks }}</strong></article>
+    <article class="nalva-stat"><span>Failed executions</span><strong>{{ data.failedExecutions }}</strong></article>
+    <article class="nalva-stat"><span>Workflow runs</span><strong>{{ data.workflowRuns }}</strong></article>
     <article class="nalva-stat">
-      <span>Available AI employees</span>
-      <strong>{{ employees().length }}</strong>
-    </article>
-    <article class="nalva-stat">
-      <span>Active AI employees</span>
-      <strong>{{ activeEmployees() }}</strong>
-    </article>
-    <article class="nalva-stat">
-      <span>Recent execution workflows</span>
-      <strong>{{ workflows().length }}</strong>
+      <span>Estimated spend (USD)</span>
+      <strong>{{ data.estimatedCostUsd | number:'1.2-4' }}</strong>
     </article>
   </section>
+
+  @if (data.costIsEstimate) {
+    <p class="muted small mt-2">Cost figures are estimates (pricing {{ data.pricingVersion }}).</p>
+  }
+  @if (data.costAlert) {
+    <p class="nalva-panel mt-2" role="status">A cost alert is active for this company.</p>
+  }
 
   <section class="nalva-panel mt-4">
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-      <h3 class="mb-0">Recent execution workflows</h3>
-      <a [routerLink]="routes.nalva.marketplace">View AI employees</a>
+      <h3 class="mb-0">Queued tasks</h3>
+      <a [routerLink]="routes.nalva.tasks">Open task queue</a>
     </div>
-
-    @if (workflows().length === 0) {
-      <p class="muted mb-0">No agent workflows have been recorded for your account yet. Start a conversation with an AI employee to create an execution workflow.</p>
+    @if (tasks().length === 0) {
+      <p class="muted mb-0">No queued tasks right now.</p>
     } @else {
-      <div class="table-responsive">
-        <table class="table align-middle">
-          <thead>
-            <tr><th>Workflow</th><th>AI employee</th><th>Status</th><th>Started</th></tr>
-          </thead>
-          <tbody>
-            @for (workflow of workflows(); track workflow.id) {
-              <tr>
-                <td>
-                  <strong>{{ workflow.title }}</strong>
-                  @if (workflow.resultSummary) { <div class="muted small">{{ workflow.resultSummary }}</div> }
-                </td>
-                <td>{{ workflow.agentKey }}</td>
-                <td>{{ workflowStatus(workflow.status) }}</td>
-                <td>{{ workflow.startedAt | date:'medium' }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+      <ul class="mb-0">
+        @for (task of tasks().slice(0, 5); track task.id) {
+          <li>
+            <strong>{{ task.agentKey }}</strong> — {{ task.objective }}
+            <span class="muted small"> · {{ task.createdAt | date:'short' }}</span>
+          </li>
+        }
+      </ul>
     }
   </section>
-  <p class="muted small mt-2">These figures reflect the available employee catalog and the latest 20 execution workflows. Token usage, spend, approvals and task-queue metrics are intentionally not displayed until the backend exposes verified data for them.</p>
+
+  <section class="nalva-panel mt-3">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+      <h3 class="mb-0">Pending approvals</h3>
+      <a [routerLink]="routes.nalva.approvals">Review approvals</a>
+    </div>
+    @if (approvals().length === 0) {
+      <p class="muted mb-0">No pending approvals.</p>
+    } @else {
+      <ul class="mb-0">
+        @for (item of approvals().slice(0, 5); track item.id) {
+          <li>
+            <strong>{{ item.toolName }}</strong> · {{ item.agentKey }}
+            <span class="muted small"> · {{ item.requestedAt | date:'short' }}</span>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+
+  <p class="muted small mt-2">
+    Figures come from <code>GET /nalva/overview</code>, queued tasks, and pending approvals for the signed-in company.
+    <a [routerLink]="routes.nalva.marketplace">Browse marketplace</a>
+  </p>
 }

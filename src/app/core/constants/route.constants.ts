@@ -179,7 +179,7 @@ export const ROUTES = {
     base: '/pricing',
   },
   subscription: {
-    base: '/subscription',
+    base: '/billing',
   },
   profile: '/profile',
   ai: {

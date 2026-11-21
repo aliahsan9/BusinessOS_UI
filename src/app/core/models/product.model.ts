@@ -36,6 +36,7 @@ export interface UpdateProductRequest {
 
 export interface ProductQueryParams extends PaginationParams {
   categoryId?: string;
+  isActive?: boolean;
   sortDirection?: 'asc' | 'desc';
 }
 

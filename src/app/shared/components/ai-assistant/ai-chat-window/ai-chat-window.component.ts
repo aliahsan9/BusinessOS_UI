@@ -74,6 +74,7 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
   readonly workflowSteps = signal<AgentWorkflowStep[]>([]);
   readonly liveTaskStatus = signal<string | null>(null);
   readonly liveToolName = signal<string | null>(null);
+  readonly activeSpecialist = signal<string | null>(null);
 
   private buildWelcome(lang: string, name = 'Navla AI'): AiChatMessage {
     const content =
@@ -152,9 +153,11 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
   readonly chatEnabled = this.aiAssistantState.chatEnabled;
   readonly settingsRoute = ROUTES.settings.hub;
   readonly workspaceRoute = ROUTES.ai.workspace;
-  readonly contextLabel = computed(() =>
-    this.aiPromptBuilder.buildContextLabel(this.aiContextService.buildPageContext()),
-  );
+  readonly contextLabel = computed(() => {
+    const specialist = this.activeSpecialist();
+    const page = this.aiPromptBuilder.buildContextLabel(this.aiContextService.buildPageContext());
+    return specialist ? `${specialist}${page ? ` · ${page}` : ''}` : page;
+  });
   readonly canRegenerate = computed(() => {
     const msgs = this.messages();
     return !this.loading() && msgs.some((m) => m.role === 'user');
@@ -495,6 +498,11 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
       for await (const chunk of this.agentService.streamWithFallback(message)) {
         if (chunk.type === 'status' && chunk.content) {
           this.liveTaskStatus.set(chunk.content);
+          if (chunk.content.startsWith('Routing to ')) {
+            this.activeSpecialist.set(
+              chunk.content.replace(/^Routing to\s+/, '').replace(/…$/, '').trim(),
+            );
+          }
           this.voice.setWorking(true);
         }
         if (chunk.type === 'tool') {
@@ -602,12 +610,15 @@ export class AiChatWindowComponent implements OnInit, OnDestroy {
         workflowSteps: response.workflowSteps ?? [],
         agentDisplayName: response.agentDisplayName,
         pendingConfirmation: response.pendingConfirmation ?? null,
+        specialistAgents: response.specialistAgents ?? [],
+        specialistLabel: response.specialistLabel ?? null,
       };
       return copy.map((message, index) =>
         index === msgIndex ? message : { ...message, pendingConfirmation: null },
       );
     });
 
+    if (response.specialistLabel) this.activeSpecialist.set(response.specialistLabel);
     this.searchResults.set(response.searchResults ?? []);
     this.suggestions.set(response.suggestions ?? []);
 

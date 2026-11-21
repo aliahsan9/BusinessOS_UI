@@ -29,5 +29,5 @@
     <article class="nalva-stat"><span>Retries</span><strong>{{ data.retries }}</strong></article>
     <article class="nalva-stat"><span>Tasks completed</span><strong>{{ data.tasksCompleted }}</strong></article>
   </section>
-  <p class="muted">Pricing {{ data.pricingVersion }}. Costs are estimates{{ data.costIsEstimate ? '' : '' }}.</p>
+  <p class="muted">Pricing {{ data.pricingVersion }}. {{ data.costIsEstimate ? 'Costs are estimates.' : 'Costs use the configured pricing table.' }}</p>
 }

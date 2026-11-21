@@ -11,6 +11,8 @@ export interface RoleDto {
   name: string;
   description?: string | null;
   isActive: boolean;
+  isSystem: boolean;
+  tenantId?: string | null;
   createdAt: string;
   permissions: string[];
 }

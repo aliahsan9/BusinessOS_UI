@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
+import { provideRouter } from '@angular/router';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ProfitLossComponent } from './profit-loss.component';
 
@@ -9,7 +10,7 @@ describe('ProfitLossComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ProfitLossComponent],
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
     fixture = TestBed.createComponent(ProfitLossComponent);
     fixture.detectChanges();

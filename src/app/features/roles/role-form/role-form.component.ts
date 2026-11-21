@@ -60,6 +60,11 @@ export class RoleFormComponent implements OnInit {
       this.loading.set(true);
       this.roleService.getById(id).subscribe({
         next: (role) => {
+          if (role.isSystem) {
+            this.notification.error('System roles cannot be edited.');
+            this.router.navigate([ROUTES.roles.base, role.id]);
+            return;
+          }
           this.form.patchValue({
             name: role.name,
             description: role.description ?? '',

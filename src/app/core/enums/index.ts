@@ -18,6 +18,8 @@ export enum AnalyticsPeriod {
 export enum DashboardPeriod {
   Today = 'today',
   Week = 'week',
+  Last7Days = 'last7days',
+  Last30Days = 'last30days',
   Month = 'month',
   Year = 'year',
   All = 'all',

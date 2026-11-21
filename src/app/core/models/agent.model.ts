@@ -109,6 +109,8 @@ export interface AgentChatResponse {
   language?: string | null;
   textDirection?: 'ltr' | 'rtl' | string | null;
   pendingConfirmation?: AiPendingConfirmation | null;
+  specialistAgents?: string[];
+  specialistLabel?: string | null;
 }
 
 export interface AiPendingConfirmation {

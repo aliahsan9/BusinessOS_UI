@@ -40,8 +40,9 @@
       @if (profitLoss(); as report) {
         <div class="summary-row">
           <div class="summary-card"><span>Total Revenue</span><strong>{{ report.totalRevenue | appCurrency }}</strong></div>
-          <div class="summary-card"><span>Total Expenses</span><strong>{{ report.totalExpenses | appCurrency }}</strong></div>
+          <div class="summary-card"><span>Cost of Goods Sold</span><strong>{{ report.costOfGoodsSold | appCurrency }}</strong></div>
           <div class="summary-card"><span>Gross Profit</span><strong>{{ report.grossProfit | appCurrency }}</strong></div>
+          <div class="summary-card"><span>Total Expenses</span><strong>{{ report.totalExpenses | appCurrency }}</strong></div>
           <div class="summary-card"><span>Net Profit</span><strong>{{ report.netProfit | appCurrency }}</strong></div>
         </div>
         @if (report.periodBreakdown.length === 0) {

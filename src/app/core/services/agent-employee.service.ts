@@ -343,6 +343,9 @@ export class AgentEmployeeService extends BaseApiService {
       citations: response.citations ?? [],
       agentKey: response.agentKey || 'sophia',
       agentDisplayName: response.agentDisplayName || 'Navla AI',
+      specialistAgents: response.specialistAgents ?? [],
+      specialistLabel: response.specialistLabel ?? null,
+      pendingConfirmation: response.pendingConfirmation ?? null,
     };
   }
 

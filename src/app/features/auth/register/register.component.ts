@@ -68,7 +68,7 @@ export class RegisterComponent {
     this.authService.register({ firstName, lastName, businessName, email, password }).subscribe({
       next: () => {
         this.notificationService.success('Account created successfully!');
-        void this.router.navigate(['/dashboard']);
+        navigateAfterSignIn(this.router, this.onboardingService);
       },
       error: (error: ApiError) => {
         const message = error.detail ?? error.title ?? 'Registration failed';

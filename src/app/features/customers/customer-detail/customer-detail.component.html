@@ -39,8 +39,10 @@
       } @else if (analytics()) {
         <dl class="detail-list">
           <div><dt>Total Orders</dt><dd>{{ analytics()!.totalOrders }}</dd></div>
+          <div><dt>Completed Orders</dt><dd>{{ analytics()!.totalCompletedOrders }}</dd></div>
           <div><dt>Total Spending</dt><dd>{{ analytics()!.totalSpending | appCurrency }}</dd></div>
           <div><dt>Average Order Value</dt><dd>{{ analytics()!.averageOrderValue | appCurrency }}</dd></div>
+          <div><dt>Outstanding Balance</dt><dd>{{ analytics()!.outstandingBalance | appCurrency }}</dd></div>
           <div><dt>Last Order</dt><dd>{{ analytics()!.lastOrderDate ? (analytics()!.lastOrderDate | date: 'mediumDate') : '—' }}</dd></div>
         </dl>
       }

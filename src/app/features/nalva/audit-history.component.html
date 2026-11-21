@@ -1,45 +1,53 @@
 <section class="nalva-panel stack">
   <div class="actions" style="justify-content: space-between; align-items: center; margin-top: 0">
     <div>
-      <h3>AI employee audit history</h3>
-      <p class="muted">A record of permission changes, activation changes, and approval lifecycle events in this workspace.</p>
+      <h3>Navla execution audit trail</h3>
+      <p class="muted">
+        The dedicated <code>/agents/audit-history</code> endpoint is not available.
+        This page shows verified tenant-scoped execution records from <code>/nalva/executions</code>.
+      </p>
     </div>
-    <button class="btn" type="button" (click)="load()" [disabled]="loading()">Refresh</button>
+    <div class="d-flex gap-2">
+      <a class="btn" [routerLink]="routes.nalva.history">Open history</a>
+      <button class="btn" type="button" (click)="load()" [disabled]="loading()">Refresh</button>
+    </div>
   </div>
 
   @if (loading()) {
-    <p class="muted">Loading audit history…</p>
+    <p class="muted">Loading execution audit trail…</p>
   } @else if (error()) {
     <p role="alert">{{ error() }}</p>
   } @else if (rows().length === 0) {
-    <p class="muted">No AI employee audit events have been recorded yet.</p>
+    <p class="muted">No Navla executions have been recorded for this company yet.</p>
   } @else {
     <div style="overflow-x: auto">
       <table class="table">
         <thead>
           <tr>
             <th>Date</th>
-            <th>Event</th>
-            <th>Actor</th>
-            <th>Record</th>
-            <th>Previous value</th>
-            <th>New value</th>
+            <th>Agent</th>
+            <th>Status</th>
+            <th>Model</th>
+            <th>Tool calls</th>
+            <th>Approvals</th>
+            <th>Summary</th>
           </tr>
         </thead>
         <tbody>
           @for (row of rows(); track row.id) {
             <tr>
-              <td>{{ row.createdAt | date:'medium' }}</td>
-              <td>{{ row.action }}</td>
-              <td>{{ row.actorUserId }}</td>
-              <td>{{ row.entityType }}<br /><span class="muted">{{ row.entityId }}</span></td>
-              <td><pre class="nalva-payload">{{ row.oldValue || '—' }}</pre></td>
-              <td><pre class="nalva-payload">{{ row.newValue || '—' }}</pre></td>
+              <td>{{ row.startedAt | date:'medium' }}</td>
+              <td>{{ row.agentKey }}</td>
+              <td>{{ row.status }}</td>
+              <td>{{ row.model }}</td>
+              <td>{{ row.toolCallCount }}</td>
+              <td>{{ row.approvalCount }}</td>
+              <td>{{ row.summary || row.error || '—' }}</td>
             </tr>
           }
         </tbody>
       </table>
     </div>
-    <p class="muted">Showing the latest {{ rows().length }} events. Audit records are scoped to the current workspace.</p>
+    <p class="muted">Showing {{ rows().length }} execution record(s) for the current workspace.</p>
   }
 </section>

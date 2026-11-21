@@ -21,6 +21,7 @@ export interface FinancialDashboard {
 
 export interface ProfitLossReport {
   totalRevenue: number;
+  costOfGoodsSold: number;
   totalExpenses: number;
   grossProfit: number;
   netProfit: number;

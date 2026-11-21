@@ -34,15 +34,20 @@ export class DashboardCopilotComponent implements OnInit {
   readonly insights = signal<AiProactiveInsight[]>([]);
   readonly askSophia = signal<AskSophiaSuggestions | null>(null);
   readonly loading = signal(true);
+  readonly loadFailed = signal(false);
 
   ngOnInit(): void {
     this.aiChat.getDashboardCopilot().subscribe({
       next: (data) => {
         this.copilot.set(data);
         this.insights.set(data.insights);
+        this.loadFailed.set(false);
         this.loading.set(false);
       },
-      error: () => this.loading.set(false),
+      error: () => {
+        this.loadFailed.set(true);
+        this.loading.set(false);
+      },
     });
 
     this.agentService.getAskSophiaSuggestions().subscribe({

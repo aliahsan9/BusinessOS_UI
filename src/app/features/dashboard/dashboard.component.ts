@@ -106,7 +106,8 @@ export class DashboardComponent implements OnInit {
   readonly routes = ROUTES;
   readonly periods: ReadonlyArray<{ label: string; value: DashboardPeriod }> = [
     { label: 'Today', value: DashboardPeriod.Today },
-    { label: 'This Week', value: DashboardPeriod.Week },
+    { label: 'Last 7 Days', value: DashboardPeriod.Last7Days },
+    { label: 'Last 30 Days', value: DashboardPeriod.Last30Days },
     { label: 'This Month', value: DashboardPeriod.Month },
     { label: 'This Year', value: DashboardPeriod.Year },
     { label: 'All Time', value: DashboardPeriod.All },

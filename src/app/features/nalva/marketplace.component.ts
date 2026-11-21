@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { AgentEmployeeService } from '../../core/services/agent-employee.service';
-import { AgentEmployee, UpdateAgentConfigurationRequest } from '../../core/models/agent.model';
+import { NalvaService } from '../../core/services/nalva.service';
+import { NalvaAgentCard, NalvaAgentDetail } from '../../core/models/nalva.model';
+import { ApiError } from '../../core/models/api-error.model';
 
 @Component({
   selector: 'app-nalva-marketplace',
@@ -12,11 +13,11 @@ import { AgentEmployee, UpdateAgentConfigurationRequest } from '../../core/model
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NalvaMarketplaceComponent implements OnInit {
-  private readonly api = inject(AgentEmployeeService);
+  private readonly api = inject(NalvaService);
   private readonly route = inject(ActivatedRoute);
 
   readonly mine = signal(false);
-  readonly employees = signal<AgentEmployee[]>([]);
+  readonly agents = signal<NalvaAgentCard[]>([]);
   readonly error = signal<string | null>(null);
   readonly loading = signal(true);
   readonly category = signal('All');
@@ -24,14 +25,8 @@ export class NalvaMarketplaceComponent implements OnInit {
   readonly actionError = signal<string | null>(null);
   readonly actionMessage = signal<string | null>(null);
   readonly editingKey = signal<string | null>(null);
-  readonly configurationDraft = signal<UpdateAgentConfigurationRequest>({
-    displayName: '', roleTitle: '', specialty: '', defaultLanguage: 'en',
-  });
-  readonly permissionsEditingKey = signal<string | null>(null);
-  readonly permissionsLoadingKey = signal<string | null>(null);
-  readonly permissionsSavingKey = signal<string | null>(null);
-  readonly availableTools = signal<string[]>([]);
-  readonly allowedToolsDraft = signal<string[]>([]);
+  readonly detail = signal<NalvaAgentDetail | null>(null);
+  readonly toolsDraft = signal<string[]>([]);
 
   ngOnInit(): void {
     this.mine.set(this.route.snapshot.data['mine'] === true);
@@ -39,108 +34,69 @@ export class NalvaMarketplaceComponent implements OnInit {
   }
 
   categories(): string[] {
-    return ['All', ...new Set(this.employees().map((employee) => employee.specialty).filter(Boolean))];
+    return ['All', ...new Set(this.agents().map((agent) => agent.category).filter(Boolean))];
   }
 
-  visible(): AgentEmployee[] {
+  visible(): NalvaAgentCard[] {
     const selected = this.category();
-    return this.employees().filter((employee) =>
-      selected === 'All' || employee.specialty === selected
-    );
+    const rows = this.mine()
+      ? this.agents().filter((agent) => agent.status === 'Active')
+      : this.agents();
+    return rows.filter((agent) => selected === 'All' || agent.category === selected);
   }
 
-  toggleActivation(employee: AgentEmployee): void {
-    if (!this.mine() || employee.isDefault || this.savingKey()) return;
+  toggleActivation(agent: NalvaAgentCard): void {
+    if (!this.mine() || this.savingKey()) return;
 
-    const nextActive = !employee.isActive;
-    this.savingKey.set(employee.key);
+    const activate = agent.status !== 'Active';
+    this.savingKey.set(agent.key);
     this.actionError.set(null);
     this.actionMessage.set(null);
 
-    this.api.setEmployeeActivation(employee.key, nextActive).subscribe({
+    const request = activate ? this.api.activate(agent.key) : this.api.deactivate(agent.key);
+    request.subscribe({
       next: (updated) => {
-        this.employees.update((rows) => rows.map((row) => row.key === updated.key ? updated : row));
-        this.actionMessage.set(`${updated.displayName} ${updated.isActive ? 'activated' : 'deactivated'} for this business.`);
+        this.agents.update((rows) => rows.map((row) => row.key === updated.key
+          ? { ...row, status: updated.status, autonomyLevel: updated.autonomyLevel }
+          : row));
+        this.actionMessage.set(`${updated.name} ${updated.status === 'Active' ? 'activated' : 'deactivated'} for this business.`);
         this.savingKey.set(null);
+        if (this.mine()) this.load();
       },
-      error: (error: { status?: number }) => {
+      error: (error: ApiError) => {
         this.actionError.set(error.status === 403
-          ? 'Only a business Owner or Admin can manage AI employee activation.'
-          : 'Could not update this AI employee. Confirm the backend activation API is deployed and try again.');
+          ? 'Only accounts with Navla manage permission can change agent activation.'
+          : error.detail || error.title || 'Could not update this agent. No activation change was confirmed.');
         this.savingKey.set(null);
       },
     });
   }
 
-  startConfiguration(employee: AgentEmployee): void {
+  startConfiguration(agent: NalvaAgentCard): void {
     if (!this.mine() || this.savingKey()) return;
     this.actionError.set(null);
     this.actionMessage.set(null);
-    this.configurationDraft.set({
-      displayName: employee.displayName,
-      roleTitle: employee.roleTitle,
-      specialty: employee.specialty,
-      defaultLanguage: employee.defaultLanguage || 'en',
-    });
-    this.editingKey.set(employee.key);
-  }
-
-  updateDraft(field: keyof UpdateAgentConfigurationRequest, value: string): void {
-    this.configurationDraft.update((draft) => ({ ...draft, [field]: value }));
-  }
-
-  saveConfiguration(employee: AgentEmployee): void {
-    if (!this.mine() || this.savingKey()) return;
-    this.savingKey.set(employee.key);
-    this.actionError.set(null);
-    this.actionMessage.set(null);
-    this.api.updateEmployeeConfiguration(employee.key, this.configurationDraft()).subscribe({
-      next: (updated) => {
-        this.employees.update((rows) => rows.map((row) => row.key === updated.key ? updated : row));
-        this.actionMessage.set(`${updated.displayName} configuration saved for this business.`);
-        this.editingKey.set(null);
+    this.savingKey.set(agent.key);
+    this.api.agent(agent.key).subscribe({
+      next: (detail) => {
+        this.detail.set(detail);
+        this.toolsDraft.set(detail.tools?.map((tool) => tool.name) ?? []);
+        this.editingKey.set(agent.key);
         this.savingKey.set(null);
       },
-      error: (error: { status?: number; error?: { error?: string } }) => {
-        this.actionError.set(error.error?.error || (error.status === 403
-          ? 'Only a business Owner or Admin can configure AI employees.'
-          : 'Could not save this configuration. Confirm the backend configuration API is deployed and try again.'));
+      error: (error: ApiError) => {
+        this.actionError.set(error.detail || error.title || 'Could not load agent configuration.');
         this.savingKey.set(null);
-      },
-    });
-  }
-
-  cancelConfiguration(): void {
-    if (!this.savingKey()) this.editingKey.set(null);
-  }
-
-  startToolPermissions(employee: AgentEmployee): void {
-    if (!this.mine() || this.permissionsLoadingKey() || this.permissionsSavingKey()) return;
-    this.actionError.set(null);
-    this.actionMessage.set(null);
-    this.permissionsLoadingKey.set(employee.key);
-    this.api.getEmployeeToolPermissions(employee.key).subscribe({
-      next: (permissions) => {
-        this.availableTools.set(permissions.availableTools ?? []);
-        this.allowedToolsDraft.set(permissions.allowedTools ?? []);
-        this.permissionsEditingKey.set(employee.key);
-        this.permissionsLoadingKey.set(null);
-      },
-      error: (error: { status?: number }) => {
-        this.actionError.set(error.status === 403
-          ? 'Only a business Owner or Admin can manage AI employee tool access.'
-          : 'Could not load tool permissions. Confirm the backend permissions API is deployed.');
-        this.permissionsLoadingKey.set(null);
       },
     });
   }
 
   isToolAllowed(tool: string): boolean {
-    return this.allowedToolsDraft().includes(tool);
+    return this.toolsDraft().includes(tool);
   }
 
   toggleToolPermission(tool: string, checked: boolean): void {
-    this.allowedToolsDraft.update((current) => {
+    this.toolsDraft.update((current) => {
       const next = new Set(current);
       if (checked) next.add(tool);
       else next.delete(tool);
@@ -148,43 +104,48 @@ export class NalvaMarketplaceComponent implements OnInit {
     });
   }
 
-  saveToolPermissions(employee: AgentEmployee): void {
-    if (!this.mine() || this.permissionsSavingKey()) return;
-    this.permissionsSavingKey.set(employee.key);
+  saveConfiguration(agent: NalvaAgentCard): void {
+    if (!this.mine() || this.savingKey()) return;
+    this.savingKey.set(agent.key);
     this.actionError.set(null);
     this.actionMessage.set(null);
-    this.api.updateEmployeeToolPermissions(employee.key, {
-      allowedTools: this.allowedToolsDraft(),
-    }).subscribe({
-      next: (saved) => {
-        this.allowedToolsDraft.set(saved.allowedTools ?? []);
-        this.actionMessage.set('Tool access saved for ' + employee.displayName + '.');
-        this.permissionsEditingKey.set(null);
-        this.permissionsSavingKey.set(null);
+    this.api.configure(agent.key, { tools: this.toolsDraft() }).subscribe({
+      next: (updated) => {
+        this.agents.update((rows) => rows.map((row) => row.key === updated.key
+          ? { ...row, status: updated.status, autonomyLevel: updated.autonomyLevel }
+          : row));
+        this.actionMessage.set(`${updated.name} tool configuration saved for this business.`);
+        this.editingKey.set(null);
+        this.detail.set(null);
+        this.savingKey.set(null);
       },
-      error: (error: { status?: number; error?: { error?: string } }) => {
-        this.actionError.set(error.error?.error || (error.status === 403
-          ? 'Only a business Owner or Admin can manage AI employee tool access.'
-          : 'Could not save tool access. No permission changes were confirmed.'));
-        this.permissionsSavingKey.set(null);
+      error: (error: ApiError) => {
+        this.actionError.set(error.status === 403
+          ? 'Only accounts with Navla manage permission can configure agents.'
+          : error.detail || error.title || 'Could not save this configuration. No changes were confirmed.');
+        this.savingKey.set(null);
       },
     });
   }
 
-  cancelToolPermissions(): void {
-    if (!this.permissionsSavingKey()) this.permissionsEditingKey.set(null);
+  cancelConfiguration(): void {
+    if (!this.savingKey()) {
+      this.editingKey.set(null);
+      this.detail.set(null);
+    }
   }
 
   load(): void {
     this.loading.set(true);
     this.error.set(null);
-    this.api.listEmployees().subscribe({
+    const request = this.mine() ? this.api.myAgents() : this.api.marketplace();
+    request.subscribe({
       next: (rows) => {
-        this.employees.set(rows);
+        this.agents.set(rows);
         this.loading.set(false);
       },
-      error: () => {
-        this.error.set('The AI employee catalog could not be loaded. Check your API connection and permissions.');
+      error: (err: ApiError) => {
+        this.error.set(err.detail || err.title || 'The Navla agent catalog could not be loaded.');
         this.loading.set(false);
       },
     });
