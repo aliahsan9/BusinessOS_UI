@@ -1,0 +1,164 @@
+.procurement-workspace {
+  display: grid;
+  gap: 18px;
+}
+
+.procurement-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) auto;
+  gap: 18px;
+  align-items: start;
+  padding: 20px;
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--color-primary) 16%, transparent), transparent 45%),
+    linear-gradient(160deg, color-mix(in srgb, var(--color-surface) 92%, #d7e4f5), var(--color-surface));
+  border: 1px solid var(--color-border);
+}
+
+.eyebrow {
+  margin: 0 0 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+
+.procurement-hero h1 {
+  margin: 0 0 8px;
+  font-size: clamp(1.6rem, 2vw, 2.1rem);
+}
+
+.lede {
+  margin: 0;
+  max-width: 44rem;
+  color: var(--color-text-muted);
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.data-class {
+  margin: -8px 0 0;
+}
+
+.risk-group + .risk-group {
+  margin-top: 16px;
+}
+
+.risk-group h4 {
+  margin: 0 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-transform: capitalize;
+}
+
+.split-panels {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.rec-list,
+.activity-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  max-height: 52vh;
+  overflow: auto;
+}
+
+.rec-row {
+  width: 100%;
+  text-align: left;
+  display: grid;
+  gap: 4px;
+  border: 1px solid var(--color-border);
+  background: transparent;
+  border-radius: 10px;
+  padding: 10px;
+  cursor: pointer;
+  color: inherit;
+}
+
+.rec-row.active {
+  border-color: color-mix(in srgb, var(--color-primary) 55%, var(--color-border));
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+}
+
+.rec-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+}
+
+.prepared-box {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+}
+
+.receive-grid,
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.receive-grid .span-2 {
+  grid-column: 1 / -1;
+}
+
+.toggle-grid {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.92rem;
+}
+
+.check input {
+  width: auto;
+}
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+tr.delayed td {
+  background: color-mix(in srgb, #b42318 6%, transparent);
+}
+
+.error {
+  color: #b42318;
+}
+
+.notice {
+  color: #027a48;
+}
+
+@media (max-width: 960px) {
+  .procurement-hero,
+  .split-panels,
+  .receive-grid,
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-actions {
+    justify-content: flex-start;
+  }
+}

@@ -2,30 +2,58 @@
   <header class="launch__header">
     <p class="launch__kicker">Early access</p>
     <h1>Feedback and company data</h1>
-    <p><a [routerLink]="routes.onboarding.agency">Agency setup</a></p>
+    <p class="launch__lede">
+      Share product notes, track usage, and manage your company data export.
+    </p>
+    <p class="launch__links">
+      <a [routerLink]="routes.onboarding.agency">Agency setup</a>
+    </p>
   </header>
 
   @if (error()) {
     <p class="launch__error" role="alert">{{ error() }}</p>
   }
   @if (message()) {
-    <p>{{ message() }}</p>
+    <p class="launch__success" role="status">{{ message() }}</p>
   }
 
   @if (analytics(); as figures) {
-    <div class="launch__metrics">
-      <div><strong>{{ figures.usageEvents }}</strong> events in 7 days</div>
-      <div><strong>{{ figures.agentExecutions }}</strong> agent executions</div>
-      <div><strong>{{ figures.failedExecutions }}</strong> failed executions</div>
-      <div><strong>{{ figures.workflowRuns }}</strong> workflow runs</div>
-      <div><strong>{{ figures.supportRequests }}</strong> support requests</div>
-      <div><strong>{{ figures.openFeedback }}</strong> open notes</div>
+    <div class="launch__metrics" role="list">
+      <div class="launch__metric" role="listitem">
+        <strong>{{ figures.usageEvents }}</strong>
+        <span>Events in 7 days</span>
+      </div>
+      <div class="launch__metric" role="listitem">
+        <strong>{{ figures.agentExecutions }}</strong>
+        <span>Agent executions</span>
+      </div>
+      <div class="launch__metric" role="listitem">
+        <strong>{{ figures.failedExecutions }}</strong>
+        <span>Failed executions</span>
+      </div>
+      <div class="launch__metric" role="listitem">
+        <strong>{{ figures.workflowRuns }}</strong>
+        <span>Workflow runs</span>
+      </div>
+      <div class="launch__metric" role="listitem">
+        <strong>{{ figures.supportRequests }}</strong>
+        <span>Support requests</span>
+      </div>
+      <div class="launch__metric" role="listitem">
+        <strong>{{ figures.openFeedback }}</strong>
+        <span>Open notes</span>
+      </div>
     </div>
   }
 
   <form class="launch__card" (ngSubmit)="send()">
-    <h2>Tell CompanyOS</h2>
-    <label>Type
+    <div class="launch__card-head">
+      <h2>Tell CompanyOS</h2>
+      <p class="launch__muted">Bugs and broken workflows stay ahead of feature requests.</p>
+    </div>
+
+    <label>
+      Type
       <select name="kind" [(ngModel)]="kind">
         <option value="feedback">Feedback</option>
         <option value="feature">Feature request</option>
@@ -34,19 +62,50 @@
         <option value="support">Support</option>
       </select>
     </label>
-    <label>Subject <input name="subject" [(ngModel)]="subject" /></label>
-    <label>Message <textarea name="body" [(ngModel)]="body" required></textarea></label>
+
+    <label>
+      Subject
+      <input name="subject" [(ngModel)]="subject" placeholder="Short summary" autocomplete="off" />
+    </label>
+
+    <label>
+      Message
+      <textarea name="body" [(ngModel)]="body" required placeholder="What happened, and what should change?"></textarea>
+    </label>
+
     @if (kind === 'survey') {
-      <label>Rating from 1 to 5 <input name="rating" type="number" min="1" max="5" [(ngModel)]="rating" /></label>
+      <label>
+        Rating from 1 to 5
+        <input name="rating" type="number" min="1" max="5" [(ngModel)]="rating" />
+      </label>
     }
-    <button type="submit">Send</button>
+
+    <div class="launch__actions">
+      <button type="submit">Send</button>
+    </div>
   </form>
 
   <section class="launch__card">
-    <h2>Your company data</h2>
-    <p>The export contains this company's operational records. It leaves out passwords, tokens, and payment methods.</p>
-    <button type="button" (click)="exportData()">Download export</button>
-    <label><input type="checkbox" [(ngModel)]="confirmDelete" name="confirmDelete" /> I have downloaded the export and want to request deletion.</label>
-    <button type="button" (click)="requestDeletion()">Request deletion</button>
+    <div class="launch__card-head">
+      <h2>Your company data</h2>
+      <p class="launch__muted">
+        The export contains this company's operational records. It leaves out passwords, tokens, and payment methods.
+      </p>
+    </div>
+
+    <div class="launch__actions">
+      <button type="button" (click)="exportData()">Download export</button>
+    </div>
+
+    <label class="launch__check">
+      <input type="checkbox" [(ngModel)]="confirmDelete" name="confirmDelete" />
+      <span>I have downloaded the export and want to request deletion.</span>
+    </label>
+
+    <div class="launch__actions">
+      <button type="button" class="launch__btn--danger" (click)="requestDeletion()">
+        Request deletion
+      </button>
+    </div>
   </section>
 </section>

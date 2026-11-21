@@ -1,0 +1,105 @@
+<header class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+  <div>
+    <h2>Campaigns</h2>
+    <p class="muted mb-0">Objectives, strategy preview, and verified performance only.</p>
+  </div>
+  <button class="btn" type="button" (click)="load()" [disabled]="loading()">Refresh</button>
+</header>
+
+@if (notice()) { <p class="nalva-panel" role="status">{{ notice() }}</p> }
+@if (error()) { <p class="nalva-panel" role="alert">{{ error() }}</p> }
+@if (loading()) { <p class="muted" role="status">Loading campaigns…</p> }
+
+@if (!loading()) {
+  <div class="nalva-cards mb-3">
+    @for (row of campaigns(); track row.id) {
+      <article class="nalva-card">
+        <h3>{{ row.title }}</h3>
+        <p class="muted">{{ row.objective || 'No objective recorded' }}</p>
+        <div class="pills">
+          <span class="pill">{{ row.status || 'Unknown' }}</span>
+          @if (row.strategyApproved) {
+            <span class="pill">Strategy approved</span>
+          }
+        </div>
+        <div class="actions">
+          <button class="btn" type="button" (click)="open(row)">Open</button>
+          @if (isPaused(row)) {
+            <button class="btn primary" type="button" [disabled]="savingId() !== null" (click)="resume(row)">Resume</button>
+          } @else {
+            <button class="btn" type="button" [disabled]="savingId() !== null" (click)="pause(row)">Pause</button>
+          }
+        </div>
+      </article>
+    } @empty {
+      <p class="muted">No campaigns yet.</p>
+    }
+  </div>
+}
+
+@if (selected(); as campaign) {
+  <section class="nalva-panel" aria-label="Campaign detail">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+      <div>
+        <h3>{{ campaign.title }}</h3>
+        <p class="muted mb-0">{{ campaign.objective || 'No objective recorded' }}</p>
+      </div>
+      <span class="pill">{{ campaign.status || 'Unknown' }}</span>
+    </div>
+
+    @if (detailLoading()) {
+      <p class="muted">Loading detail…</p>
+    }
+
+    <div class="stack">
+      <p><strong>Target audience:</strong> {{ campaign.targetAudience || 'Not set' }}</p>
+      <p><strong>Publishing frequency:</strong> {{ campaign.publishingFrequency || 'Not set' }}</p>
+      <p><strong>Estimated AI cost:</strong> ${{ campaign.estimatedAiCostUsd ?? 0 }}</p>
+      @if (platforms(campaign).length) {
+        <div class="pills">
+          @for (platform of platforms(campaign); track platform) {
+            <span class="pill">{{ platform }}</span>
+          }
+        </div>
+      }
+      @if (campaign.strategyBody) {
+        <details>
+          <summary>Strategy preview</summary>
+          <pre class="nalva-payload mt-2">{{ campaign.strategyBody }}</pre>
+        </details>
+      }
+    </div>
+
+    <section class="mt-4">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+        <h3>Performance</h3>
+        <button class="btn" type="button" (click)="syncAnalytics(campaign)">Sync analytics</button>
+      </div>
+
+      @if (sync(); as syncResult) {
+        <div class="d-flex flex-wrap gap-3 muted small mb-2">
+          <span>Data source: {{ syncResult.dataSource || 'Unavailable' }}</span>
+          <span>Snapshots created: {{ syncResult.snapshotsCreated }}</span>
+        </div>
+        <p class="muted">{{ syncResult.message }}</p>
+      }
+
+      @if (report(); as performance) {
+        <article class="nalva-panel">
+          <h3>{{ performance.title || 'Performance report' }}</h3>
+          <p class="muted small">
+            Sources: {{ performance.dataSourcesJson || 'Unavailable' }}
+            · Generated {{ performance.generatedAt | date:'medium' }}
+            · Fabricated: {{ performance.fabricated ? 'yes' : 'no' }}
+          </p>
+          <pre class="nalva-payload">{{ performance.body }}</pre>
+          @if (performance.unavailableMetricsJson) {
+            <p class="muted small">Unavailable metrics: {{ performance.unavailableMetricsJson }}</p>
+          }
+        </article>
+      } @else {
+        <p class="muted mb-0">No performance report returned. Metrics are Unavailable, not zero.</p>
+      }
+    </section>
+  </section>
+}

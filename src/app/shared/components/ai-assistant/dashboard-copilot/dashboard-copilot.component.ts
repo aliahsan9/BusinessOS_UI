@@ -3,6 +3,7 @@ import {
   Component,
   OnInit,
   inject,
+  input,
   output,
   signal,
 } from '@angular/core';
@@ -28,6 +29,8 @@ export class DashboardCopilotComponent implements OnInit {
   private readonly agentService = inject(AgentEmployeeService);
   private readonly aiState = inject(AiAssistantStateService);
 
+  /** `ask` hides the insight list so the owner dashboard can render business insights itself. */
+  readonly variant = input<'full' | 'ask'>('full');
   readonly askQuestion = output<string>();
   readonly routes = ROUTES;
   readonly copilot = signal<AiDashboardCopilot | null>(null);

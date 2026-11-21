@@ -22,6 +22,11 @@
       @if (detail.isCore) { <span class="pill">Core</span> }
       @if (detail.isCustom) { <span class="pill">Custom</span> }
     </div>
+    @if (workspaceLink(); as link) {
+      <div class="actions">
+        <a class="btn primary" [routerLink]="link.route">{{ link.label }}</a>
+      </div>
+    }
     @if (detail.healthMessage) {
       <p class="muted mt-3 mb-0">{{ detail.healthMessage }}</p>
     }

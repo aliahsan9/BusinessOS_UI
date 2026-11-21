@@ -171,6 +171,8 @@
 [data-card-style='glassmorphism'] {
   .app-card,
   .bos-card,
+  .launch__card,
+  .launch__metric,
   .app-navbar,
   .app-sidebar {
     backdrop-filter: blur(12px);
@@ -180,7 +182,8 @@
 
 [data-card-style='modern'] {
   .app-card,
-  .bos-card {
+  .bos-card,
+  .launch__card {
     border-top: 3px solid var(--primary-color);
   }
 }

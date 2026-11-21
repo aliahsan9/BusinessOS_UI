@@ -1,21 +1,20 @@
+import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { AppCurrencyPipe } from '../../shared/pipes/app-currency.pipe';
 import { DashboardExperience, DashboardWidget, ExperienceService } from '../../core/services/experience.service';
 
 @Component({
   selector: 'app-dashboard-experience',
   standalone: true,
-  imports: [RouterLink, AppCurrencyPipe],
+  imports: [RouterLink, DecimalPipe],
   templateUrl: './dashboard-experience.component.html',
   styleUrl: './experience.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardExperienceComponent implements OnInit {
-  private readonly experience = inject(ExperienceService);
+  readonly experience = inject(ExperienceService);
 
   readonly data = signal<DashboardExperience | null>(null);
-  readonly editing = signal(false);
   readonly saving = signal(false);
   readonly error = signal<string | null>(null);
   readonly visible = (id: string) => this.experience.visible(id);
@@ -23,8 +22,22 @@ export class DashboardExperienceComponent implements OnInit {
   ngOnInit(): void {
     this.experience.loadDashboard().subscribe({
       next: (data) => this.data.set(data),
-      error: () => this.error.set('Business insights could not be loaded.'),
+      error: () => {
+        this.experience.loadFailed.set(true);
+        this.error.set('Secondary operations could not be loaded.');
+      },
     });
+  }
+
+  hasSecondary(): boolean {
+    const snapshot = this.data();
+    if (!snapshot) return false;
+    return (
+      (this.visible('projects') && snapshot.activeProjects != null) ||
+      (this.visible('employees') && snapshot.totalEmployees != null) ||
+      (this.visible('ai') && snapshot.activeAgents != null) ||
+      (this.visible('automation') && snapshot.activeWorkflows != null)
+    );
   }
 
   widgets(): DashboardWidget[] {
@@ -72,7 +85,7 @@ export class DashboardExperienceComponent implements OnInit {
       next: (data) => {
         this.data.set(data);
         this.saving.set(false);
-        this.editing.set(false);
+        this.experience.editingLayout.set(false);
       },
       error: () => {
         this.saving.set(false);
@@ -87,7 +100,7 @@ export class DashboardExperienceComponent implements OnInit {
       next: (data) => {
         this.data.set(data);
         this.saving.set(false);
-        this.editing.set(false);
+        this.experience.editingLayout.set(false);
       },
       error: () => {
         this.saving.set(false);

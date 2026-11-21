@@ -1,0 +1,421 @@
+<section class="procurement-workspace">
+  <header class="procurement-hero">
+    <div>
+      <p class="eyebrow">AI Workforce</p>
+      <h1>Inventory &amp; Procurement Agent</h1>
+      <p class="lede">
+        Stock risks, demand coverage, supplier comparison, purchase preparation, and receiving — wired to recorded inventory and purchase data.
+      </p>
+    </div>
+    <div class="hero-actions">
+      <button class="btn" type="button" [disabled]="working() || loading()" (click)="reload()">Refresh</button>
+      <button class="btn primary" type="button" [disabled]="working()" (click)="runMonitor()">Run inventory monitor</button>
+    </div>
+  </header>
+
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+  }
+  @if (notice()) {
+    <p class="notice" role="status">{{ notice() }}</p>
+  }
+
+  @if (loading()) {
+    <p class="muted" role="status">Loading procurement workspace…</p>
+  }
+
+  @if (overview(); as stats) {
+    <div class="nalva-grid">
+      <div class="nalva-stat"><span>Active products</span><strong>{{ stats.activeProducts }}</strong></div>
+      <div class="nalva-stat"><span>Low stock</span><strong>{{ stats.lowStockCount }}</strong></div>
+      <div class="nalva-stat"><span>Out of stock</span><strong>{{ stats.outOfStockCount }}</strong></div>
+      <div class="nalva-stat"><span>Slow moving</span><strong>{{ stats.slowMovingCount }}</strong></div>
+      <div class="nalva-stat"><span>Overstock</span><strong>{{ stats.overstockCount }}</strong></div>
+      <div class="nalva-stat"><span>Open POs</span><strong>{{ stats.openPurchaseOrders }}</strong></div>
+      <div class="nalva-stat"><span>Delayed deliveries</span><strong>{{ stats.delayedDeliveries }}</strong></div>
+      <div class="nalva-stat"><span>Est. procurement need</span><strong>{{ stats.estimatedProcurementNeed | number:'1.0-2' }}</strong></div>
+    </div>
+    <p class="muted data-class">Data classification: {{ stats.dataClassification }}</p>
+  }
+
+  <section class="nalva-panel">
+    <h3>Inventory risk alerts</h3>
+    @if (risks().length === 0) {
+      <p class="muted">No inventory risks recorded.</p>
+    } @else {
+      @for (group of risksByKind(); track group.kind) {
+        <div class="risk-group">
+          <h4>{{ group.kind }} <span class="pill">{{ group.rows.length }}</span></h4>
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Stock</th>
+                  <th>Reorder</th>
+                  <th>Days cover</th>
+                  <th>Suggested qty</th>
+                  <th>Confidence</th>
+                  <th>Explanation</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of group.rows; track row.productId) {
+                  <tr>
+                    <td>
+                      <strong>{{ row.productName }}</strong>
+                      <div class="muted">{{ row.sku }}</div>
+                    </td>
+                    <td>{{ row.currentStock | number:'1.0-2' }}</td>
+                    <td>{{ row.reorderLevel | number:'1.0-2' }}</td>
+                    <td>{{ row.daysOfCover == null ? '—' : (row.daysOfCover | number:'1.0-1') }}</td>
+                    <td>{{ row.suggestedReorderQuantity | number:'1.0-2' }}</td>
+                    <td><span class="pill">{{ row.confidence }}</span></td>
+                    <td>{{ row.explanation }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+    }
+  </section>
+
+  <section class="nalva-panel">
+    <h3>Demand &amp; stock coverage</h3>
+    @if (demand().length === 0) {
+      <p class="muted">No demand insights available yet.</p>
+    } @else {
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>30d</th>
+              <th>90d</th>
+              <th>Avg daily</th>
+              <th>Stock</th>
+              <th>Days cover</th>
+              <th>Stockout</th>
+              <th>Suggested qty</th>
+              <th>Confidence</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of demand(); track row.productId) {
+              <tr>
+                <td>
+                  <strong>{{ row.productName }}</strong>
+                  <div class="muted">{{ row.sku }}</div>
+                </td>
+                <td>{{ row.unitsLast30Days | number:'1.0-2' }}</td>
+                <td>{{ row.unitsLast90Days | number:'1.0-2' }}</td>
+                <td>{{ row.averageDailyDemand == null ? '—' : (row.averageDailyDemand | number:'1.0-2') }}</td>
+                <td>{{ row.currentStock | number:'1.0-2' }}</td>
+                <td>{{ row.daysOfCover == null ? '—' : (row.daysOfCover | number:'1.0-1') }}</td>
+                <td>{{ row.estimatedStockoutDate ? (row.estimatedStockoutDate | date:'mediumDate') : '—' }}</td>
+                <td>{{ row.suggestedReorderQuantity | number:'1.0-2' }}</td>
+                <td>
+                  <span class="pill">{{ row.confidence }}</span>
+                  @if (!row.forecastAvailable) {
+                    <span class="pill">Limited history</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+
+  <div class="split-panels">
+    <section class="nalva-panel">
+      <h3>Procurement recommendations</h3>
+      @if (recommendations().length === 0) {
+        <p class="muted">No open recommendations. Run the inventory monitor to generate them from current stock risks.</p>
+      } @else {
+        <ul class="rec-list">
+          @for (rec of recommendations(); track rec.id) {
+            <li>
+              <button
+                type="button"
+                class="rec-row"
+                [class.active]="selectedRecommendationId() === rec.id"
+                (click)="selectRecommendation(rec.id)">
+                <div class="rec-head">
+                  <strong>{{ rec.productName }}</strong>
+                  <span class="pill">{{ rec.status }}</span>
+                </div>
+                <span class="muted">{{ rec.sku }} · qty {{ rec.suggestedQuantity | number:'1.0-2' }} · {{ rec.confidence }}</span>
+                <span>{{ rec.reason }}</span>
+                @if (rec.preferredSupplierName) {
+                  <span class="muted">
+                    Preferred: {{ rec.preferredSupplierName }}
+                    @if (rec.preferredUnitPrice != null) {
+                      &#64; {{ rec.preferredUnitPrice | number:'1.2-2' }}
+                    }
+                  </span>
+                }
+              </button>
+              <div class="actions">
+                @if (rec.status === 'AwaitingApproval') {
+                  <button class="btn primary" type="button" [disabled]="working()" (click)="submitRecommendation(rec, true)">Approve &amp; submit</button>
+                  <button class="btn" type="button" [disabled]="working()" (click)="submitRecommendation(rec, false)">Reject</button>
+                }
+              </div>
+            </li>
+          }
+        </ul>
+      }
+
+      @if (lastPrepared(); as prepared) {
+        <div class="prepared-box">
+          <h4>Last prepare / submit result</h4>
+          <p>{{ prepared.summary }}</p>
+          <p class="muted">
+            Status {{ prepared.status }}
+            · fingerprint {{ prepared.approvalFingerprint }}
+            @if (prepared.purchaseOrderId) {
+              · PO {{ prepared.purchaseOrderId }}
+            }
+          </p>
+          @if (prepared.requiresApproval && prepared.recommendationId) {
+            <div class="actions">
+              <button class="btn primary" type="button" [disabled]="working()" (click)="submitPrepared(true)">Approve prepared PO</button>
+              <button class="btn" type="button" [disabled]="working()" (click)="submitPrepared(false)">Reject prepared PO</button>
+            </div>
+          }
+        </div>
+      }
+    </section>
+
+    <section class="nalva-panel">
+      <h3>Supplier comparison</h3>
+      @if (!selectedRecommendation()) {
+        <p class="muted">Select a recommendation to compare suppliers for that product.</p>
+      } @else {
+        <p>
+          Comparing <strong>{{ selectedRecommendation()!.productName }}</strong>
+          <span class="muted">({{ selectedRecommendation()!.sku }})</span>
+        </p>
+        <label for="compare-qty">Quantity</label>
+        <input
+          id="compare-qty"
+          type="number"
+          min="1"
+          [ngModel]="compareQuantity()"
+          (ngModelChange)="compareQuantity.set(+$event || 1)" />
+        <div class="actions">
+          <button class="btn" type="button" [disabled]="comparing()" (click)="compareSuppliers()">
+            {{ comparing() ? 'Comparing…' : 'Compare suppliers' }}
+          </button>
+          <button class="btn primary" type="button" [disabled]="working()" (click)="prepareFromRecommendation()">
+            Prepare purchase order
+          </button>
+        </div>
+
+        @if (supplierOptions().length === 0) {
+          <p class="muted">Run comparison to load supplier options for this product.</p>
+        } @else {
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>Supplier</th>
+                  <th>Source</th>
+                  <th>Unit price</th>
+                  <th>Total</th>
+                  <th>Lead time</th>
+                  <th>Terms</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (opt of supplierOptions(); track (opt.supplierId || opt.supplierName) + opt.source) {
+                  <tr>
+                    <td>
+                      @if (opt.supplierId) {
+                        <input
+                          type="radio"
+                          name="supplier"
+                          [checked]="selectedSupplierId() === opt.supplierId"
+                          (change)="selectedSupplierId.set(opt.supplierId!)" />
+                      }
+                    </td>
+                    <td>
+                      <strong>{{ opt.supplierName }}</strong>
+                      <div class="muted">{{ opt.classification }}</div>
+                    </td>
+                    <td>{{ opt.source }}</td>
+                    <td>{{ opt.unitPrice | number:'1.2-2' }}</td>
+                    <td>{{ opt.totalCost | number:'1.2-2' }}</td>
+                    <td>{{ opt.estimatedDeliveryDays == null ? '—' : opt.estimatedDeliveryDays + 'd' }}</td>
+                    <td>{{ opt.paymentTerms || '—' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <p class="muted">Only catalog suppliers (with an id) can be used to prepare a purchase order.</p>
+        }
+      }
+    </section>
+  </div>
+
+  <section class="nalva-panel">
+    <h3>Purchase orders &amp; deliveries</h3>
+    @if (deliveries().length === 0) {
+      <p class="muted">No open or tracked purchase orders.</p>
+    } @else {
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Reference</th>
+              <th>Supplier</th>
+              <th>Status</th>
+              <th>Expected</th>
+              <th>Ordered</th>
+              <th>Received</th>
+              <th>Remaining</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of deliveries(); track row.purchaseOrderId) {
+              <tr [class.delayed]="row.isDelayed">
+                <td>
+                  <strong>{{ row.referenceNumber }}</strong>
+                  <div class="muted">{{ row.purchaseOrderId }}</div>
+                </td>
+                <td>{{ row.supplierName }}</td>
+                <td>
+                  <span class="pill">{{ row.status }}</span>
+                  @if (row.isDelayed) {
+                    <span class="pill">{{ row.daysLate }}d late</span>
+                  }
+                </td>
+                <td>{{ row.expectedDeliveryDate ? (row.expectedDeliveryDate | date:'mediumDate') : '—' }}</td>
+                <td>{{ row.orderedQuantity | number:'1.0-2' }}</td>
+                <td>{{ row.receivedQuantity | number:'1.0-2' }}</td>
+                <td>{{ row.remainingQuantity | number:'1.0-2' }}</td>
+                <td>
+                  <button class="btn" type="button" (click)="fillReceiveFromDelivery(row)">Use for receive</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+
+  <section class="nalva-panel">
+    <h3>Receiving verification</h3>
+    <p class="muted">Enter the purchase order id and purchase line id, then the quantity received against that line.</p>
+    <div class="receive-grid">
+      <label for="recv-po">Purchase order id
+        <input id="recv-po" [ngModel]="receivePurchaseOrderId()" (ngModelChange)="receivePurchaseOrderId.set($event)" />
+      </label>
+      <label for="recv-line">Purchase line id
+        <input id="recv-line" [ngModel]="receivePurchaseItemId()" (ngModelChange)="receivePurchaseItemId.set($event)" />
+      </label>
+      <label for="recv-qty">Received quantity
+        <input id="recv-qty" type="number" min="0" [ngModel]="receiveQuantity()" (ngModelChange)="receiveQuantity.set(+$event || 0)" />
+      </label>
+      <label for="recv-dmg">Damaged quantity
+        <input id="recv-dmg" type="number" min="0" [ngModel]="receiveDamaged()" (ngModelChange)="receiveDamaged.set(+$event || 0)" />
+      </label>
+      <label class="span-2" for="recv-notes">Notes
+        <textarea id="recv-notes" rows="2" [ngModel]="receiveNotes()" (ngModelChange)="receiveNotes.set($event)"></textarea>
+      </label>
+    </div>
+    <div class="actions">
+      <button class="btn primary" type="button" [disabled]="working()" (click)="receiveGoods()">Verify &amp; receive</button>
+    </div>
+  </section>
+
+  <div class="split-panels">
+    <section class="nalva-panel">
+      <h3>Agent activity</h3>
+      @if (activity().length === 0) {
+        <p class="muted">No procurement activity recorded yet.</p>
+      } @else {
+        <ul class="activity-list">
+          @for (item of activity(); track item.id) {
+            <li>
+              <div class="rec-head">
+                <strong>{{ item.title }}</strong>
+                <span class="pill">{{ item.status }}</span>
+              </div>
+              <span class="muted">{{ item.kind }} · {{ item.createdAt | date:'short' }}</span>
+              <p>{{ item.summary }}</p>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <section class="nalva-panel">
+      <h3>Automation settings</h3>
+      @if (automation(); as auto) {
+        <div class="toggle-grid">
+          <label class="check">
+            <input type="checkbox" [ngModel]="auto.dailyInventoryMonitoring" (ngModelChange)="setAutomationToggle('dailyInventoryMonitoring', $event)" />
+            Daily inventory monitoring
+          </label>
+          <label class="check">
+            <input type="checkbox" [ngModel]="auto.lowStockDetection" (ngModelChange)="setAutomationToggle('lowStockDetection', $event)" />
+            Low-stock detection
+          </label>
+          <label class="check">
+            <input type="checkbox" [ngModel]="auto.demandAnalysis" (ngModelChange)="setAutomationToggle('demandAnalysis', $event)" />
+            Demand analysis
+          </label>
+          <label class="check">
+            <input type="checkbox" [ngModel]="auto.procurementRecommendations" (ngModelChange)="setAutomationToggle('procurementRecommendations', $event)" />
+            Procurement recommendations
+          </label>
+          <label class="check">
+            <input type="checkbox" [ngModel]="auto.purchaseOrderStatusMonitoring" (ngModelChange)="setAutomationToggle('purchaseOrderStatusMonitoring', $event)" />
+            Purchase order status monitoring
+          </label>
+          <label class="check">
+            <input type="checkbox" [ngModel]="auto.deliveryFollowUps" (ngModelChange)="setAutomationToggle('deliveryFollowUps', $event)" />
+            Delivery follow-ups
+          </label>
+          <label class="check">
+            <input type="checkbox" [ngModel]="auto.inventoryDiscrepancyAlerts" (ngModelChange)="setAutomationToggle('inventoryDiscrepancyAlerts', $event)" />
+            Inventory discrepancy alerts
+          </label>
+        </div>
+
+        <div class="settings-grid">
+          <label for="slow-days">Slow-moving days
+            <input id="slow-days" type="number" min="1" [ngModel]="auto.slowMovingDays" (ngModelChange)="setAutomationNumber('slowMovingDays', +$event || 1)" />
+          </label>
+          <label for="overstock-mult">Overstock multiplier
+            <input id="overstock-mult" type="number" min="1" step="0.1" [ngModel]="auto.overstockMultiplier" (ngModelChange)="setAutomationNumber('overstockMultiplier', +$event || 1)" />
+          </label>
+          <label for="min-history">Minimum history days
+            <input id="min-history" type="number" min="1" [ngModel]="auto.minimumHistoryDays" (ngModelChange)="setAutomationNumber('minimumHistoryDays', +$event || 1)" />
+          </label>
+          <label for="pref-criterion">Preferred supplier criterion
+            <input id="pref-criterion" [ngModel]="auto.preferredSupplierCriterion" (ngModelChange)="setPreferredCriterion($event)" />
+          </label>
+        </div>
+
+        @if (auto.updatedAt) {
+          <p class="muted">Last updated {{ auto.updatedAt | date:'short' }}</p>
+        }
+        <div class="actions">
+          <button class="btn primary" type="button" [disabled]="working()" (click)="saveAutomation()">Save automation</button>
+        </div>
+      } @else {
+        <p class="muted">Automation settings not loaded.</p>
+      }
+    </section>
+  </div>
+</section>

@@ -183,6 +183,53 @@ export interface NalvaAnalytics {
   tasksCompleted: number;
 }
 
+export interface NalvaAgentOutcome {
+  agentKey: string;
+  agentName: string;
+  executions: number;
+  succeeded: number;
+  failed: number;
+  pendingApprovals: number;
+  approvedActions: number;
+  rejectedActions: number;
+  leadsCreated: number;
+  dealsCreated: number;
+  followUpsCreated: number;
+  contentDrafts: number;
+  emailDrafts: number;
+  campaignDrafts: number;
+  supportTickets: number;
+  purchaseDrafts: number;
+  reports: number;
+  workItems: number;
+  estimatedCostUsd: number;
+  costIsEstimate: boolean;
+}
+
+export interface NalvaWorkforceRecommendation {
+  businessType: string;
+  packKey: string;
+  packName: string;
+  description: string;
+  agents: Array<{
+    key: string;
+    name: string;
+    role: string;
+    category: string;
+    isActive: boolean;
+    isRecommended: boolean;
+  }>;
+  workflows: Array<{
+    key: string;
+    name: string;
+    triggerKind: string;
+    isActive: boolean;
+    isRecommended: boolean;
+  }>;
+  alreadyActiveAgents: number;
+  recommendedAgentCount: number;
+}
+
 export interface NalvaSettings {
   defaultModel: string;
   embeddingModel: string;

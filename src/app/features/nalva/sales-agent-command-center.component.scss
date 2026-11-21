@@ -1,0 +1,82 @@
+.sales-agent-cc {
+  display: grid;
+  gap: 16px;
+}
+
+.sales-hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin: 0 0 6px;
+}
+
+.lede {
+  max-width: 52rem;
+  color: var(--color-text-muted);
+}
+
+.hero-actions,
+.assign-grid,
+.split {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.assign-grid > *,
+.split > * {
+  flex: 1 1 320px;
+}
+
+label {
+  display: block;
+  margin: 10px 0 4px;
+  font-size: 0.9rem;
+}
+
+textarea,
+input[type='number'] {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  padding: 8px 10px;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 12px;
+}
+
+.plain-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.obj {
+  border-top: 1px solid var(--color-border);
+  padding: 10px 0;
+}
+
+.error {
+  color: #b42318;
+}
+
+.notice {
+  color: #027a48;
+}

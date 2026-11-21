@@ -35,6 +35,39 @@
     <p class="nalva-panel mt-2" role="status">A cost alert is active for this company.</p>
   }
 
+  @if (recommendation(); as pack) {
+    <section class="nalva-panel mt-4">
+      <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+        <div>
+          <h3 class="mb-1">Recommended workforce</h3>
+          <p class="muted mb-0">
+            {{ pack.packName }} for business type <code>{{ pack.businessType || 'custom' }}</code>.
+            {{ pack.alreadyActiveAgents }} of {{ pack.recommendedAgentCount }} recommended agents are active.
+          </p>
+          <p class="muted small mt-1 mb-0">{{ pack.description }}</p>
+        </div>
+        <button class="btn" type="button" (click)="applyPack()" [disabled]="applying()">
+          {{ applying() ? 'Activating…' : 'Activate recommended agents' }}
+        </button>
+      </div>
+      @if (packMessage()) {
+        <p class="muted small" role="status">{{ packMessage() }}</p>
+      }
+      <ul class="mb-0">
+        @for (agent of recommendedAgents(pack); track agent.key) {
+          <li>
+            <strong>{{ agent.name }}</strong>
+            <span class="muted small"> · {{ agent.role }} · {{ agent.isActive ? 'Active' : 'Inactive' }}</span>
+          </li>
+        }
+      </ul>
+      <p class="muted small mt-2 mb-0">
+        Recommended workflows stay paused until you activate them in
+        <a [routerLink]="routes.nalva.automation">Automation</a>.
+      </p>
+    </section>
+  }
+
   <section class="nalva-panel mt-4">
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
       <h3 class="mb-0">Queued tasks</h3>
@@ -74,7 +107,9 @@
   </section>
 
   <p class="muted small mt-2">
-    Figures come from <code>GET /nalva/overview</code>, queued tasks, and pending approvals for the signed-in company.
+    Figures come from live <code>/nalva</code> endpoints for the signed-in company.
     <a [routerLink]="routes.nalva.marketplace">Browse marketplace</a>
+    ·
+    <a [routerLink]="routes.nalva.command">Open command center</a>
   </p>
 }

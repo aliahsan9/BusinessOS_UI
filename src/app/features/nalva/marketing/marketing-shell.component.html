@@ -1,0 +1,11 @@
+<header class="nalva-head">
+  <p class="eyebrow">Nalva.ai</p>
+  <h1>Marketing Agent</h1>
+  <p>Plan content, review drafts, manage campaigns, and connect social accounts for this company.</p>
+</header>
+<nav class="nalva-nav" aria-label="Marketing Agent">
+  @for (link of links; track link.route) {
+    <a [routerLink]="link.route" routerLinkActive="active">{{ link.label }}</a>
+  }
+</nav>
+<router-outlet />

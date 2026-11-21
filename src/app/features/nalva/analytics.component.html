@@ -31,3 +31,42 @@
   </section>
   <p class="muted">Pricing {{ data.pricingVersion }}. {{ data.costIsEstimate ? 'Costs are estimates.' : 'Costs use the configured pricing table.' }}</p>
 }
+
+<section class="nalva-panel mt-4">
+  <h3>Agent outcomes</h3>
+  <p class="muted">Counted from stored executions, work items, and approvals. These are not invented productivity scores.</p>
+  @if (outcomes().length === 0) {
+    <p class="muted mb-0">No recorded agent outcomes yet.</p>
+  } @else {
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Agent</th>
+            <th>Leads</th>
+            <th>Email drafts</th>
+            <th>Content</th>
+            <th>Campaigns</th>
+            <th>Tickets</th>
+            <th>Approvals</th>
+            <th>Est. cost</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of outcomes(); track row.agentKey) {
+            <tr>
+              <td>{{ row.agentName }}</td>
+              <td>{{ row.leadsCreated }}</td>
+              <td>{{ row.emailDrafts }}</td>
+              <td>{{ row.contentDrafts }}</td>
+              <td>{{ row.campaignDrafts }}</td>
+              <td>{{ row.supportTickets }}</td>
+              <td>{{ row.approvedActions }}/{{ row.rejectedActions }}</td>
+              <td>${{ row.estimatedCostUsd | number:'1.2-4' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

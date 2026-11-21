@@ -18,6 +18,7 @@ export const API_ENDPOINTS = {
     linkGoogle: '/account/external-logins/google',
   },
   dashboard: {
+    summary: '/dashboard/summary',
     overview: '/dashboard/overview',
     sales: '/dashboard/sales',
     customers: '/dashboard/customers', 
@@ -164,6 +165,20 @@ export const API_ENDPOINTS = {
     askSophia: '/agents/ask-sophia',
     actionProposals: '/agents/actions/proposals',
   },
+  marketing: {
+    overview: '/marketing/overview',
+    brand: '/marketing/brand',
+    campaigns: '/marketing/campaigns',
+    content: '/marketing/content',
+    calendar: '/marketing/calendar',
+    assets: '/marketing/assets',
+    research: '/marketing/research',
+    analytics: '/marketing/analytics',
+    policy: '/marketing/policy',
+    accounts: '/marketing/accounts',
+    reports: '/marketing/reports',
+  },
+
   help: {
     faqs: '/help/faqs',
   },

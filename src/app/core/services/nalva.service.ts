@@ -6,6 +6,7 @@ import {
   NalvaAuditEntry,
   NalvaAgentDetail,
   NalvaAnalytics,
+  NalvaAgentOutcome,
   NalvaApproval,
   NalvaExecution,
   NalvaKnowledge,
@@ -17,7 +18,39 @@ import {
   NalvaTask,
   NalvaWorkflow,
   NalvaWorkflowRun,
+  NalvaWorkforceRecommendation,
 } from '../models/nalva.model';
+import {
+  SupportChannel,
+  SupportOverview,
+  SupportProcessResult,
+  SupportTicketDetail,
+  SupportTicketListItem,
+} from '../models/support.model';
+import {
+  SalesAgentCommandCenter,
+  SalesAgentObjective,
+  SalesAgentSettings,
+  SalesCampaignReport,
+  SalesOutreachMessage,
+  SalesResearchProviderStatus,
+} from '../models/sales-agent.model';
+import {
+  DeliveryTracking,
+  DemandInsight,
+  InventoryRisk,
+  PreparePurchaseOrderRequest,
+  PreparedPurchaseOrder,
+  ProcurementActivity,
+  ProcurementAutomationSettings,
+  ProcurementAutomationSettingsWrite,
+  ProcurementOverview,
+  ProcurementRecommendation,
+  ReceiveVerificationRequest,
+  ReceiveVerificationResult,
+  SubmitPreparedPurchaseRequest,
+  SupplierOption,
+} from '../models/procurement-agent.model';
 
 @Injectable({ providedIn: 'root' })
 export class NalvaService extends BaseApiService {
@@ -145,6 +178,22 @@ export class NalvaService extends BaseApiService {
     return this.get<NalvaAnalytics>('/nalva/analytics', { agentKey, category });
   }
 
+  outcomes(agentKey?: string): Observable<NalvaAgentOutcome[]> {
+    return this.get<NalvaAgentOutcome[]>('/nalva/outcomes', { agentKey });
+  }
+
+  workforceRecommendation(): Observable<NalvaWorkforceRecommendation> {
+    return this.get<NalvaWorkforceRecommendation>('/nalva/workforce/recommendation');
+  }
+
+  applyWorkforcePack(body?: {
+    activateRecommendedAgents?: boolean;
+    activateRecommendedWorkflows?: boolean;
+    onlyAgentKeys?: string[];
+  }): Observable<{ packKey: string; activatedAgents: string[]; activatedWorkflows: string[]; skipped: string[] }> {
+    return this.post('/nalva/workforce/apply', body ?? { activateRecommendedAgents: true, activateRecommendedWorkflows: false });
+  }
+
   settings(): Observable<NalvaSettings> {
     return this.get<NalvaSettings>('/nalva/settings');
   }
@@ -175,6 +224,145 @@ export class NalvaService extends BaseApiService {
 
   testIntegration(id: string): Observable<{ performed: boolean; status: string; message: string }> {
     return this.post(`/integrations/connections/${id}/test`, {});
+  }
+
+  supportOverview(): Observable<SupportOverview> {
+    return this.get<SupportOverview>('/nalva/support/overview');
+  }
+
+  supportChannels(): Observable<SupportChannel[]> {
+    return this.get<SupportChannel[]>('/nalva/support/channels');
+  }
+
+  supportTickets(status?: string, priority?: string): Observable<SupportTicketListItem[]> {
+    return this.get<SupportTicketListItem[]>('/nalva/support/tickets', { status, priority });
+  }
+
+  supportTicket(id: string): Observable<SupportTicketDetail> {
+    return this.get<SupportTicketDetail>(`/nalva/support/tickets/${id}`);
+  }
+
+  supportInbound(body: Record<string, unknown>): Observable<SupportProcessResult> {
+    return this.post<SupportProcessResult>('/nalva/support/inbound', body);
+  }
+
+  supportReply(id: string, body: string, options?: { sendToCustomer?: boolean; isInternalNote?: boolean; channel?: string }): Observable<unknown> {
+    return this.post(`/nalva/support/tickets/${id}/reply`, { body, ...options });
+  }
+
+  supportEscalate(id: string, reason: string, recommendedAction?: string): Observable<SupportTicketDetail> {
+    return this.post<SupportTicketDetail>(`/nalva/support/tickets/${id}/escalate`, { reason, recommendedAction });
+  }
+
+  supportResolve(id: string, resolution: string, close = false): Observable<SupportTicketDetail> {
+    return this.post<SupportTicketDetail>(`/nalva/support/tickets/${id}/resolve`, { resolution, close, scheduleFollowUp: true });
+  }
+
+  supportTakeover(id: string, enabled = true, note?: string): Observable<SupportTicketDetail> {
+    return this.post<SupportTicketDetail>(`/nalva/support/tickets/${id}/takeover`, { enabled, note });
+  }
+
+  supportReopen(id: string, reason?: string): Observable<SupportTicketDetail> {
+    return this.post<SupportTicketDetail>(`/nalva/support/tickets/${id}/reopen`, { reason });
+  }
+
+  salesCommandCenter(): Observable<SalesAgentCommandCenter> {
+    return this.get<SalesAgentCommandCenter>('/nalva/sales-agent/command-center');
+  }
+
+  salesSettings(): Observable<SalesAgentSettings> {
+    return this.get<SalesAgentSettings>('/nalva/sales-agent/settings');
+  }
+
+  saveSalesSettings(body: Record<string, unknown>): Observable<SalesAgentSettings> {
+    return this.put<SalesAgentSettings>('/nalva/sales-agent/settings', body);
+  }
+
+  assignSalesObjective(body: {
+    objective: string;
+    targetProspectCount?: number;
+    idealCustomerProfileJson?: string;
+    queueExecution?: boolean;
+    delegatedByAgentKey?: string;
+  }): Observable<SalesAgentObjective> {
+    return this.post<SalesAgentObjective>('/nalva/sales-agent/objectives', body);
+  }
+
+  pauseSalesAgent(): Observable<SalesAgentSettings> {
+    return this.post<SalesAgentSettings>('/nalva/sales-agent/pause', {});
+  }
+
+  resumeSalesAgent(): Observable<SalesAgentSettings> {
+    return this.post<SalesAgentSettings>('/nalva/sales-agent/resume', {});
+  }
+
+  salesResearchProviders(): Observable<SalesResearchProviderStatus[]> {
+    return this.get<SalesResearchProviderStatus[]>('/nalva/sales-agent/research-providers');
+  }
+
+  salesCampaignReport(objectiveId?: string, campaignId?: string): Observable<SalesCampaignReport> {
+    return this.get<SalesCampaignReport>('/nalva/sales-agent/reports/campaign', { objectiveId, campaignId });
+  }
+
+  simulateSalesReply(body: {
+    outreachMessageId: string;
+    replySummary: string;
+    scheduleFollowUp?: boolean;
+    followUpDays?: number;
+  }): Observable<SalesOutreachMessage> {
+    return this.post<SalesOutreachMessage>('/nalva/sales-agent/replies/simulate', body);
+  }
+
+  procurementOverview(): Observable<ProcurementOverview> {
+    return this.get<ProcurementOverview>('/nalva/procurement/overview');
+  }
+
+  procurementRisks(): Observable<InventoryRisk[]> {
+    return this.get<InventoryRisk[]>('/nalva/procurement/risks');
+  }
+
+  procurementDemand(productId?: string): Observable<DemandInsight[]> {
+    return this.get<DemandInsight[]>('/nalva/procurement/demand', { productId });
+  }
+
+  procurementRecommendations(): Observable<ProcurementRecommendation[]> {
+    return this.get<ProcurementRecommendation[]>('/nalva/procurement/recommendations');
+  }
+
+  procurementCompareSuppliers(productId: string, quantity: number): Observable<SupplierOption[]> {
+    return this.get<SupplierOption[]>('/nalva/procurement/suppliers/compare', { productId, quantity });
+  }
+
+  procurementPrepare(body: PreparePurchaseOrderRequest): Observable<PreparedPurchaseOrder> {
+    return this.post<PreparedPurchaseOrder>('/nalva/procurement/prepare', body);
+  }
+
+  procurementSubmit(recommendationId: string, body: SubmitPreparedPurchaseRequest): Observable<PreparedPurchaseOrder> {
+    return this.post<PreparedPurchaseOrder>(`/nalva/procurement/submit/${recommendationId}`, body);
+  }
+
+  procurementDeliveries(): Observable<DeliveryTracking[]> {
+    return this.get<DeliveryTracking[]>('/nalva/procurement/deliveries');
+  }
+
+  procurementReceive(body: ReceiveVerificationRequest): Observable<ReceiveVerificationResult> {
+    return this.post<ReceiveVerificationResult>('/nalva/procurement/receive', body);
+  }
+
+  procurementActivity(): Observable<ProcurementActivity[]> {
+    return this.get<ProcurementActivity[]>('/nalva/procurement/activity');
+  }
+
+  procurementAutomation(): Observable<ProcurementAutomationSettings> {
+    return this.get<ProcurementAutomationSettings>('/nalva/procurement/automation');
+  }
+
+  saveProcurementAutomation(body: ProcurementAutomationSettingsWrite): Observable<ProcurementAutomationSettings> {
+    return this.put<ProcurementAutomationSettings>('/nalva/procurement/automation', body);
+  }
+
+  procurementMonitorRun(): Observable<{ ran: boolean }> {
+    return this.post<{ ran: boolean }>('/nalva/procurement/monitor/run', {});
   }
 }
 

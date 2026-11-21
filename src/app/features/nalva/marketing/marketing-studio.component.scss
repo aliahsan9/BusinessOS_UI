@@ -1,0 +1,35 @@
+:host { display: block; }
+
+.studio-layout {
+  display: grid;
+  grid-template-columns: minmax(220px, 280px) 1fr;
+  gap: 14px;
+}
+
+.studio-list {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+
+.studio-item {
+  display: grid;
+  gap: 2px;
+  text-align: left;
+  width: 100%;
+}
+
+.preview-image {
+  max-width: 100%;
+  max-height: 280px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  object-fit: contain;
+  background: var(--color-bg);
+}
+
+@media (max-width: 900px) {
+  .studio-layout {
+    grid-template-columns: 1fr;
+  }
+}

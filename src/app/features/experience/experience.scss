@@ -117,6 +117,54 @@ a.cc__btn {
   color: var(--danger-color);
 }
 
+.ux--ops {
+  margin-bottom: 0;
+}
+
+.ux__editor {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.ux__ops-head {
+  display: grid;
+  gap: 0.2rem;
+
+  h2 {
+    margin: 0;
+    font-size: 0.95rem;
+  }
+
+  p {
+    margin: 0;
+    color: var(--text-muted-color);
+    font-size: 0.78rem;
+  }
+}
+
+.ux__grid--compact {
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.ux--ops .ux__stat--lg {
+  grid-column: auto;
+}
+
+.ux--ops .ux__stat--sm {
+  max-width: none;
+}
+
+.ux--ops .ux__stat h2 {
+  font-size: 0.86rem;
+}
+
+.ux--ops .ux__stat dd span {
+  margin-left: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted-color);
+}
+
 .cc {
   display: grid;
   grid-template-columns: minmax(220px, 280px) minmax(0, 1fr) minmax(220px, 300px);

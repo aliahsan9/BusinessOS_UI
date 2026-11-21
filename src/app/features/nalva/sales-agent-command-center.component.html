@@ -1,0 +1,150 @@
+<section class="sales-agent-cc">
+  <header class="sales-hero">
+    <div>
+      <p class="eyebrow">AI Workforce</p>
+      <h1>Sales Agent</h1>
+      <p class="lede">Research authorized prospects, qualify CRM leads, prepare outreach, and track results from persisted records.</p>
+    </div>
+    <div class="hero-actions">
+      <button class="btn" type="button" [disabled]="working() || loading()" (click)="reload()">Refresh</button>
+      @if (center()?.isPaused) {
+        <button class="btn primary" type="button" [disabled]="working()" (click)="resume()">Resume</button>
+      } @else {
+        <button class="btn" type="button" [disabled]="working()" (click)="pause()">Pause</button>
+      }
+    </div>
+  </header>
+
+  @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
+  @if (notice()) { <p class="notice" role="status">{{ notice() }}</p> }
+
+  @if (center(); as cc) {
+    <div class="nalva-grid">
+      <div class="nalva-stat"><span>Agent status</span><strong>{{ cc.agentStatus }}</strong></div>
+      <div class="nalva-stat"><span>Leads discovered</span><strong>{{ cc.leadsDiscovered }}</strong></div>
+      <div class="nalva-stat"><span>Qualified leads</span><strong>{{ cc.qualifiedLeads }}</strong></div>
+      <div class="nalva-stat"><span>Pending outreach</span><strong>{{ cc.pendingOutreachApprovals }}</strong></div>
+      <div class="nalva-stat"><span>Emails sent</span><strong>{{ cc.emailsSent }}</strong></div>
+      <div class="nalva-stat"><span>Responses</span><strong>{{ cc.responsesReceived }}</strong></div>
+      <div class="nalva-stat"><span>Follow-ups</span><strong>{{ cc.meetingsScheduled }}</strong></div>
+      <div class="nalva-stat"><span>Failed tasks</span><strong>{{ cc.failedTasks }}</strong></div>
+      <div class="nalva-stat"><span>Est. cost</span><strong>{{ cc.estimatedCostUsd | number:'1.2-4' }}</strong></div>
+    </div>
+
+    <div class="nalva-panel">
+      <h3>Current objective</h3>
+      <p>{{ cc.currentObjective || 'No active objective.' }}</p>
+      <p class="muted">{{ cc.currentExecutionSummary || 'No recent execution summary.' }}</p>
+    </div>
+
+    <div class="nalva-panel">
+      <h3>Research &amp; email status</h3>
+      <p><strong>{{ cc.researchProvider.displayName }}</strong> · {{ cc.researchProvider.isAvailable ? 'Available' : 'Unavailable' }}</p>
+      <p class="muted">{{ cc.researchProvider.message }}</p>
+      @if (cc.researchProvider.isFixture) {
+        <p class="muted">Fixture results are deterministic sandbox data — not a live third-party integration.</p>
+      }
+      <p class="muted">{{ cc.emailIntegrationMessage }}</p>
+    </div>
+
+    <div class="assign-grid">
+      <div class="nalva-panel">
+        <h3>Assign objective</h3>
+        <label for="sales-objective">Objective</label>
+        <textarea id="sales-objective" rows="4" [ngModel]="objective()" (ngModelChange)="objective.set($event)"></textarea>
+        <label for="sales-target">Target prospect count</label>
+        <input id="sales-target" type="number" min="1" max="500" [ngModel]="targetCount()" (ngModelChange)="targetCount.set(+$event)" />
+        <button class="btn primary" type="button" [disabled]="working()" (click)="assignObjective()">Assign to Sales Agent</button>
+      </div>
+
+      <div class="nalva-panel">
+        <h3>Configuration</h3>
+        <label class="check">
+          <input type="checkbox" [ngModel]="allowFixture()" (ngModelChange)="allowFixture.set($event)" />
+          Enable deterministic fixture research (sandbox)
+        </label>
+        <label for="daily-limit">Daily research limit</label>
+        <input id="daily-limit" type="number" min="1" max="200" [ngModel]="dailyLimit()" (ngModelChange)="dailyLimit.set(+$event)" />
+        <button class="btn" type="button" [disabled]="working()" (click)="saveSettings()">Save settings</button>
+        <p class="muted">Connect Gmail under Integrations for live approved sends. Configure an HTTP research API key for live prospect research.</p>
+      </div>
+    </div>
+
+    <div class="split">
+      <div class="nalva-panel">
+        <h3>Recent research</h3>
+        @if (cc.recentProspects.length === 0) {
+          <p class="muted">No researched prospects yet.</p>
+        } @else {
+          <ul class="plain-list">
+            @for (p of cc.recentProspects; track p.id) {
+              <li>
+                <strong>{{ p.companyName }}</strong>
+                <span class="muted">{{ p.country || '—' }} · {{ p.industry || '—' }} · score {{ p.leadScore ?? '—' }}{{ p.scoreIsEstimate ? ' (estimate)' : '' }}</span>
+                <span class="pill">{{ p.providerKey }}</span>
+                @if (p.isQualified) { <span class="pill">Qualified</span> }
+                <p class="muted">{{ p.sourceAttribution }}</p>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+
+      <div class="nalva-panel">
+        <h3>Outreach drafts</h3>
+        @if (cc.pendingApprovals.length === 0) {
+          <p class="muted">No pending outreach drafts.</p>
+        } @else {
+          <ul class="plain-list">
+            @for (m of cc.pendingApprovals; track m.id) {
+              <li>
+                <strong>{{ m.subject }}</strong>
+                <span class="muted">{{ m.toEmail }} · {{ m.status }}</span>
+                <p>{{ m.fitExplanation }}</p>
+              </li>
+            }
+          </ul>
+        }
+        <p class="muted">Approve sends from Navla Approvals. External mail never leaves without approval.</p>
+      </div>
+    </div>
+
+    <div class="split">
+      <div class="nalva-panel">
+        <h3>Objectives</h3>
+        @for (o of cc.objectives; track o.id) {
+          <article class="obj">
+            <strong>{{ o.objectiveText }}</strong>
+            <span class="pill">{{ o.status }}</span>
+            <p class="muted">Discovered {{ o.discoveredCount }} · Qualified {{ o.qualifiedCount }} · Sent {{ o.outreachSentCount }} · Responses {{ o.responseCount }}</p>
+            @if (o.delegatedByAgentKey) {
+              <p class="muted">Delegated by {{ o.delegatedByAgentKey }}</p>
+            }
+          </article>
+        }
+      </div>
+
+      <div class="nalva-panel">
+        <h3>Execution history</h3>
+        @for (e of cc.executionHistory; track e.id) {
+          <article class="obj">
+            <strong>{{ e.status }}</strong>
+            <span class="muted">{{ e.startedAt | date:'short' }}</span>
+            <p>{{ e.summary || e.objective }}</p>
+            @if (e.error) { <p class="error">{{ e.error }}</p> }
+          </article>
+        }
+      </div>
+    </div>
+  } @else if (loading()) {
+    <p class="muted">Loading Sales Agent command center…</p>
+  }
+
+  @if (report(); as r) {
+    <div class="nalva-panel">
+      <h3>{{ r.title }}</h3>
+      <p>{{ r.summary }}</p>
+      <p class="muted">Researched {{ r.prospectsResearched }} · Qualified {{ r.qualifiedLeads }} · Sent {{ r.emailsSent }} · Responses {{ r.responses }} · Follow-ups {{ r.followUpsScheduled }}</p>
+    </div>
+  }
+</section>

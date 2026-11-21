@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 import { Chart, ChartConfiguration, Plugin, TooltipItem, registerables } from 'chart.js';
 import { ChartDataResponse } from '../../../core/models/dashboard.model';
+import { CurrencyService } from '../../../core/services/currency.service';
 import { ThemeService } from '../../../core/theme/theme.service';
 
 Chart.register(...registerables);
@@ -26,6 +27,7 @@ export class AppChartComponent implements OnDestroy {
   readonly height = input(280);
 
   private readonly themeService = inject(ThemeService);
+  private readonly currencyService = inject(CurrencyService);
   private readonly canvasRef = viewChild<ElementRef<HTMLCanvasElement>>('canvas');
   private chart: Chart | null = null;
   private chartType: 'line' | 'bar' | 'doughnut' = 'line';
@@ -112,13 +114,7 @@ export class AppChartComponent implements OnDestroy {
             mode: isDoughnut ? 'nearest' : 'index',
             intersect: isDoughnut,
             callbacks: {
-              label: (item: TooltipItem<'line'>) => {
-                const total = this.data()?.periodTotal;
-                if (total != null) {
-                  return `${item.dataset.label ?? 'Revenue'}: ${total.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
-                }
-                return `${item.dataset.label ?? 'Value'}: ${item.formattedValue}`;
-              },
+              label: (item: TooltipItem<'line'>) => this.formatTooltipLabel(item),
             },
           },
         },
@@ -243,7 +239,7 @@ export class AppChartComponent implements OnDestroy {
             gradient.addColorStop(1, this.withAlpha(color.border, 0));
             return gradient;
           },
-          pointRadius: 0,
+          pointRadius: ds.data.length <= 2 ? 4 : 0,
           pointHoverRadius: 6,
           pointHitRadius: 12,
           pointBackgroundColor: color.border,
@@ -283,6 +279,32 @@ export class AppChartComponent implements OnDestroy {
         chart.ctx.restore();
       },
     };
+  }
+
+  private formatTooltipLabel(item: TooltipItem<'line'>): string {
+    const label = item.dataset.label ?? 'Value';
+    const raw = typeof item.raw === 'number' ? item.raw : Number(item.parsed.y);
+    if (this.isCurrencySeries(label) && Number.isFinite(raw)) {
+      return `${label}: ${this.formatCurrency(raw)}`;
+    }
+    return `${label}: ${item.formattedValue}`;
+  }
+
+  private isCurrencySeries(label: string): boolean {
+    return /revenue|sales|profit|expense|amount|cogs|income|payment|value/i.test(label);
+  }
+
+  private formatCurrency(value: number): string {
+    const code = this.data()?.currency || this.currencyService.currencyCode() || 'USD';
+    try {
+      return new Intl.NumberFormat(undefined, {
+        style: 'currency',
+        currency: code,
+        maximumFractionDigits: 2,
+      }).format(value);
+    } catch {
+      return `${code} ${value.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+    }
   }
 
   private formatAxisTick(value: string | number): string {

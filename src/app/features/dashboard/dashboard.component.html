@@ -1,11 +1,8 @@
 <main class="dash">
   <header class="dash__header">
     <div class="dash__intro">
-      <h1 class="dash__title">
-        Welcome back, {{ firstName() }}!
-        <i class="bi bi-person-raised-hand dash__title-icon" aria-hidden="true"></i>
-      </h1>
-      <p class="dash__subtitle">Here's what's happening with your business today.</p>
+      <h1 class="dash__title">{{ greeting() }}</h1>
+      <p class="dash__subtitle">Here's what is happening in your business today.</p>
     </div>
 
     <div class="dash__actions">
@@ -17,8 +14,8 @@
           (change)="onPeriodChange($event)"
           aria-label="Select period"
         >
-          @for (p of periods; track p.value) {
-            <option [value]="p.value">{{ p.label }}</option>
+          @for (item of periods; track item.value) {
+            <option [value]="item.value">{{ item.label }}</option>
           }
         </select>
         <span class="dash__date-text d-none d-sm-inline">{{ dateRangeLabel() }}</span>
@@ -34,12 +31,7 @@
         @if (showAddMenu()) {
           <div class="dash__add-menu" role="menu">
             @for (action of addActions; track action.route) {
-              <a
-                class="dash__add-item"
-                role="menuitem"
-                [routerLink]="action.route"
-                (click)="closeAddMenu()"
-              >
+              <a class="dash__add-item" role="menuitem" [routerLink]="action.route" (click)="closeAddMenu()">
                 <i class="bi" [class]="action.icon" aria-hidden="true"></i>
                 {{ action.label }}
               </a>
@@ -51,6 +43,17 @@
       <button
         type="button"
         class="dash__icon-btn"
+        (click)="toggleCustomize()"
+        [attr.aria-pressed]="experience.editingLayout()"
+        aria-label="Customize dashboard"
+        title="Customize"
+      >
+        <i class="bi bi-sliders" aria-hidden="true"></i>
+      </button>
+
+      <button
+        type="button"
+        class="dash__icon-btn"
         (click)="retry()"
         [disabled]="loading()"
         aria-label="Refresh dashboard"
@@ -58,351 +61,527 @@
       >
         <i class="bi bi-arrow-clockwise" [class.dash__spin]="loading()" aria-hidden="true"></i>
       </button>
-      <a class="dash__icon-btn" [routerLink]="routes.nalva.command" aria-label="AI Command Center" title="AI Command Center">
+
+      <a class="dash__icon-btn" [routerLink]="routes.nalva.command" aria-label="Open Navla" title="Navla">
         <i class="bi bi-stars" aria-hidden="true"></i>
       </a>
     </div>
   </header>
 
-  <app-dashboard-experience />
-
   @if (error()) {
     <app-alert [message]="error()!" variant="danger" [dismissible]="false" />
-    <app-empty-state
-      title="Couldn't load your data"
-      description="Check your connection, then try again."
-      actionLabel="Try again"
-      (action)="retry()"
-    />
-  } @else if (loading()) {
-    <div class="dash__kpi-grid">
-      @for (i of [1, 2, 3, 4]; track i) {
-        <app-skeleton variant="rect" height="110px" />
-      }
-    </div>
-    <div class="dash__charts">
-      <app-skeleton variant="rect" height="220px" />
-      <app-skeleton variant="rect" height="220px" />
-    </div>
-  } @else {
-    <div class="dash__shell">
-      <div class="dash__main">
-        <!-- KPI cards -->
-        @if (experience.visible('performance')) {
-        <section class="dash__kpi-grid" aria-label="Key metrics">
-          <a class="kpi kpi--purple" [routerLink]="routes.orders.list">
-            <div class="kpi__top">
-              <span class="kpi__icon" aria-hidden="true"><i class="bi bi-currency-dollar"></i></span>
-              <span class="kpi__label">Total Revenue</span>
-            </div>
-            <div class="kpi__value">{{ overview()?.totalRevenue | appCurrency }}</div>
-            @if (revenueTrend() !== null) {
-              <div class="kpi__trend kpi__trend--up">
-                <i class="bi bi-arrow-up-short" aria-hidden="true"></i>
-                {{ revenueTrend() | number: '1.1-1' }}% vs last period
-              </div>
-            }
-            <svg class="kpi__spark" viewBox="0 0 120 40" preserveAspectRatio="none" aria-hidden="true">
-              <defs>
-                <linearGradient id="sparkFillPurple" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="currentColor" stop-opacity="0.45" />
-                  <stop offset="100%" stop-color="currentColor" stop-opacity="0" />
-                </linearGradient>
-              </defs>
-              <path [attr.d]="sparkRevenue().area" fill="url(#sparkFillPurple)" />
-              <path [attr.d]="sparkRevenue().line" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" />
-            </svg>
-          </a>
+  }
 
-          <a class="kpi kpi--blue" [routerLink]="routes.orders.list">
-            <div class="kpi__top">
-              <span class="kpi__icon" aria-hidden="true"><i class="bi bi-bag-check"></i></span>
-              <span class="kpi__label">Total Orders</span>
-            </div>
-            <div class="kpi__value">{{ overview()?.totalOrders | number }}</div>
-            <svg class="kpi__spark" viewBox="0 0 120 40" preserveAspectRatio="none" aria-hidden="true">
-              <defs>
-                <linearGradient id="sparkFillBlue" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="currentColor" stop-opacity="0.45" />
-                  <stop offset="100%" stop-color="currentColor" stop-opacity="0" />
-                </linearGradient>
-              </defs>
-              <path [attr.d]="sparkOrders().area" fill="url(#sparkFillBlue)" />
-              <path [attr.d]="sparkOrders().line" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" />
-            </svg>
-          </a>
-
-          <a class="kpi kpi--green" [routerLink]="routes.finance.profitLoss">
-            <div class="kpi__top">
-              <span class="kpi__icon" aria-hidden="true"><i class="bi bi-graph-up-arrow"></i></span>
-              <span class="kpi__label">Profit</span>
-            </div>
-            <div class="kpi__value">
-              @if (netProfit() === null) { — } @else { {{ netProfit() | appCurrency }} }
-            </div>
-            <div class="kpi__trend">Net of recorded expenses</div>
-            <svg class="kpi__spark" viewBox="0 0 120 40" preserveAspectRatio="none" aria-hidden="true">
-              <defs>
-                <linearGradient id="sparkFillGreen" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="currentColor" stop-opacity="0.45" />
-                  <stop offset="100%" stop-color="currentColor" stop-opacity="0" />
-                </linearGradient>
-              </defs>
-              <path [attr.d]="sparkProfit().area" fill="url(#sparkFillGreen)" />
-              <path [attr.d]="sparkProfit().line" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" />
-            </svg>
-          </a>
-
-          <a class="kpi kpi--orange" [routerLink]="routes.customers.list">
-            <div class="kpi__top">
-              <span class="kpi__icon" aria-hidden="true"><i class="bi bi-people"></i></span>
-              <span class="kpi__label">Customers</span>
-            </div>
-            <div class="kpi__value">{{ overview()?.totalCustomers | number }}</div>
-            @if (customersTrend() !== null) {
-              <div class="kpi__trend kpi__trend--up">
-                <i class="bi bi-arrow-up-short" aria-hidden="true"></i>
-                {{ customersTrend() | number: '1.1-1' }}% vs last period
-              </div>
-            }
-            <svg class="kpi__spark" viewBox="0 0 120 40" preserveAspectRatio="none" aria-hidden="true">
-              <defs>
-                <linearGradient id="sparkFillOrange" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="currentColor" stop-opacity="0.45" />
-                  <stop offset="100%" stop-color="currentColor" stop-opacity="0" />
-                </linearGradient>
-              </defs>
-              <path [attr.d]="sparkCustomers().area" fill="url(#sparkFillOrange)" />
-              <path [attr.d]="sparkCustomers().line" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" />
-            </svg>
-          </a>
-        </section>
-        }
-
-        @if (experience.visible('sales')) {
-        <!-- Charts row -->
-        <section class="dash__charts" aria-label="Analytics">
-          <article class="panel panel--sales">
-            <div class="panel__head">
-              <div>
-                <h2 class="panel__title">Sales Overview</h2>
-                <p class="panel__meta">
-                  <strong>{{ salesHeadline() | appCurrency }}</strong>
-                  @if (salesChange() !== null) {
-                  <span class="panel__chip panel__chip--up">
-                    ↑ {{ salesChange() | number: '1.1-1' }}%
-                  </span>
-                  }
-                </p>
-              </div>
-              <span class="panel__filter">{{ currentPeriodLabel() }}</span>
-            </div>
-            <div class="panel__chart panel__chart--tall">
-              @if (salesChart(); as chart) {
-                <app-chart [data]="chart" [height]="chartHeight()" />
-              } @else {
-                <app-empty-state title="No sales yet" description="Charts appear after you complete orders." />
-              }
-            </div>
-          </article>
-
-          <article class="panel panel--category">
-            <div class="panel__head">
-              <h2 class="panel__title">Top product revenue</h2>
-            </div>
-            <div class="category">
-              <div class="category__chart">
-                <svg class="category__donut" viewBox="0 0 140 140" role="img" [attr.aria-label]="'Revenue by category, total ' + categoryTotalLabel()">
-                  <defs>
-                    <filter id="donutGlow" x="-40%" y="-40%" width="180%" height="180%">
-                      <feGaussianBlur stdDeviation="2.2" result="blur" />
-                      <feMerge>
-                        <feMergeNode in="blur" />
-                        <feMergeNode in="SourceGraphic" />
-                      </feMerge>
-                    </filter>
-                  </defs>
-                  <circle
-                    class="category__track"
-                    cx="70"
-                    cy="70"
-                    [attr.r]="donutRadius"
-                    fill="none"
-                    stroke-width="20"
-                  />
-                  @for (slice of categorySlices(); track slice.name) {
-                    <circle
-                      class="category__slice"
-                      cx="70"
-                      cy="70"
-                      [attr.r]="donutRadius"
-                      fill="none"
-                      stroke-width="20"
-                      stroke-linecap="butt"
-                      filter="url(#donutGlow)"
-                      [attr.stroke]="slice.color"
-                      [attr.stroke-dasharray]="slice.dashArray"
-                      [attr.stroke-dashoffset]="slice.dashOffset"
-                    />
-                  }
-                </svg>
-                <div class="category__center" aria-hidden="true">
-                  <span>{{ categoryTotalLabel() }}</span>
-                  <small>Total</small>
+  <div class="dash__shell">
+    <div class="dash__main">
+      @if (showSkeleton()) {
+        <div class="dash__kpi-grid" aria-hidden="true">
+          @for (item of [1, 2, 3, 4, 5, 6]; track item) {
+            <app-skeleton variant="rect" height="104px" />
+          }
+        </div>
+        <app-skeleton variant="rect" height="160px" />
+        <app-skeleton variant="rect" height="220px" />
+        <div class="dash__split dash__split--half">
+          <app-skeleton variant="rect" height="200px" />
+          <app-skeleton variant="rect" height="200px" />
+        </div>
+      } @else if (hardFail()) {
+        <app-empty-state
+          title="Couldn't load your data"
+          description="Check your connection, then try again."
+          actionLabel="Try again"
+          (action)="retry()"
+        />
+      } @else {
+        @if (showRevenueKpi() || showProfitKpi() || showOrdersKpi() || showCustomersKpi() || showInventoryKpi()) {
+          <section class="dash__kpi-grid" aria-label="Key metrics">
+            @if (showRevenueKpi()) {
+              <a class="kpi kpi--purple" [routerLink]="routes.sales.dashboard">
+                <div class="kpi__top">
+                  <span class="kpi__icon" aria-hidden="true"><i class="bi bi-currency-dollar"></i></span>
+                  <span class="kpi__label">Total Revenue</span>
                 </div>
-              </div>
-              <ul class="category__legend">
-                @for (item of categorySlices(); track item.name) {
-                  <li>
-                    <span
-                      class="category__dot"
-                      [style.background]="item.color"
-                      [style.box-shadow]="'0 0 10px ' + item.color + '88'"
-                    ></span>
-                    <span class="category__name" [title]="item.name">{{ item.name }}</span>
-                    <strong>{{ item.pct }}%</strong>
-                  </li>
+                <div class="kpi__value">{{ (overview()?.totalRevenue ?? 0) | appCurrency }}</div>
+                @if (formatChange(revenueChange()); as change) {
+                  <div
+                    class="kpi__trend"
+                    [class.kpi__trend--up]="(revenueChange() ?? 0) > 0"
+                    [class.kpi__trend--down]="(revenueChange() ?? 0) < 0"
+                  >{{ change }} vs previous period</div>
                 }
-              </ul>
-            </div>
-          </article>
-        </section>
+                @if (revenueSpark(); as path) {
+                  <svg class="kpi__spark" viewBox="0 0 120 36" preserveAspectRatio="none" aria-hidden="true">
+                    <path [attr.d]="path" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                }
+              </a>
+            }
+
+            @if (showProfitKpi()) {
+              <a class="kpi kpi--green" [routerLink]="routes.finance.profitLoss">
+                <div class="kpi__top">
+                  <span class="kpi__icon" aria-hidden="true"><i class="bi bi-graph-up-arrow"></i></span>
+                  <span class="kpi__label">Net Profit</span>
+                </div>
+                <div class="kpi__value">
+                  @if (netProfit() === null) { — } @else { {{ netProfit() | appCurrency }} }
+                </div>
+                <p class="kpi__hint">Net after COGS &amp; expenses</p>
+              </a>
+            }
+
+            @if (showOrdersKpi()) {
+              <a class="kpi kpi--blue" [routerLink]="routes.orders.list">
+                <div class="kpi__top">
+                  <span class="kpi__icon" aria-hidden="true"><i class="bi bi-bag-check"></i></span>
+                  <span class="kpi__label">Total Orders</span>
+                </div>
+                <div class="kpi__value">{{ (overview()?.totalOrders ?? 0) | number }}</div>
+                @if (formatChange(ordersChange()); as change) {
+                  <div
+                    class="kpi__trend"
+                    [class.kpi__trend--up]="(ordersChange() ?? 0) > 0"
+                    [class.kpi__trend--down]="(ordersChange() ?? 0) < 0"
+                  >{{ change }} vs previous period</div>
+                }
+                @if (ordersSpark(); as path) {
+                  <svg class="kpi__spark" viewBox="0 0 120 36" preserveAspectRatio="none" aria-hidden="true">
+                    <path [attr.d]="path" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                }
+              </a>
+            }
+
+            @if (showCustomersKpi()) {
+              <a class="kpi kpi--orange" [routerLink]="routes.customers.list">
+                <div class="kpi__top">
+                  <span class="kpi__icon" aria-hidden="true"><i class="bi bi-people"></i></span>
+                  <span class="kpi__label">Total Customers</span>
+                </div>
+                <div class="kpi__value">{{ (overview()?.totalCustomers ?? 0) | number }}</div>
+                @if (newCustomers() !== null || activeCustomers() !== null) {
+                  <p class="kpi__hint">
+                    @if (newCustomers() !== null) { {{ newCustomers() | number }} new }
+                    @if (newCustomers() !== null && activeCustomers() !== null) { · }
+                    @if (activeCustomers() !== null) { {{ activeCustomers() | number }} active }
+                  </p>
+                }
+              </a>
+            }
+
+            @if (showProfitKpi()) {
+              <a class="kpi kpi--rose" [routerLink]="routes.invoices.list">
+                <div class="kpi__top">
+                  <span class="kpi__icon" aria-hidden="true"><i class="bi bi-receipt"></i></span>
+                  <span class="kpi__label">Outstanding</span>
+                </div>
+                <div class="kpi__value">
+                  @if (outstanding() === null) { — } @else { {{ outstanding() | appCurrency }} }
+                </div>
+                <p class="kpi__hint">Unpaid invoices</p>
+              </a>
+            }
+
+            @if (showInventoryKpi()) {
+              <a class="kpi kpi--teal" [routerLink]="routes.inventory.base">
+                <div class="kpi__top">
+                  <span class="kpi__icon" aria-hidden="true"><i class="bi bi-box-seam"></i></span>
+                  <span class="kpi__label">Inventory Value</span>
+                </div>
+                <div class="kpi__value">
+                  @if (inventoryValue() === null) { — } @else { {{ inventoryValue() | appCurrency }} }
+                </div>
+                @if (lowStockCount() !== null) {
+                  <p class="kpi__hint">{{ lowStockCount() | number }} low stock</p>
+                }
+              </a>
+            }
+          </section>
         }
 
-        <!-- Lists row -->
-        <section class="dash__lists" aria-label="Products and orders">
-          @if (experience.visible('products')) {
-          <article class="panel">
-            <div class="panel__head">
-              <h2 class="panel__title">Top Selling Products</h2>
-              <span class="panel__filter">{{ currentPeriodLabel() }}</span>
+        @if (experience.visible('insights')) {
+          <section class="dash__section" aria-labelledby="insights-heading">
+            <div class="section__head">
+              <h2 id="insights-heading" class="section__title">Navla Business Insights</h2>
             </div>
-            @if (topProducts().length) {
-              <ul class="product-list">
-                @for (product of topProducts(); track product.productId; let i = $index) {
-                  <li class="product-list__item">
-                    <span class="product-list__rank">{{ i + 1 }}</span>
-                    <span class="product-list__avatar" aria-hidden="true">{{ productInitials(product.productName) }}</span>
-                    <div class="product-list__body">
-                      <strong>{{ product.productName }}</strong>
-                      <span>{{ product.totalQuantitySold | number }} sold</span>
-                    </div>
-                    <div class="product-list__stats">
-                      <strong>{{ product.totalRevenue | appCurrency }}</strong>
-                    </div>
-                  </li>
-                }
-              </ul>
+            @if (insightsPending()) {
+              <div class="insights">
+                <app-skeleton variant="rect" height="112px" />
+                <app-skeleton variant="rect" height="112px" />
+              </div>
+            } @else if (insightLoadFailed()) {
+              <app-empty-state
+                title="Insights unavailable"
+                description="Business insights could not be loaded. Your other figures are unaffected."
+              />
+            } @else if (!visibleInsights().length) {
+              <app-empty-state
+                [title]="insightsDismissedAll() ? 'Insights dismissed' : 'Nothing to flag'"
+                [description]="insightsDismissedAll() ? 'Dismissed insights stay hidden until you close this tab.' : 'Navla will surface a card when your records support one.'"
+              />
             } @else {
-              <p class="panel__empty">No product sales in this period.</p>
-            }
-          </article>
-          }
-
-          @if (experience.visible('orders')) {
-          <article class="panel">
-            <div class="panel__head">
-              <h2 class="panel__title">Recent Orders</h2>
-              <a class="panel__link" [routerLink]="routes.orders.list">View all</a>
-            </div>
-            @if (ordersLoading()) {
-              @for (i of [1, 2, 3]; track i) {
-                <app-skeleton height="3rem" />
-              }
-            } @else if (recentOrders().length === 0) {
-              <p class="panel__empty">No orders yet — start with a new sale.</p>
-            } @else {
-              <div class="orders">
-                @for (order of recentOrders(); track order.id) {
-                  <a class="orders__row" [routerLink]="[routes.orders.base, order.id]">
-                    <span class="orders__icon" aria-hidden="true"><i class="bi bi-calendar2-check"></i></span>
-                    <div class="orders__main">
-                      <strong>{{ order.orderNumber }}</strong>
-                      <span>{{ order.customerName }}</span>
+              <div class="insights">
+                @for (insight of visibleInsights(); track insight.code) {
+                  <article class="insight" [attr.data-severity]="insightSeverity(insight.severity)">
+                    <div class="insight__top">
+                      <span class="insight__severity">{{ insightSeverity(insight.severity) }}</span>
+                      <button type="button" class="insight__dismiss" (click)="dismissInsight(insight.code)" [attr.aria-label]="'Dismiss ' + (insight.title || 'insight')">
+                        Dismiss
+                      </button>
                     </div>
-                    <div class="orders__amount">{{ order.grandTotal | appCurrency }}</div>
-                    <span class="orders__badge" [attr.data-tone]="statusTone(order.status)">
-                      {{ order.status }}
-                    </span>
-                    <time class="orders__time">{{ relativeTime(order.createdAt || order.orderDate) }}</time>
-                  </a>
+                    <h3>{{ insight.title || 'Business insight' }}</h3>
+                    <p>{{ insight.message }}</p>
+                    @if (insight.metricLabel || insight.metricValue) {
+                      <p class="insight__metric">
+                        @if (insight.metricLabel) { <span>{{ insight.metricLabel }}</span> }
+                        @if (insight.metricValue) { <strong>{{ insight.metricValue }}</strong> }
+                      </p>
+                    }
+                    <div class="insight__foot">
+                      @if (internalRoute(insight.route); as route) {
+                        <a [routerLink]="route">{{ insight.recommendedAction || 'View details' }}</a>
+                      }
+                      @if (insight.updatedAt) {
+                        <time [attr.datetime]="insight.updatedAt">{{ relativeTime(insight.updatedAt) }}</time>
+                      }
+                    </div>
+                  </article>
                 }
               </div>
             }
-          </article>
-          }
-        </section>
-      </div>
-
-      <!-- Right rail -->
-      <aside class="dash__rail" aria-label="Activity and tasks">
-        @if (experience.visible('activity')) {
-        <article class="panel">
-          <div class="panel__head">
-            <h2 class="panel__title">Activity</h2>
-            <a class="panel__link" [routerLink]="routes.activity.list">See all</a>
-          </div>
-          @if (activityLoading()) {
-            @for (i of [1, 2, 3]; track i) {
-              <app-skeleton height="2.75rem" />
-            }
-          } @else if (recentActivities().length === 0) {
-            <p class="panel__empty">Nothing recent yet.</p>
-          } @else {
-            <ul class="activity">
-              @for (item of recentActivities(); track item.id) {
-                <li class="activity__item">
-                  <span class="activity__icon" [attr.data-tone]="activityTone(item.entityType)" aria-hidden="true">
-                    <i class="bi" [class]="activityIcon(item.entityType)"></i>
-                  </span>
-                  <div class="activity__body">
-                    <strong>{{ item.description }}</strong>
-                    <time>{{ relativeTime(item.createdAt) }}</time>
-                  </div>
-                </li>
-              }
-            </ul>
-          }
-        </article>
+          </section>
         }
 
         @if (experience.visible('tasks')) {
-        <article class="panel">
-          <div class="panel__head">
-            <h2 class="panel__title">Tasks</h2>
-          </div>
-          @if (!tasks().length) {
-            <app-empty-state title="No follow-ups" description="Low stock and pending orders show up here." />
-          } @else {
-          <ul class="tasks">
-            @for (task of tasks(); track task.id) {
-              <li class="tasks__item" [class.tasks__item--done]="task.done">
-                <label>
-                  <input type="checkbox" [checked]="task.done" (change)="toggleTask(task.id)" />
-                  <span>{{ task.label }}</span>
-                </label>
-                <span class="tasks__priority" [attr.data-priority]="task.priority">{{ task.priority }}</span>
-              </li>
+          <section class="panel" aria-labelledby="priorities-heading">
+            <div class="panel__head">
+              <h2 id="priorities-heading" class="panel__title">Today's Priorities</h2>
+            </div>
+            @if (prioritiesPending()) {
+              @for (item of [1, 2]; track item) {
+                <app-skeleton height="3rem" />
+              }
+            } @else if (!priorityItems().length) {
+              <app-empty-state
+                title="No priorities right now"
+                description="Low stock, pending orders, and unpaid invoices will show up here."
+              />
+            } @else {
+              <ul class="priorities">
+                @for (item of priorityItems(); track item.id) {
+                  <li class="priorities__item" [class.priorities__item--done]="item.done">
+                    <label>
+                      <input type="checkbox" [checked]="item.done" (change)="togglePriority(item.id)" />
+                      <span class="priorities__copy">
+                        <strong>{{ item.title }}</strong>
+                        <small>{{ item.description }}</small>
+                      </span>
+                    </label>
+                    <span class="priorities__meta">
+                      <span class="priorities__badge" [attr.data-priority]="priorityTone(item.priority)">{{ priorityTone(item.priority) }}</span>
+                      @if (internalRoute(item.route); as route) {
+                        <a [routerLink]="route">{{ item.actionLabel || 'Open' }}</a>
+                      }
+                    </span>
+                  </li>
+                }
+              </ul>
             }
-          </ul>
-          }
-        </article>
+          </section>
         }
 
-        <article class="ai-card">
-          <div class="ai-card__copy">
-            <span class="ai-card__eyebrow">AI Business Advisor</span>
-            <h3>Need insights on sales or inventory?</h3>
-            <p>Ask your AI assistant for recommendations and next actions.</p>
-            <button type="button" class="ai-card__btn" data-ai-open (click)="openAiAssistant($event)">
-              Ask AI Assistant
-            </button>
-          </div>
-          <div class="ai-card__art" aria-hidden="true">
-            <i class="bi bi-robot"></i>
-          </div>
-        </article>
-      </aside>
+        @if (experience.visible('sales') || experience.visible('products')) {
+          <section class="dash__split dash__split--sales" aria-label="Sales performance">
+            @if (experience.visible('sales')) {
+              <article class="panel">
+                <div class="panel__head">
+                  <div>
+                    <h2 class="panel__title">Sales performance</h2>
+                    <p class="panel__meta">
+                      <strong>{{ (overview()?.totalRevenue ?? 0) | appCurrency }}</strong>
+                      @if (formatChange(revenueChange()); as change) {
+                        <span class="panel__chip" [class.panel__chip--up]="(revenueChange() ?? 0) > 0" [class.panel__chip--down]="(revenueChange() ?? 0) < 0">
+                          {{ change }}
+                        </span>
+                      }
+                    </p>
+                    @if (averageOrderValue() !== null) {
+                      <p class="panel__note">Average order value {{ averageOrderValue() | appCurrency }}</p>
+                    }
+                  </div>
+                  <span class="panel__filter">{{ currentPeriodLabel() }}</span>
+                </div>
+                <div class="panel__chart">
+                  @if (salesChart(); as chart) {
+                    <app-chart [data]="chart" [height]="chartHeight()" />
+                  } @else {
+                    <app-empty-state title="No sales trend" [description]="salesChartEmpty()" />
+                  }
+                </div>
+              </article>
+            }
+
+            @if (experience.visible('products')) {
+              <article class="panel panel--category">
+                <div class="panel__head">
+                  <h2 class="panel__title">Top products</h2>
+                  <a class="panel__link" [routerLink]="routes.products.list">View all</a>
+                </div>
+                @if (categorySlices().length) {
+                  <div class="category">
+                    <div class="category__chart">
+                      <svg class="category__donut" viewBox="0 0 140 140" role="img" [attr.aria-label]="'Product revenue, total ' + formatCompactMoney(categoryTotal())">
+                        <circle class="category__track" cx="70" cy="70" [attr.r]="donutRadius" fill="none" stroke-width="16" />
+                        @for (slice of categorySlices(); track slice.name) {
+                          <circle
+                            class="category__slice"
+                            cx="70"
+                            cy="70"
+                            [attr.r]="donutRadius"
+                            fill="none"
+                            stroke-width="16"
+                            [attr.stroke]="slice.color"
+                            [attr.stroke-dasharray]="slice.dashArray"
+                            [attr.stroke-dashoffset]="slice.dashOffset"
+                          />
+                        }
+                      </svg>
+                      <div class="category__center" aria-hidden="true">
+                        <span>{{ formatCompactMoney(categoryTotal()) }}</span>
+                        <small>Revenue</small>
+                      </div>
+                    </div>
+                    <ul class="category__legend">
+                      @for (item of categorySlices(); track item.name) {
+                        <li>
+                          <span class="category__dot" [style.background]="item.color"></span>
+                          <span class="category__name" [title]="item.name">{{ item.name }}</span>
+                          <strong>{{ item.pct }}%</strong>
+                        </li>
+                      }
+                    </ul>
+                  </div>
+                } @else {
+                  <app-empty-state title="No product revenue" description="This period has no product sales to chart." />
+                }
+
+                @if (topProducts().length) {
+                  <ul class="product-list">
+                    @for (product of topProducts(); track product.productId; let index = $index) {
+                      <li class="product-list__item">
+                        <span class="product-list__rank">{{ index + 1 }}</span>
+                        <span class="product-list__avatar" aria-hidden="true">{{ productInitials(product.productName) }}</span>
+                        <div class="product-list__body">
+                          <strong>{{ product.productName }}</strong>
+                          <span>{{ productQuantitySold(product) | number }} sold</span>
+                        </div>
+                        <div class="product-list__stats">
+                          <strong>{{ productRevenue(product) | appCurrency }}</strong>
+                        </div>
+                      </li>
+                    }
+                  </ul>
+                }
+              </article>
+            }
+          </section>
+        }
+
+        @if (experience.visible('products') || showInventoryKpi()) {
+          <section class="dash__split dash__split--half" aria-label="Inventory and finance">
+            @if (experience.visible('products') || showInventoryKpi()) {
+              <article class="panel">
+                <div class="panel__head">
+                  <h2 class="panel__title">Inventory overview</h2>
+                  <a class="panel__link" [routerLink]="routes.inventory.base">View all</a>
+                </div>
+                @if (overview() || inventory()) {
+                  <dl class="stats">
+                    <div>
+                      <dt>Products</dt>
+                      <dd>{{ (overview()?.totalProducts ?? 0) | number }}</dd>
+                    </div>
+                    <div>
+                      <dt>Inventory value</dt>
+                      <dd>@if (inventoryValue() === null) { — } @else { {{ inventoryValue() | appCurrency }} }</dd>
+                    </div>
+                    @if (inStockPercent() !== null) {
+                      <div>
+                        <dt>In stock</dt>
+                        <dd>{{ inStockPercent() }}%</dd>
+                      </div>
+                    }
+                    @if (unitsOnHand() !== null) {
+                      <div>
+                        <dt>Units on hand</dt>
+                        <dd>{{ unitsOnHand() | number }}</dd>
+                      </div>
+                    }
+                    <div>
+                      <dt>Low stock</dt>
+                      <dd>{{ (lowStockCount() ?? 0) | number }}</dd>
+                    </div>
+                    <div>
+                      <dt>Out of stock</dt>
+                      <dd>{{ (outOfStockCount() ?? 0) | number }}</dd>
+                    </div>
+                  </dl>
+                  <h3 class="panel__sub">Stock alerts</h3>
+                  @if (stockAlerts().length) {
+                    <ul class="alerts">
+                      @for (alert of stockAlerts(); track alert.productId) {
+                        <li>
+                          <span>{{ alert.productName }}</span>
+                          <strong>{{ alert.detail }}</strong>
+                        </li>
+                      }
+                    </ul>
+                  } @else {
+                    <p class="panel__empty">No stock alerts for the current catalog.</p>
+                  }
+                } @else {
+                  <app-empty-state title="Inventory unavailable" description="Stock figures will appear when inventory data loads." />
+                }
+              </article>
+            }
+
+            @if (experience.visible('performance')) {
+              <article class="panel">
+                <div class="panel__head">
+                  <h2 class="panel__title">Financial snapshot</h2>
+                  <a class="panel__link" [routerLink]="routes.finance.profitLoss">Open P&amp;L</a>
+                </div>
+                @if (financeRows().length) {
+                  <dl class="stats stats--rows">
+                    @for (row of financeRows(); track row.label) {
+                      <div>
+                        <dt>
+                          {{ row.label }}
+                          @if (row.hint) { <small>{{ row.hint }}</small> }
+                        </dt>
+                        <dd>
+                          @if (row.value === null) { — } @else { {{ row.value | appCurrency }} }
+                        </dd>
+                      </div>
+                    }
+                  </dl>
+                } @else {
+                  <app-empty-state title="Finance unavailable" description="Profit, cost of goods, and outstanding invoices appear here when finance data loads." />
+                }
+              </article>
+            }
+          </section>
+        }
+
+        @if (experience.visible('orders') || experience.visible('customers') || experience.visible('performance')) {
+          <section class="dash__split dash__split--half" aria-label="Orders and customers">
+            @if (experience.visible('orders')) {
+              <article class="panel">
+                <div class="panel__head">
+                  <h2 class="panel__title">Recent orders</h2>
+                  <a class="panel__link" [routerLink]="routes.orders.list">View all</a>
+                </div>
+                @if (ordersLoading()) {
+                  @for (item of [1, 2, 3]; track item) {
+                    <app-skeleton height="3rem" />
+                  }
+                } @else if (ordersError()) {
+                  <p class="panel__empty">{{ ordersError() }}</p>
+                } @else if (!recentOrders().length) {
+                  <app-empty-state title="No orders yet" description="New sales will be listed here." />
+                } @else {
+                  <div class="orders">
+                    @for (order of recentOrders(); track order.id) {
+                      <a class="orders__row" [routerLink]="[routes.orders.base, order.id]">
+                        <div class="orders__main">
+                          <strong>{{ order.orderNumber }}</strong>
+                          <span>{{ order.customerName }}</span>
+                        </div>
+                        <div class="orders__amount">{{ order.grandTotal | appCurrency }}</div>
+                        <span class="orders__badge" [attr.data-tone]="statusTone(order.status)">{{ order.status }}</span>
+                        <time class="orders__time">{{ relativeTime(order.createdAt || order.orderDate) }}</time>
+                      </a>
+                    }
+                  </div>
+                }
+              </article>
+            }
+
+            @if (experience.visible('customers') || experience.visible('performance')) {
+              <article class="panel">
+                <div class="panel__head">
+                  <h2 class="panel__title">Customers and receivables</h2>
+                  <a class="panel__link" [routerLink]="routes.customers.list">Customers</a>
+                </div>
+                <ul class="notes">
+                  @if (experience.visible('customers')) {
+                    @if (newCustomers() !== null) {
+                      <li><span>New this period</span><strong>{{ newCustomers() | number }}</strong></li>
+                    }
+                    @if (activeCustomers() !== null) {
+                      <li><span>Active customers</span><strong>{{ activeCustomers() | number }}</strong></li>
+                    }
+                    @for (customer of topCustomers(); track customer.customerId) {
+                      <li>
+                        <a [routerLink]="[routes.customers.base, customer.customerId]">{{ customerName(customer) }}</a>
+                        <strong>{{ customer.totalSpending | appCurrency }}</strong>
+                      </li>
+                    }
+                  }
+                  @if (experience.visible('performance')) {
+                    <li>
+                      <a [routerLink]="routes.invoices.list">Outstanding invoices</a>
+                      <strong>@if (outstanding() === null) { — } @else { {{ outstanding() | appCurrency }} }</strong>
+                    </li>
+                  }
+                </ul>
+                @if (!topCustomers().length && newCustomers() === null && outstanding() === null) {
+                  <p class="panel__empty">Customer and receivable notes appear when that data is available.</p>
+                }
+              </article>
+            }
+          </section>
+        }
+
+        @if (experience.visible('activity')) {
+          <article class="panel" aria-labelledby="activity-heading">
+            <div class="panel__head">
+              <h2 id="activity-heading" class="panel__title">Activity</h2>
+              <a class="panel__link" [routerLink]="routes.activity.list">See all</a>
+            </div>
+            @if (activityPending()) {
+              @for (item of [1, 2, 3]; track item) {
+                <app-skeleton height="2.5rem" />
+              }
+            } @else if (activityError()) {
+              <p class="panel__empty">{{ activityError() }}</p>
+            } @else if (!activityItems().length) {
+              <app-empty-state title="No recent activity" description="Sales, inventory, and customer updates will show up here." />
+            } @else {
+              <ul class="activity">
+                @for (item of activityItems(); track item.id) {
+                  <li class="activity__item">
+                    <span class="activity__icon" [attr.data-tone]="activityTone(item.entityType)" aria-hidden="true">
+                      <i class="bi" [class]="activityIcon(item.entityType)"></i>
+                    </span>
+                    <div class="activity__body">
+                      <strong>{{ activityText(item) }}</strong>
+                      <time [attr.datetime]="item.createdAt">{{ relativeTime(item.createdAt) }}</time>
+                    </div>
+                  </li>
+                }
+              </ul>
+            }
+          </article>
+        }
+
+        <app-dashboard-experience />
+      }
     </div>
-  }
+
+    <aside class="dash__rail" aria-label="Ask Navla">
+      <app-dashboard-copilot variant="ask" />
+    </aside>
+  </div>
 </main>

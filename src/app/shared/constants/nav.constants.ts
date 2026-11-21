@@ -123,6 +123,15 @@ export const NAV_ITEMS: NavItem[] = [
     group: 'AI Workforce',
   },
   {
+    label: 'Marketing Agent',
+    icon: 'bi-megaphone',
+    route: ROUTES.nalva.marketing.base,
+    description: 'Content calendar, campaigns, and connected social accounts.',
+    permissions: ['Nalva.View'],
+    group: 'AI Workforce',
+  },
+
+  {
     label: 'Agent tasks',
     icon: 'bi-list-check',
     route: ROUTES.nalva.tasks,

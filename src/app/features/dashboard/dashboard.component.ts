@@ -10,23 +10,22 @@ import {
 } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { catchError, forkJoin, of } from 'rxjs';
 import { AppCurrencyPipe } from '../../shared/pipes/app-currency.pipe';
 import { DashboardStateService } from '../../state/dashboard.state';
-import { ActivityService } from '../../core/services/activity.service';
 import { OrderService } from '../../core/services/order.service';
 import { NotificationStateService } from '../../state/notification.state';
-import { AiAssistantStateService } from '../../state/ai-assistant.state';
 import { AuthService } from '../../core/services/auth.service';
 import { CurrencyService } from '../../core/services/currency.service';
-import { FinanceService } from '../../core/services/finance.service';
-import { DashboardService } from '../../core/services/dashboard.service';
-import { FinancialDashboard, TrendPoint } from '../../core/models/finance.model';
+import { ExperienceService, BusinessInsight } from '../../core/services/experience.service';
 import { ActivityDto } from '../../core/models/activity.model';
 import { OrderSummaryDto } from '../../core/models/order.model';
 import {
   ChartDataResponse,
+  DashboardPriority,
   ProductPerformanceDto,
+  TopCustomer,
+  productQuantitySold,
+  productRevenue,
 } from '../../core/models/dashboard.model';
 import { ROUTES } from '../../core/constants/route.constants';
 import { DashboardPeriod } from '../../core/enums';
@@ -35,24 +34,21 @@ import { AppSkeletonComponent } from '../../shared/components/app-skeleton/app-s
 import { AppAlertComponent } from '../../shared/components/app-alert/app-alert.component';
 import { AppEmptyStateComponent } from '../../shared/components/app-empty-state/app-empty-state.component';
 import { DashboardExperienceComponent } from '../experience/dashboard-experience.component';
-import { ExperienceService } from '../../core/services/experience.service';
+import { DashboardCopilotComponent } from '../../shared/components/ai-assistant/dashboard-copilot/dashboard-copilot.component';
 
 type StatusTone = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'neutral';
 
-export interface DashboardTask {
-  id: string;
-  label: string;
-  priority: 'High' | 'Medium' | 'Low';
-  done: boolean;
-}
-
-export interface CategorySlice {
+interface CategorySlice {
   name: string;
   value: number;
   pct: number;
   color: string;
   dashArray: string;
   dashOffset: number;
+}
+
+interface PriorityView extends DashboardPriority {
+  done: boolean;
 }
 
 const CATEGORY_COLORS = ['#8b5cf6', '#3b82f6', '#22c55e', '#f59e0b', '#94a3b8', '#ec4899'];
@@ -71,6 +67,7 @@ const DONUT_CIRCUMFERENCE = 2 * Math.PI * DONUT_RADIUS;
     AppAlertComponent,
     AppEmptyStateComponent,
     DashboardExperienceComponent,
+    DashboardCopilotComponent,
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
@@ -78,32 +75,42 @@ const DONUT_CIRCUMFERENCE = 2 * Math.PI * DONUT_RADIUS;
 })
 export class DashboardComponent implements OnInit {
   private readonly dashboardState = inject(DashboardStateService);
-  private readonly activityService = inject(ActivityService);
   private readonly orderService = inject(OrderService);
   private readonly notificationState = inject(NotificationStateService);
-  private readonly aiAssistantState = inject(AiAssistantStateService);
   private readonly authService = inject(AuthService);
   private readonly currencyService = inject(CurrencyService);
-  private readonly financeService = inject(FinanceService);
-  private readonly dashboardService = inject(DashboardService);
   readonly experience = inject(ExperienceService);
-  private readonly financeReport = signal<FinancialDashboard | null>(null);
-  private readonly customerSparkValues = signal<number[]>([]);
-  readonly netProfit = computed(() => {
-    const report = this.financeReport();
-    return report ? report.netProfit : null;
-  });
-
-  readonly recentActivities = signal<ActivityDto[]>([]);
-  readonly recentOrders = signal<OrderSummaryDto[]>([]);
-  readonly activityLoading = signal(false);
-  readonly ordersLoading = signal(false);
-  readonly showAddMenu = signal(false);
-  readonly tasks = signal<DashboardTask[]>([]);
-  private readonly completedFollowUps = new Set<string>();
-  readonly chartHeight = signal(280);
 
   readonly routes = ROUTES;
+  readonly productRevenue = productRevenue;
+  readonly productQuantitySold = productQuantitySold;
+  readonly donutCircumference = DONUT_CIRCUMFERENCE;
+  readonly donutRadius = DONUT_RADIUS;
+
+  readonly recentOrders = signal<OrderSummaryDto[]>([]);
+  readonly ordersLoading = signal(false);
+  readonly ordersError = signal<string | null>(null);
+  readonly showAddMenu = signal(false);
+  readonly chartHeight = signal(260);
+
+  private readonly completedPriorityIds = signal<string[]>([]);
+  private readonly dismissedInsightCodes = signal<string[]>([]);
+  private loadedPriorityKey = '';
+  private loadedDismissKey = '';
+
+  private readonly restoreChecks = effect(() => {
+    const priorityKey = this.priorityStorageKey();
+    if (priorityKey !== this.loadedPriorityKey) {
+      this.loadedPriorityKey = priorityKey;
+      this.completedPriorityIds.set(this.readList(this.browserStorage('local'), priorityKey));
+    }
+    const dismissKey = this.dismissStorageKey();
+    if (dismissKey !== this.loadedDismissKey) {
+      this.loadedDismissKey = dismissKey;
+      this.dismissedInsightCodes.set(this.readList(this.browserStorage('session'), dismissKey));
+    }
+  });
+
   readonly periods: ReadonlyArray<{ label: string; value: DashboardPeriod }> = [
     { label: 'Today', value: DashboardPeriod.Today },
     { label: 'Last 7 Days', value: DashboardPeriod.Last7Days },
@@ -124,45 +131,40 @@ export class DashboardComponent implements OnInit {
   readonly sales = this.dashboardState.sales;
   readonly customers = this.dashboardState.customers;
   readonly products = this.dashboardState.products;
+  readonly inventory = this.dashboardState.inventory;
   readonly orders = this.dashboardState.orders;
-  private readonly syncFollowUps = effect(() => {
-    const low = this.overview()?.lowStockProducts ?? 0;
-    const pending = this.orders()?.ordersByStatus
-      ?.find((status) => status.status.toLowerCase() === 'pending')?.count ?? 0;
-    const next: DashboardTask[] = [];
-    if (low > 0) {
-      next.push({
-        id: 'low-stock',
-        label: `Review ${low} low-stock products`,
-        priority: 'High',
-        done: this.completedFollowUps.has('low-stock'),
-      });
-    }
-    if (pending > 0) {
-      next.push({
-        id: 'pending-orders',
-        label: `Follow up ${pending} pending orders`,
-        priority: 'Medium',
-        done: this.completedFollowUps.has('pending-orders'),
-      });
-    }
-    this.tasks.set(next);
-  });
+  readonly finance = this.dashboardState.finance;
   readonly revenueChart = this.dashboardState.revenueChart;
+  readonly activityError = this.dashboardState.activityError;
   readonly loading = this.dashboardState.loading;
   readonly error = this.dashboardState.error;
   readonly period = this.dashboardState.period;
 
+  readonly showSkeleton = computed(() => this.loading() && !this.overview() && !this.finance());
+  readonly hardFail = computed(() => !this.loading() && !this.overview() && !this.finance() && !!this.error());
+
   readonly currentPeriodLabel = computed(
-    () => this.periods.find((p) => p.value === this.period())?.label ?? 'This Period',
+    () => this.periods.find((item) => item.value === this.period())?.label ?? 'This period',
   );
 
   readonly firstName = computed(() => {
-    const email = this.authService.currentUser()?.email;
+    const user = this.authService.currentUser();
+    const given = user?.firstName?.trim();
+    if (given) return given;
+    const full = user?.fullName?.trim();
+    if (full) return full.split(/\s+/)[0] || full;
+    const email = user?.email;
     if (!email) return 'there';
-    const local = email.split('@')[0] ?? 'there';
-    const part = local.split(/[._-]/)[0] || local;
+    const local = email.split('@')[0] ?? '';
+    const part = local.split(/[._-]/).filter(Boolean)[0] || local;
+    if (!part) return 'there';
     return part.charAt(0).toUpperCase() + part.slice(1);
+  });
+
+  readonly greeting = computed(() => {
+    const hour = new Date().getHours();
+    const dayPart = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+    return `${dayPart}, ${this.firstName()}.`;
   });
 
   readonly dateRangeLabel = computed(() => {
@@ -178,88 +180,125 @@ export class DashboardComponent implements OnInit {
     return this.currentPeriodLabel();
   });
 
-  readonly revenueTrend = computed((): number | null => null);
-  readonly customersTrend = computed((): number | null => this.customers()?.customerGrowthRate ?? null);
+  readonly revenueChange = computed(() => this.numericOrNull(this.overview()?.revenueChangePercent));
+  readonly ordersChange = computed(() => this.numericOrNull(this.overview()?.ordersChangePercent));
+  readonly newCustomers = computed(() => this.numericOrNull(this.overview()?.newCustomers));
+  readonly activeCustomers = computed(() => this.numericOrNull(this.overview()?.activeCustomers));
+  readonly netProfit = computed(() => this.numericOrNull(this.finance()?.netProfit));
+  readonly outstanding = computed(() => this.numericOrNull(this.finance()?.outstandingInvoices));
+  readonly averageOrderValue = computed(() => this.numericOrNull(this.sales()?.averageOrderValue));
 
-  readonly sparkRevenue = computed(() =>
-    this.buildSpark(this.salesSeries((point) => point.revenue).values, this.overview()?.totalRevenue ?? 0),
-  );
-  readonly sparkOrders = computed(() =>
-    this.buildSpark(this.salesSeries((point) => point.orderCount).values, this.overview()?.totalOrders ?? 0),
-  );
-  readonly sparkProfit = computed(() => {
-    const report = this.financeReport();
-    const fromFinance = report
-      ? this.profitSeries(
-          report.revenueTrend ?? [],
-          report.expenseTrend ?? [],
-          report.startDate,
-          report.endDate,
-        )
-      : [];
-    if (this.hasShape(fromFinance)) return this.buildSpark(fromFinance, report?.netProfit ?? 0);
-    const salesShape = this.salesSeries((point) => point.revenue).values;
-    if (this.hasShape(salesShape) && (report?.totalExpenses ?? 0) === 0) {
-      return this.buildSpark(salesShape, report?.netProfit ?? 0);
+  readonly inventoryValue = computed(() => {
+    const inventory = this.inventory();
+    if (typeof inventory?.totalInventoryValue === 'number') return inventory.totalInventoryValue;
+    if (typeof inventory?.inventoryValue === 'number') return inventory.inventoryValue;
+    if (this.overview() && typeof this.overview()?.totalInventoryValue === 'number') {
+      return this.overview()!.totalInventoryValue;
     }
-    return this.buildSpark(fromFinance, report?.netProfit ?? 0);
-  });
-  readonly sparkCustomers = computed(() => {
-    const series = this.customerSparkValues();
-    const total = this.overview()?.totalCustomers ?? 0;
-    return this.buildSpark(series, total);
+    return null;
   });
 
-  /** Sales area chart. Sparse periods (today, this month) are drawn as a full curve so the panel matches All Time. */
+  readonly lowStockCount = computed(() => {
+    const inventory = this.inventory();
+    if (typeof inventory?.lowStockCount === 'number') return inventory.lowStockCount;
+    if (typeof inventory?.lowStockProducts === 'number') return inventory.lowStockProducts;
+    return this.overview() ? this.overview()!.lowStockProducts : null;
+  });
+
+  readonly outOfStockCount = computed(() => {
+    const inventory = this.inventory();
+    if (typeof inventory?.outOfStockCount === 'number') return inventory.outOfStockCount;
+    if (typeof inventory?.outOfStockProducts === 'number') return inventory.outOfStockProducts;
+    return this.overview() ? this.overview()!.outOfStockProducts : null;
+  });
+
+  readonly inStockPercent = computed(() => {
+    const total = this.overview()?.totalProducts;
+    const out = this.outOfStockCount();
+    if (typeof total !== 'number' || total <= 0 || out == null) return null;
+    return Math.max(0, Math.min(100, Math.round(((total - out) / total) * 100)));
+  });
+
+  readonly unitsOnHand = computed(() => this.numericOrNull(this.inventory()?.totalStockQuantity));
+
+  readonly showRevenueKpi = computed(() => this.experience.visible('performance') || this.experience.visible('sales'));
+  readonly showProfitKpi = computed(() => this.experience.visible('performance'));
+  readonly showOrdersKpi = computed(() => this.experience.visible('orders') || this.experience.visible('sales'));
+  readonly showCustomersKpi = computed(() => this.experience.visible('customers'));
+  readonly showInventoryKpi = computed(
+    () => this.experience.visible('products') || this.experience.visible('performance') || this.experience.visible('sales'),
+  );
+
+  readonly revenueSpark = computed(() => {
+    const fromSales = (this.sales()?.revenueTrends ?? []).map((point) => Number(point.revenue) || 0);
+    if (fromSales.length >= 2) return this.sparkPath(fromSales);
+    const series = this.revenueChart()?.datasets?.[0]?.data ?? [];
+    return this.sparkPath(series.map((value) => Number(value) || 0));
+  });
+
+  readonly ordersSpark = computed(() =>
+    this.sparkPath((this.sales()?.revenueTrends ?? []).map((point) => Number(point.orderCount) || 0)),
+  );
+
   readonly salesChart = computed((): ChartDataResponse | null => {
+    const currency = this.overview()?.currency || this.finance()?.currency || this.dashboardState.currency() || undefined;
     const source = this.revenueChart();
-    const headline = this.overview()?.totalRevenue ?? 0;
-    const revenue =
-      source?.datasets?.find((d) => /revenue/i.test(d.label ?? '')) ?? source?.datasets?.[0];
-    const values = (revenue?.data ?? []).map((n) => Number(n) || 0);
-    if (!values.some((v) => v > 0) && headline <= 0) return null;
+    const dataset =
+      source?.datasets?.find((item) => /revenue/i.test(item.label ?? '')) ?? source?.datasets?.[0];
+    const values = (dataset?.data ?? []).map((value) => Number(value) || 0);
+    if (source && dataset && values.some((value) => value > 0)) {
+      return {
+        ...source,
+        labels: this.displayLabels(source.labels ?? []),
+        datasets: [{ ...dataset, label: dataset.label || 'Revenue', data: values, chartStyle: dataset.chartStyle || 'line' }],
+        currency,
+      };
+    }
 
-    if (!values.length) return null;
-    const range = source?.dateRange ?? this.overview()?.dateRange;
-    const labels = source?.labels?.length ? source.labels : values.map((_, index) => `${index + 1}`);
-    const spread = this.spreadSeries(
-      labels.map((label, index) => ({ at: label, value: values[index] ?? 0 })),
-      range?.startDate,
-      range?.endDate,
-    );
-    const chartValues = this.hasShape(spread.values) ? spread.values : values;
-    const chartLabels = this.hasShape(spread.values) ? spread.labels : labels;
-
+    const trends = this.sales()?.revenueTrends ?? [];
+    if (!trends.some((point) => Number(point.revenue) > 0)) return null;
     return {
       chartType: 'line',
-      title: source?.title || 'Sales Overview',
-      labels: chartLabels,
-      datasets: [
-        {
-          label: revenue?.label || 'Revenue',
-          data: chartValues,
-          chartStyle: 'line',
-        },
-      ],
-      dateRange: range ?? {
+      title: 'Sales performance',
+      labels: this.displayLabels(trends.map((point) => point.date)),
+      datasets: [{ label: 'Revenue', data: trends.map((point) => Number(point.revenue) || 0), chartStyle: 'line' }],
+      dateRange: this.sales()?.dateRange ?? this.overview()?.dateRange ?? {
         startDate: '',
         endDate: '',
         period: this.period(),
       },
-      periodTotal: headline,
+      currency,
     };
   });
 
+  readonly salesChartEmpty = computed(() => {
+    if ((this.overview()?.totalRevenue ?? 0) > 0) {
+      return 'Revenue is recorded, but there is no trend breakdown for this period.';
+    }
+    return 'Charts appear after completed orders.';
+  });
+
+  readonly topProducts = computed((): ProductPerformanceDto[] => {
+    const products = this.products();
+    const ranked = products?.highestRevenueProducts?.length
+      ? products.highestRevenueProducts
+      : products?.productRevenue?.length
+        ? products.productRevenue
+        : products?.bestSellingProducts ?? [];
+    return ranked.slice(0, 5);
+  });
+
   readonly categorySlices = computed((): CategorySlice[] => {
-    const raw = this.buildCategoryRaw();
-    const total = raw.reduce((sum, item) => sum + item.value, 0) || 1;
-    let cumulative = 0;
+    const raw = this.topProducts()
+      .map((product) => ({ name: product.productName, value: productRevenue(product) }))
+      .filter((item) => item.value > 0);
+    const total = raw.reduce((sum, item) => sum + item.value, 0);
+    if (!total) return [];
     const ratios = raw.map((item) => item.value / total);
     const pcts = this.roundPercentages(ratios);
-
+    let cumulative = 0;
     return raw.map((item, index) => {
-      const ratio = ratios[index];
-      const length = ratio * DONUT_CIRCUMFERENCE;
+      const length = ratios[index] * DONUT_CIRCUMFERENCE;
       const slice: CategorySlice = {
         name: item.name,
         value: item.value,
@@ -273,34 +312,171 @@ export class DashboardComponent implements OnInit {
     });
   });
 
-  readonly categoryTotal = computed(() => {
-    const raw = this.buildCategoryRaw();
-    return raw.reduce((sum, item) => sum + item.value, 0);
+  readonly categoryTotal = computed(() => this.categorySlices().reduce((sum, item) => sum + item.value, 0));
+
+  readonly financeRows = computed(() => {
+    const finance = this.finance();
+    if (!finance) return [];
+    const row = (label: string, value: number | null | undefined, hint = '') => ({
+      label,
+      value: typeof value === 'number' ? value : null,
+      hint,
+    });
+    return [
+      row('Revenue', finance.totalRevenue),
+      row('Expenses', finance.totalExpenses),
+      row('Cost of goods sold', finance.costOfGoodsSold),
+      row('Gross profit', finance.grossProfit, 'Revenue minus cost of goods sold'),
+      row('Net profit', finance.netProfit, 'After COGS and expenses'),
+      row('Outstanding invoices', finance.outstandingInvoices),
+    ];
   });
 
-  readonly categoryTotalLabel = computed(() => this.formatCompactMoney(this.categoryTotal()));
-
-  readonly topProducts = computed((): ProductPerformanceDto[] => {
-    return this.products()?.bestSellingProducts?.slice(0, 5) ?? [];
+  readonly stockAlerts = computed(() => {
+    const inventory = this.inventory();
+    if (!inventory) return [];
+    const recommendations = inventory.reorderRecommendations ?? [];
+    if (recommendations.length) {
+      return recommendations.slice(0, 4).map((item) => ({
+        productId: item.productId,
+        productName: item.productName,
+        detail: `${this.formatCount(item.currentStock)} on hand · reorder ${this.formatCount(item.suggestedReorderQuantity)}`,
+      }));
+    }
+    return (inventory.stockLevels ?? [])
+      .filter((level) => level.isOutOfStock || level.isLowStock)
+      .slice(0, 4)
+      .map((level) => ({
+        productId: level.productId,
+        productName: level.productName,
+        detail: level.isOutOfStock
+          ? 'Out of stock'
+          : `${this.formatCount(level.currentStock)} on hand · low stock`,
+      }));
   });
 
-  readonly salesHeadline = computed(() => this.overview()?.totalRevenue ?? 0);
-  readonly salesChange = computed((): number | null => {
-    const values = this.salesSeries((point) => point.revenue).values;
-    if (values.length < 2) return null;
-    const previous = values[values.length - 2];
-    const latest = values[values.length - 1];
-    if (!previous) return null;
-    return ((latest - previous) / Math.abs(previous)) * 100;
+  readonly topCustomers = computed(() => (this.customers()?.topCustomers ?? []).slice(0, 3));
+
+  readonly insightSource = computed((): BusinessInsight[] | null => {
+    if (this.dashboardState.usedSummary()) return this.dashboardState.insights();
+    if (this.loading()) return null;
+    const snapshot = this.experience.snapshot();
+    if (snapshot) return snapshot.insights ?? [];
+    if (this.experience.loadFailed()) return [];
+    return null;
   });
 
-  readonly donutCircumference = DONUT_CIRCUMFERENCE;
-  readonly donutRadius = DONUT_RADIUS;
+  readonly visibleInsights = computed(() => {
+    const source = this.insightSource();
+    if (!source) return [];
+    const hidden = new Set(this.dismissedInsightCodes());
+    return source.filter((insight) => !!insight.code && !hidden.has(insight.code));
+  });
+
+  readonly insightsPending = computed(() => this.insightSource() === null);
+  readonly insightsDismissedAll = computed(() => {
+    const source = this.insightSource();
+    return !!source?.length && this.visibleInsights().length === 0;
+  });
+  readonly insightLoadFailed = computed(
+    () => !this.dashboardState.usedSummary() && !this.loading() && this.experience.loadFailed() && !this.experience.snapshot(),
+  );
+
+  private readonly fallbackPriorities = computed((): DashboardPriority[] => {
+    if (this.dashboardState.usedSummary() || this.loading()) return [];
+    const list: DashboardPriority[] = [];
+    const low = this.lowStockCount() ?? 0;
+    const out = this.outOfStockCount() ?? 0;
+    const pending =
+      this.orders()?.ordersByStatus?.find((status) => status.status.toLowerCase() === 'pending')?.count ?? 0;
+    const outstanding = this.outstanding();
+    const currency = this.overview()?.currency || this.finance()?.currency || '';
+    if (low > 0) {
+      list.push({
+        id: 'low-stock',
+        title: 'Reorder low-stock products',
+        description: low === 1 ? '1 product is at or below its reorder level.' : `${low} products are at or below their reorder levels.`,
+        priority: 'high',
+        route: ROUTES.inventory.base,
+        actionLabel: 'View inventory',
+      });
+    }
+    if (out > 0) {
+      list.push({
+        id: 'out-of-stock',
+        title: 'Restock out-of-stock items',
+        description: out === 1 ? '1 product has zero stock.' : `${out} products have zero stock.`,
+        priority: 'high',
+        route: ROUTES.inventory.base,
+        actionLabel: 'View inventory',
+      });
+    }
+    if (pending > 0) {
+      list.push({
+        id: 'pending-orders',
+        title: 'Review pending orders',
+        description: pending === 1 ? '1 order is waiting to be processed.' : `${pending} orders are waiting to be processed.`,
+        priority: 'medium',
+        route: ROUTES.orders.list,
+        actionLabel: 'Open orders',
+      });
+    }
+    if (outstanding != null && outstanding > 0) {
+      const amount = outstanding.toLocaleString(undefined, { maximumFractionDigits: 2 });
+      list.push({
+        id: 'outstanding',
+        title: 'Follow up on outstanding payments',
+        description: currency ? `${amount} ${currency} remains unpaid.` : `${amount} remains unpaid.`,
+        priority: 'high',
+        route: ROUTES.invoices.list,
+        actionLabel: 'View invoices',
+      });
+    }
+    return list;
+  });
+
+  readonly priorityItems = computed((): PriorityView[] => {
+    const done = new Set(this.completedPriorityIds());
+    const source = this.dashboardState.usedSummary()
+      ? this.dashboardState.priorities()
+      : this.fallbackPriorities();
+    return source.map((item) => ({ ...item, done: done.has(item.id) }));
+  });
+
+  readonly prioritiesPending = computed(
+    () => this.loading() && !this.dashboardState.usedSummary() && this.priorityItems().length === 0,
+  );
+
+  readonly activityItems = computed(() => {
+    const seen = new Set<string>();
+    const items: ActivityDto[] = [];
+    for (const item of this.dashboardState.recentActivity() ?? []) {
+      const key = [
+        (item.description || '').trim().toLowerCase(),
+        (item.entityType || '').toLowerCase(),
+        String(item.entityId || item.entityName || '').toLowerCase(),
+      ].join('|');
+      if (seen.has(key)) continue;
+      seen.add(key);
+      items.push(item);
+      if (items.length >= 8) break;
+    }
+    return items;
+  });
+
+  readonly activityPending = computed(
+    () => this.loading() && this.dashboardState.recentActivity() === null,
+  );
+
+  constructor() {
+    this.loadedPriorityKey = this.priorityStorageKey();
+    this.completedPriorityIds.set(this.readList(this.browserStorage('local'), this.loadedPriorityKey));
+    this.loadedDismissKey = this.dismissStorageKey();
+    this.dismissedInsightCodes.set(this.readList(this.browserStorage('session'), this.loadedDismissKey));
+  }
 
   ngOnInit(): void {
     this.dashboardState.loadDashboard();
-    this.loadFinance();
-    this.loadRecentActivity();
     this.loadRecentOrders();
     void this.notificationState.refresh(5);
     this.syncChartHeight();
@@ -311,61 +487,86 @@ export class DashboardComponent implements OnInit {
     this.syncChartHeight();
   }
 
-  private syncChartHeight(): void {
-    if (typeof window === 'undefined') return;
-    const w = window.innerWidth;
-    if (w < 420) this.chartHeight.set(180);
-    else if (w < 768) this.chartHeight.set(220);
-    else this.chartHeight.set(280);
-  }
-
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
     const target = event.target as HTMLElement | null;
-    if (!target?.closest('.dash__add')) {
-      this.showAddMenu.set(false);
-    }
+    if (!target?.closest('.dash__add')) this.showAddMenu.set(false);
   }
 
   setPeriod(value: DashboardPeriod): void {
     this.dashboardState.setPeriod(value);
-    this.loadFinance();
   }
 
   onPeriodChange(event: Event): void {
-    const value = (event.target as HTMLSelectElement).value as DashboardPeriod;
-    this.setPeriod(value);
+    this.setPeriod((event.target as HTMLSelectElement).value as DashboardPeriod);
   }
 
   retry(): void {
     this.dashboardState.loadDashboard(this.period());
-    this.loadFinance();
-    this.loadRecentActivity();
     this.loadRecentOrders();
   }
 
   toggleAddMenu(): void {
-    this.showAddMenu.update((v) => !v);
+    this.showAddMenu.update((open) => !open);
   }
 
   closeAddMenu(): void {
     this.showAddMenu.set(false);
   }
 
-  openAiAssistant(event: Event): void {
-    event.stopPropagation();
-    // This click also reaches the assistant's document listener. Opening in the
-    // same turn makes that listener treat the button as an outside click and
-    // close the panel before it appears. Open after the click finishes.
-    setTimeout(() => this.aiAssistantState.open());
+  toggleCustomize(): void {
+    const next = !this.experience.editingLayout();
+    this.experience.editingLayout.set(next);
+    if (!next || typeof document === 'undefined') return;
+    setTimeout(() => document.getElementById('dashboard-layout')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
   }
 
-  toggleTask(id: string): void {
-    if (this.completedFollowUps.has(id)) this.completedFollowUps.delete(id);
-    else this.completedFollowUps.add(id);
-    this.tasks.update((list) =>
-      list.map((task) => (task.id === id ? { ...task, done: this.completedFollowUps.has(id) } : task)),
-    );
+  togglePriority(id: string): void {
+    const next = new Set(this.completedPriorityIds());
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    const values = [...next];
+    this.completedPriorityIds.set(values);
+    this.writeList(this.browserStorage('local'), this.priorityStorageKey(), values);
+  }
+
+  dismissInsight(code: string): void {
+    if (!code || this.dismissedInsightCodes().includes(code)) return;
+    const values = [...this.dismissedInsightCodes(), code];
+    this.dismissedInsightCodes.set(values);
+    this.writeList(this.browserStorage('session'), this.dismissStorageKey(), values);
+  }
+
+  formatChange(value: number | null): string | null {
+    if (value == null || Number.isNaN(value)) return null;
+    const abs = Math.abs(value);
+    const digits = Number.isInteger(abs) ? 0 : 1;
+    const sign = value > 0 ? '+' : value < 0 ? '−' : '';
+    return `${sign}${abs.toFixed(digits)}%`;
+  }
+
+  priorityTone(value: string): 'high' | 'medium' | 'low' {
+    const key = value.toLowerCase();
+    if (key === 'high' || key === 'critical') return 'high';
+    if (key === 'low') return 'low';
+    return 'medium';
+  }
+
+  insightSeverity(value: string | null | undefined): 'info' | 'positive' | 'warning' | 'critical' {
+    const key = (value || 'info').toLowerCase();
+    if (key === 'positive' || key === 'success') return 'positive';
+    if (key === 'warning' || key === 'medium') return 'warning';
+    if (key === 'critical' || key === 'high' || key === 'danger') return 'critical';
+    return 'info';
+  }
+
+  internalRoute(route: string | null | undefined): string | null {
+    if (!route || !route.startsWith('/') || route.startsWith('//')) return null;
+    return route;
+  }
+
+  customerName(customer: TopCustomer): string {
+    return customer.fullName?.trim() || customer.customerName?.trim() || 'Customer';
   }
 
   statusTone(status: string): StatusTone {
@@ -385,18 +586,26 @@ export class DashboardComponent implements OnInit {
     const diffMs = Date.now() - date.getTime();
     const mins = Math.floor(diffMs / 60000);
     if (mins < 1) return 'just now';
-    if (mins < 60) return `${mins} min ago`;
+    if (mins < 60) return mins === 1 ? '1 min ago' : `${mins} min ago`;
     const hours = Math.floor(mins / 60);
-    if (hours < 24) return `${hours} hr ago`;
+    if (hours < 24) return hours === 1 ? '1 hour ago' : `${hours} hours ago`;
     const days = Math.floor(hours / 24);
-    return `${days}d ago`;
+    return days === 1 ? '1 day ago' : `${days} days ago`;
+  }
+
+  activityText(item: ActivityDto): string {
+    const description = item.description?.trim();
+    if (description) return description;
+    const action = (item.action || 'Updated').replace(/([a-z0-9])([A-Z])/g, '$1 $2');
+    const entity = item.entityName?.trim();
+    return entity ? `${action} · ${entity}` : action;
   }
 
   activityIcon(entityType: string): string {
     const key = (entityType || '').toLowerCase();
     if (key.includes('order')) return 'bi-cart3';
     if (key.includes('invoice') || key.includes('payment')) return 'bi-receipt';
-    if (key.includes('customer')) return 'bi-person-plus';
+    if (key.includes('customer')) return 'bi-person';
     if (key.includes('product') || key.includes('inventory')) return 'bi-box-seam';
     return 'bi-lightning-charge';
   }
@@ -413,386 +622,136 @@ export class DashboardComponent implements OnInit {
   productInitials(name: string): string {
     return name
       .split(/\s+/)
+      .filter(Boolean)
       .slice(0, 2)
-      .map((p) => p.charAt(0).toUpperCase())
+      .map((part) => part.charAt(0).toUpperCase())
       .join('');
   }
 
-  private loadRecentOrders(): void {
-    this.ordersLoading.set(true);
-    this.orderService.getAll({ page: 1, pageSize: 6 }).subscribe({
-      next: (result) => {
-        this.recentOrders.set(result.items ?? []);
-        this.ordersLoading.set(false);
-      },
-      error: () => {
-        this.recentOrders.set([]);
-        this.ordersLoading.set(false);
-      },
-    });
-  }
-
-  private loadRecentActivity(): void {
-    this.activityLoading.set(true);
-    this.activityService.getRecent(6).subscribe({
-      next: (items) => {
-        this.recentActivities.set(items);
-        this.activityLoading.set(false);
-      },
-      error: () => {
-        this.recentActivities.set([]);
-        this.activityLoading.set(false);
-      },
-    });
-  }
-
-  private loadFinance(): void {
-    const period = this.period();
-    forkJoin({
-      finance: this.financeService.getDashboard({ period }).pipe(catchError(() => of(null))),
-      customers: this.dashboardService.getCustomersChart({ period }).pipe(catchError(() => of(null))),
-    }).subscribe(({ finance, customers }) => {
-      this.financeReport.set(finance);
-      const growth =
-        customers?.datasets?.find((dataset) => /customer/i.test(dataset.label ?? '')) ??
-        customers?.datasets?.[0];
-      const values = (growth?.data ?? []).map((value) => Number(value) || 0);
-      const spread = this.spreadSeries(
-        (customers?.labels ?? []).map((label, index) => ({ at: label, value: values[index] ?? 0 })),
-        customers?.dateRange?.startDate ?? this.overview()?.dateRange?.startDate,
-        customers?.dateRange?.endDate ?? this.overview()?.dateRange?.endDate,
-      );
-      this.customerSparkValues.set(this.hasShape(spread.values) ? spread.values : values);
-    });
-  }
-
-  /** Profit at the same grain as the selected filter. Quiet buckets stay at zero. */
-  private profitSeries(
-    revenue: TrendPoint[],
-    expenses: TrendPoint[],
-    start?: string,
-    end?: string,
-  ): number[] {
-    const revenueByKey = new Map(revenue.map((point) => [this.trendKey(point.period), Number(point.amount) || 0]));
-    const expenseByKey = new Map(expenses.map((point) => [this.trendKey(point.period), Number(point.amount) || 0]));
-    const keys = [...new Set([...revenueByKey.keys(), ...expenseByKey.keys()])].filter(Boolean).sort();
-    if (!keys.length) return [];
-    if (keys.every((key) => /^\d{4}-\d{2}$/.test(key))) {
-      return this.monthsOnAxis(keys, start, end).map(
-        (month) => (revenueByKey.get(month) ?? 0) - (expenseByKey.get(month) ?? 0),
-      );
-    }
-    return keys.map((key) => (revenueByKey.get(key) ?? 0) - (expenseByKey.get(key) ?? 0));
-  }
-
-  private trendKey(period: string): string {
-    if (/^\d{4}-\d{2}-\d{2}T\d{2}/.test(period)) return period.slice(0, 13);
-    if (/^\d{4}-\d{2}-\d{2}/.test(period)) return period.slice(0, 10);
-    return period.slice(0, 7);
-  }
-
-  private salesSeries(pick: (point: { revenue: number; orderCount: number; date: string }) => number): {
-    labels: string[];
-    values: number[];
-  } {
-    const trends = this.sales()?.revenueTrends ?? [];
-    const range = this.sales()?.dateRange ?? this.overview()?.dateRange;
-    return this.spreadSeries(
-      trends.map((point) => ({ at: point.date, value: Number(pick(point)) || 0 })),
-      range?.startDate,
-      range?.endDate,
-    );
-  }
-
-  /**
-   * Lay real figures across the selected filter.
-   * Today is hourly, week and month are daily, year is monthly.
-   * Buckets with no sales or signups stay at zero so the line can rise and fall.
-   */
-  private spreadSeries(
-    points: Array<{ at: string; value: number }>,
-    start?: string,
-    end?: string,
-  ): { labels: string[]; values: number[] } {
-    const parsed = points
-      .map((point) => ({ at: point.at, date: this.parseTrendDate(point.at), value: Number(point.value) || 0 }))
-      .filter((point): point is { at: string; date: Date; value: number } => point.date !== null)
-      .sort((a, b) => a.date.getTime() - b.date.getTime());
-    if (!parsed.length) return { labels: [], values: [] };
-
-    const period = this.period();
-    if (period === DashboardPeriod.All) {
-      return { labels: parsed.map((point) => point.at), values: parsed.map((point) => point.value) };
-    }
-
-    const grain: 'hour' | 'day' | 'month' =
-      period === DashboardPeriod.Today ? 'hour' : period === DashboardPeriod.Year ? 'month' : 'day';
-    const rangeStart = this.parseTrendDate(start ?? '') ?? parsed[0].date;
-    const rangeEnd = this.parseTrendDate(end ?? '') ?? parsed[parsed.length - 1].date;
-    return this.fillBuckets(parsed, rangeStart, rangeEnd, grain);
-  }
-
-  private fillBuckets(
-    points: Array<{ date: Date; value: number }>,
-    start: Date,
-    end: Date,
-    grain: 'hour' | 'day' | 'month',
-  ): { labels: string[]; values: number[] } {
-    const totals = new Map<string, number>();
-    for (const point of points) {
-      const key = this.bucketKey(point.date, grain);
-      totals.set(key, (totals.get(key) ?? 0) + point.value);
-    }
-
-    const labels: string[] = [];
-    const values: number[] = [];
-    let cursor = this.alignBucket(start, grain);
-    let last = this.alignBucket(end, grain);
-    for (const point of points) {
-      const aligned = this.alignBucket(point.date, grain);
-      if (aligned.getTime() < cursor.getTime()) cursor = aligned;
-      if (aligned.getTime() > last.getTime()) last = new Date(aligned.getTime());
-    }
-    const limit = grain === 'hour' ? 36 : grain === 'day' ? 62 : 18;
-    while (cursor.getTime() <= last.getTime() && values.length < limit) {
-      labels.push(this.formatBucket(cursor, grain));
-      values.push(totals.get(this.bucketKey(cursor, grain)) ?? 0);
-      this.advanceBucket(cursor, grain);
-    }
-
-    if (!this.hasShape(values) && this.hasShape(points.map((point) => point.value))) {
-      return {
-        labels: points.map((point) => this.formatBucket(point.date, grain)),
-        values: points.map((point) => point.value),
-      };
-    }
-    return { labels, values };
-  }
-
-  private parseTrendDate(value: string): Date | null {
-    const trimmed = value.trim();
-    if (!trimmed) return null;
-    const normalized = /^\d{4}-\d{2}$/.test(trimmed)
-      ? `${trimmed}-01`
-      : /^\d{4}-\d{2}-\d{2}T\d{2}$/.test(trimmed)
-        ? `${trimmed}:00:00`
-        : trimmed;
-    const date = new Date(normalized);
-    return Number.isNaN(date.getTime()) ? null : date;
-  }
-
-  private bucketKey(date: Date, grain: 'hour' | 'day' | 'month'): string {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    if (grain === 'month') return `${year}-${month}`;
-    if (grain === 'day') return `${year}-${month}-${day}`;
-    return `${year}-${month}-${day}T${String(date.getHours()).padStart(2, '0')}`;
-  }
-
-  private alignBucket(date: Date, grain: 'hour' | 'day' | 'month'): Date {
-    const aligned = new Date(date);
-    if (grain === 'month') aligned.setDate(1);
-    if (grain !== 'hour') aligned.setHours(0, 0, 0, 0);
-    else aligned.setMinutes(0, 0, 0);
-    return aligned;
-  }
-
-  private advanceBucket(date: Date, grain: 'hour' | 'day' | 'month'): void {
-    if (grain === 'hour') date.setHours(date.getHours() + 1);
-    else if (grain === 'day') date.setDate(date.getDate() + 1);
-    else date.setMonth(date.getMonth() + 1);
-  }
-
-  private formatBucket(date: Date, grain: 'hour' | 'day' | 'month'): string {
-    if (grain === 'hour') return new Intl.DateTimeFormat('en-US', { hour: 'numeric' }).format(date);
-    if (grain === 'month') return new Intl.DateTimeFormat('en-US', { month: 'short' }).format(date);
-    return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(date);
-  }
-
-  private hasShape(values: number[]): boolean {
-    return values.length > 1 && new Set(values).size > 1;
-  }
-
-  /**
-   * Months that should appear on the spark.
-   * All Time starts at 1970, so the axis follows the first and last months that
-   * actually have figures. Quiet months between them stay at zero.
-   */
-  private monthsOnAxis(known: string[], start?: string, end?: string): string[] {
-    const keys = [...new Set(known.filter((month) => /^\d{4}-\d{2}$/.test(month)))].sort();
-    if (keys.length < 2) return keys;
-
-    let first = keys[0];
-    let last = keys[keys.length - 1];
-    const startKey = start ? this.monthKey(start) : '';
-    const endKey = end ? this.monthKey(end) : '';
-    if (startKey && startKey < first && this.monthsBetween(`${startKey}-01`, `${first}-01`).length <= 3) {
-      first = startKey;
-    }
-    if (endKey && endKey > last && this.monthsBetween(`${last}-01`, `${endKey}-01`).length <= 3) {
-      last = endKey;
-    }
-    return this.monthsBetween(`${first}-01`, `${last}-01`);
-  }
-
-  private monthKey(iso: string): string {
-    const date = new Date(iso);
-    if (Number.isNaN(date.getTime())) return '';
-    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-    return `${date.getUTCFullYear()}-${month}`;
-  }
-
-  private monthsBetween(startIso: string, endIso: string): string[] {
-    const start = new Date(startIso);
-    const end = new Date(endIso);
-    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end < start) return [];
-
-    const cursor = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), 1));
-    const last = new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), 1));
-    const months: string[] = [];
-    while (cursor <= last && months.length < 120) {
-      const month = String(cursor.getUTCMonth() + 1).padStart(2, '0');
-      months.push(`${cursor.getUTCFullYear()}-${month}`);
-      cursor.setUTCMonth(cursor.getUTCMonth() + 1);
-    }
-    return months.length > 36 ? months.slice(-36) : months;
-  }
-
-  private buildCategoryRaw(): Array<{ name: string; value: number }> {
-    const products = this.products()?.bestSellingProducts?.slice(0, 5) ?? [];
-    return products
-      .filter((p) => (p.totalRevenue ?? 0) > 0)
-      .map((p) => ({ name: p.productName, value: p.totalRevenue }));
-  }
-
-  private formatCompactMoney(value: number): string {
-    const code = this.currencyService.currencyCode() || 'PKR';
+  formatCompactMoney(value: number): string {
+    const code = this.overview()?.currency || this.currencyService.currencyCode() || 'USD';
     if (!value) return `${code} 0`;
     if (value >= 1_000_000) return `${code} ${(value / 1_000_000).toFixed(2)}M`;
     if (value >= 1_000) return `${code} ${(value / 1_000).toFixed(1)}K`;
     return `${code} ${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
   }
 
-  private roundPercentages(ratios: number[]): number[] {
-    const floored = ratios.map((r) => Math.floor(r * 100));
-    let remainder = 100 - floored.reduce((sum, n) => sum + n, 0);
-    const order = ratios
-      .map((r, i) => ({ i, frac: r * 100 - floored[i] }))
-      .sort((a, b) => b.frac - a.frac);
-
-    for (const item of order) {
-      if (remainder <= 0) break;
-      floored[item.i] += 1;
-      remainder -= 1;
-    }
-    return floored;
-  }
-
-  /**
-   * Turn a short or flat series into a full-width wave.
-   * A single day or a single month-bucket cannot draw a line on its own.
-   */
-  private expandSeries(values: number[], count: number): number[] {
-    const nums = values.filter((v) => Number.isFinite(v));
-    if (nums.length === 0) return Array.from({ length: Math.max(count, 2) }, () => 0);
-    if (nums.length === 1) return Array.from({ length: Math.max(count, 2) }, () => nums[0]);
-    return nums.length === count ? nums.slice() : this.resample(nums, count);
-  }
-
-  private resample(values: number[], count: number): number[] {
-    if (values.length === count) return values.slice();
-    const result: number[] = [];
-    const maxIndex = values.length - 1;
-    for (let i = 0; i < count; i++) {
-      const t = (i / Math.max(count - 1, 1)) * maxIndex;
-      const i0 = Math.floor(t);
-      const i1 = Math.min(i0 + 1, maxIndex);
-      const f = t - i0;
-      const smooth = f * f * (3 - 2 * f);
-      result.push(values[i0] + (values[i1] - values[i0]) * smooth);
-    }
-    return result;
-  }
-
-  private periodLabels(count: number, sourceLabels: string[]): string[] {
-    let start: Date | null = null;
-    let end: Date | null = null;
-    const period = this.period();
-
-    if (period === DashboardPeriod.All || period === DashboardPeriod.Year) {
-      const parsed = sourceLabels
-        .map((label) => new Date(label))
-        .filter((date) => !Number.isNaN(date.getTime()))
-        .sort((a, b) => a.getTime() - b.getTime());
-      if (parsed.length) {
-        start = parsed[0];
-        end = parsed[parsed.length - 1];
-      }
-    }
-
-    const range = this.sales()?.dateRange ?? this.overview()?.dateRange;
-    if (!start && range?.startDate) start = new Date(range.startDate);
-    if (!end && range?.endDate) end = new Date(range.endDate);
-
-    if (!start || !end || Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end < start) {
-      return Array.from({ length: count }, (_, i) => `${i + 1}`);
-    }
-
-    const span = end.getTime() - start.getTime();
-    const fmt =
-      span < 36 * 60 * 60 * 1000
-        ? new Intl.DateTimeFormat('en-US', { hour: 'numeric' })
-        : new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' });
-
-    return Array.from({ length: count }, (_, i) => {
-      const t = count === 1 ? 0 : i / (count - 1);
-      return fmt.format(new Date(start.getTime() + span * t));
+  private loadRecentOrders(): void {
+    this.ordersLoading.set(true);
+    this.ordersError.set(null);
+    this.orderService.getAll({ page: 1, pageSize: 5 }).subscribe({
+      next: (result) => {
+        this.recentOrders.set(result.items ?? []);
+        this.ordersLoading.set(false);
+      },
+      error: () => {
+        this.recentOrders.set([]);
+        this.ordersError.set('Recent orders could not be loaded.');
+        this.ordersLoading.set(false);
+      },
     });
   }
 
-  private buildSpark(values: number[], fallbackPeak = 0): { line: string; area: string } {
-    const finite = values.filter((v) => Number.isFinite(v));
-    const peak = finite.length ? Math.max(...finite) : 0;
-    const hasShape = finite.length > 1 && new Set(finite).size > 1;
-    const basis = hasShape || peak > 0 ? finite : fallbackPeak > 0 ? [fallbackPeak] : finite;
-    const series = this.expandSeries(basis, 12);
+  private syncChartHeight(): void {
+    if (typeof window === 'undefined') return;
+    const width = window.innerWidth;
+    if (width < 420) this.chartHeight.set(180);
+    else if (width < 768) this.chartHeight.set(210);
+    else this.chartHeight.set(260);
+  }
+
+  private priorityStorageKey(): string {
+    const user = this.authService.currentUser();
+    const tenant = user?.tenantId || 'tenant';
+    const id = user?.userId || user?.email || 'user';
+    return `bos.dashboard.completed-priorities.${tenant}.${id}`;
+  }
+
+  private dismissStorageKey(): string {
+    const user = this.authService.currentUser();
+    const tenant = user?.tenantId || 'tenant';
+    const id = user?.userId || user?.email || 'user';
+    return `bos.dashboard.dismissed-insights.${tenant}.${id}`;
+  }
+
+  private browserStorage(kind: 'local' | 'session'): Storage | null {
+    try {
+      if (typeof window === 'undefined') return null;
+      return kind === 'local' ? window.localStorage : window.sessionStorage;
+    } catch {
+      return null;
+    }
+  }
+
+  private readList(storage: Storage | null, key: string): string[] {
+    if (!storage) return [];
+    try {
+      const raw = storage.getItem(key);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw) as unknown;
+      return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string') : [];
+    } catch {
+      return [];
+    }
+  }
+
+  private writeList(storage: Storage | null, key: string, values: string[]): void {
+    if (!storage) return;
+    try {
+      storage.setItem(key, JSON.stringify(values));
+    } catch {
+      /* Ignore private-mode storage failures. */
+    }
+  }
+
+  private numericOrNull(value: number | null | undefined): number | null {
+    return typeof value === 'number' && !Number.isNaN(value) ? value : null;
+  }
+
+  private formatCount(value: number): string {
+    return value.toLocaleString(undefined, { maximumFractionDigits: 0 });
+  }
+
+  private displayLabels(labels: string[]): string[] {
+    return labels.map((label) => {
+      if (!/^\d{4}-\d{2}-\d{2}/.test(label)) return label;
+      const date = new Date(label);
+      if (Number.isNaN(date.getTime())) return label;
+      const options: Intl.DateTimeFormatOptions = label.includes('T')
+        ? { month: 'short', day: 'numeric', hour: 'numeric' }
+        : { month: 'short', day: 'numeric' };
+      return new Intl.DateTimeFormat('en-US', options).format(date);
+    });
+  }
+
+  private sparkPath(values: number[]): string | null {
+    const series = values.filter((value) => Number.isFinite(value));
+    if (series.length < 2 || new Set(series).size < 2) return null;
     const width = 120;
-    const height = 40;
-    const padX = 1.5;
-    const padY = 5;
+    const height = 36;
     const min = Math.min(...series);
     const max = Math.max(...series);
     const range = max - min || 1;
-    const coords = series.map((v, i) => ({
-      x: padX + (i / Math.max(series.length - 1, 1)) * (width - padX * 2),
-      y: padY + (1 - (v - min) / range) * (height - padY * 2),
-    }));
-    const line = this.toSmoothPath(coords);
-    const first = coords[0];
-    const last = coords[coords.length - 1];
-    const area = `${line} L ${last.x.toFixed(1)} ${height} L ${first.x.toFixed(1)} ${height} Z`;
-    return { line, area };
+    return series
+      .map((value, index) => {
+        const x = (index / (series.length - 1)) * width;
+        const y = 4 + (1 - (value - min) / range) * (height - 8);
+        return `${index === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`;
+      })
+      .join(' ');
   }
 
-  private toSmoothPath(points: Array<{ x: number; y: number }>): string {
-    if (!points.length) return '';
-    const fmt = (n: number) => n.toFixed(1);
-    if (points.length === 1) {
-      return `M 0 ${fmt(points[0].y)} L 120 ${fmt(points[0].y)}`;
+  private roundPercentages(ratios: number[]): number[] {
+    const floored = ratios.map((ratio) => Math.floor(ratio * 100));
+    let remainder = 100 - floored.reduce((sum, value) => sum + value, 0);
+    const order = ratios
+      .map((ratio, index) => ({ index, frac: ratio * 100 - floored[index] }))
+      .sort((a, b) => b.frac - a.frac);
+    for (const item of order) {
+      if (remainder <= 0) break;
+      floored[item.index] += 1;
+      remainder -= 1;
     }
-    let d = `M ${fmt(points[0].x)} ${fmt(points[0].y)}`;
-    for (let i = 0; i < points.length - 1; i++) {
-      const p0 = points[Math.max(i - 1, 0)];
-      const p1 = points[i];
-      const p2 = points[i + 1];
-      const p3 = points[Math.min(i + 2, points.length - 1)];
-      const cp1x = p1.x + (p2.x - p0.x) / 6;
-      const cp1y = p1.y + (p2.y - p0.y) / 6;
-      const cp2x = p2.x - (p3.x - p1.x) / 6;
-      const cp2y = p2.y - (p3.y - p1.y) / 6;
-      d += ` C ${fmt(cp1x)} ${fmt(cp1y)}, ${fmt(cp2x)} ${fmt(cp2y)}, ${fmt(p2.x)} ${fmt(p2.y)}`;
-    }
-    return d;
+    return floored;
   }
 }

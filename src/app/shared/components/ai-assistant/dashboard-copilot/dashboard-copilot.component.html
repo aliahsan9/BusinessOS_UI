@@ -1,4 +1,5 @@
-<div class="copilot">
+<div class="copilot" [class.copilot--ask]="variant() === 'ask'">
+  @if (variant() !== 'ask') {
   <!-- Insights first: actionable, color-coded -->
   <section class="copilot__insights" aria-labelledby="copilot-insights-heading">
     <div class="copilot__insights-head">
@@ -68,6 +69,7 @@
       }
     }
   </section>
+  }
 
   <!-- Navla helper — compact, secondary -->
   <section class="ask-sophia" aria-label="Ask Navla for help">

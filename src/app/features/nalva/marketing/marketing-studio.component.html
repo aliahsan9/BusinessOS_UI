@@ -1,0 +1,103 @@
+<header class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+  <div>
+    <h2>Content studio</h2>
+    <p class="muted mb-0">Edit captions, associate campaigns, preview assets, and submit for review.</p>
+  </div>
+  <button class="btn" type="button" (click)="load()" [disabled]="loading() || saving()">Refresh</button>
+</header>
+
+@if (notice()) { <p class="nalva-panel" role="status">{{ notice() }}</p> }
+@if (error()) { <p class="nalva-panel" role="alert">{{ error() }}</p> }
+@if (loading()) { <p class="muted" role="status">Loading studio…</p> }
+
+@if (!loading()) {
+  <div class="studio-layout">
+    <aside class="nalva-panel studio-list" aria-label="Content list">
+      <h3>Content</h3>
+      @for (row of items(); track row.id) {
+        <button class="studio-item btn" type="button"
+          [class.primary]="selectedId() === row.id"
+          (click)="select(row)">
+          <strong>{{ row.title || row.caption || 'Untitled' }}</strong>
+          <span class="muted small">{{ row.platform || 'No platform' }} · {{ row.approvalStatus || 'Unknown' }}</span>
+        </button>
+      } @empty {
+        <p class="muted mb-0">No content items yet.</p>
+      }
+    </aside>
+
+    <section class="nalva-panel" aria-label="Content editor">
+      @if (draft(); as row) {
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+          <div>
+            <h3>{{ row.title || 'Edit content' }}</h3>
+            <p class="muted mb-0">Status: {{ row.approvalStatus || 'Unknown' }} · Campaign: {{ campaignTitle(row.campaignId) }}</p>
+          </div>
+          <span class="pill">{{ row.platform || 'Unspecified platform' }}</span>
+        </div>
+
+        <div class="stack">
+          <label>
+            Title
+            <input [value]="row.title || ''" (input)="patchDraft('title', $any($event.target).value)" />
+          </label>
+          <label>
+            Caption
+            <textarea rows="4" [value]="row.caption || ''" (input)="patchDraft('caption', $any($event.target).value)"></textarea>
+          </label>
+          <label>
+            Body
+            <textarea rows="5" [value]="row.body || ''" (input)="patchDraft('body', $any($event.target).value)"></textarea>
+          </label>
+          <label>
+            Hashtags JSON
+            <input [value]="row.hashtagsJson || ''" (input)="patchDraft('hashtagsJson', $any($event.target).value)" placeholder='["brand","launch"]' />
+          </label>
+          <label>
+            Call to action
+            <input [value]="row.callToAction || ''" (input)="patchDraft('callToAction', $any($event.target).value)" />
+          </label>
+          <label>
+            Platform
+            <select [value]="row.platform || ''" (change)="patchDraft('platform', $any($event.target).value)">
+              <option value="">Unspecified</option>
+              <option value="Facebook">Facebook Page</option>
+              <option value="LinkedIn">LinkedIn</option>
+              <option value="Instagram">Instagram (publish not implemented)</option>
+              <option value="TikTok">TikTok (not implemented)</option>
+              <option value="YouTube">YouTube (not implemented)</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="studio-preview nalva-panel mt-3">
+          <h3>Preview</h3>
+          <p class="muted small mb-2">Instagram / TikTok / YouTube publishing is not implemented. Meta Page publish only when connected.</p>
+          @if (previewImage(); as imageUrl) {
+            <img [src]="imageUrl" alt="Content graphic preview" class="preview-image" />
+          } @else {
+            <p class="muted">No graphic preview available. BriefOnly assets store a visual brief without fake logos.</p>
+          }
+          @for (asset of assets(); track asset.id) {
+            <p class="muted small">Asset: {{ asset.kind }} · {{ asset.source }} · {{ asset.status }}</p>
+          }
+          <pre class="nalva-payload mt-2">{{ row.caption || row.body || 'No caption yet.' }}</pre>
+          @if (row.createdAt) {
+            <p class="muted small mb-0">Created {{ row.createdAt | date:'medium' }}</p>
+          }
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" type="button" [disabled]="saving()" (click)="save()">
+            {{ saving() ? 'Working…' : 'Save' }}
+          </button>
+          <button class="btn" type="button" [disabled]="saving()" (click)="regenerateGraphic()">Regenerate graphic</button>
+          <button class="btn" type="button" [disabled]="saving()" (click)="submitReview()">Submit for review</button>
+          <button class="btn" type="button" [disabled]="saving()" (click)="approve()">Approve</button>
+        </div>
+      } @else {
+        <p class="muted mb-0">Select a content item to edit.</p>
+      }
+    </section>
+  </div>
+}

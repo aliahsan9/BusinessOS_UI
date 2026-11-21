@@ -9,12 +9,17 @@ import {
   DashboardQueryParams,
   InventoryAnalyticsDashboardResponse,
   OrderAnalyticsResponse,
+  OwnerDashboardSummary,
   ProductAnalyticsResponse,
   SalesAnalyticsResponse,
 } from '../models/dashboard.model';
 
 @Injectable({ providedIn: 'root' })
 export class DashboardService extends BaseApiService {
+  getSummary(params?: DashboardQueryParams): Observable<OwnerDashboardSummary> {
+    return this.get<OwnerDashboardSummary>(API_ENDPOINTS.dashboard.summary, params);
+  }
+
   getOverview(params?: DashboardQueryParams): Observable<DashboardOverviewResponse> {
     return this.get<DashboardOverviewResponse>(API_ENDPOINTS.dashboard.overview, params);
   }

@@ -12,8 +12,15 @@ export interface DashboardWidget {
 
 export interface BusinessInsight {
   code: string;
+  title?: string;
   message: string;
+  /** info | positive | warning | critical */
+  severity?: string;
+  metricLabel?: string | null;
+  metricValue?: string | null;
+  recommendedAction?: string | null;
   route?: string | null;
+  updatedAt?: string | null;
 }
 
 export interface DashboardExperience {
@@ -166,6 +173,9 @@ export interface SupplierPortalView {
 @Injectable({ providedIn: 'root' })
 export class ExperienceService extends BaseApiService {
   readonly widgets = signal<DashboardWidget[] | null>(null);
+  readonly snapshot = signal<DashboardExperience | null>(null);
+  readonly loadFailed = signal(false);
+  readonly editingLayout = signal(false);
 
   visible(id: string): boolean {
     const rows = this.widgets();
@@ -175,20 +185,26 @@ export class ExperienceService extends BaseApiService {
 
   loadDashboard(): Observable<DashboardExperience> {
     return this.get<DashboardExperience>('/experience/dashboard').pipe(
-      tap((data) => this.widgets.set(data.widgets ?? [])),
+      tap((data) => this.applySnapshot(data)),
     );
   }
 
   saveLayout(widgets: DashboardWidget[]): Observable<DashboardExperience> {
     return this.put<DashboardExperience>('/experience/dashboard/layout', { widgets }).pipe(
-      tap((data) => this.widgets.set(data.widgets ?? [])),
+      tap((data) => this.applySnapshot(data)),
     );
   }
 
   restoreLayout(): Observable<DashboardExperience> {
     return this.delete<DashboardExperience>('/experience/dashboard/layout').pipe(
-      tap((data) => this.widgets.set(data.widgets ?? [])),
+      tap((data) => this.applySnapshot(data)),
     );
+  }
+
+  private applySnapshot(data: DashboardExperience): void {
+    this.widgets.set(data.widgets ?? []);
+    this.snapshot.set(data);
+    this.loadFailed.set(false);
   }
 
   workspace(): Observable<WorkspaceExperience> {

@@ -1,0 +1,59 @@
+<header class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+  <div>
+    <h2>Connected accounts</h2>
+    <p class="muted mb-0">Marketing-focused social connections. OAuth tokens stay on the server and are never shown here.</p>
+  </div>
+  <button class="btn" type="button" (click)="load()" [disabled]="loading()">Refresh</button>
+</header>
+
+<div class="nalva-panel mb-3" role="note">
+  Connect or disconnect accounts from
+  <a [routerLink]="routes.nalva.integrations">Nalva integrations</a>.
+  Meta Page publish works only when a Page is connected with the required permissions.
+  Instagram, TikTok, and YouTube publishing are not implemented. LinkedIn write publish remains blocked.
+</div>
+
+@if (error()) { <p class="nalva-panel" role="alert">{{ error() }}</p> }
+@if (loading()) { <p class="muted" role="status">Loading accounts…</p> }
+
+@if (!loading() && !error()) {
+  <p class="muted small mb-3">
+    Source: {{ source() === 'marketing' ? '/marketing/accounts' : 'filtered /integrations/marketplace' }}
+  </p>
+
+  <section class="nalva-cards" aria-label="Connected marketing accounts">
+    @for (account of accounts(); track account.connectionId || account.provider) {
+      <article class="nalva-card">
+        <p class="eyebrow">{{ account.provider }}</p>
+        <h3>{{ displayName(account) }}</h3>
+        <div class="pills">
+          <span class="pill">{{ account.status || 'Unknown' }}</span>
+          <span class="pill">{{ account.publishAvailable ? 'Publish available' : 'Publish unavailable' }}</span>
+        </div>
+        <p class="muted">{{ publishNote(account) }}</p>
+        <div class="actions">
+          <a class="btn primary" [routerLink]="routes.nalva.integrations">Connect / manage</a>
+        </div>
+      </article>
+    } @empty {
+      <p class="muted">No Meta or LinkedIn marketing connections found yet.</p>
+    }
+  </section>
+
+  <section class="nalva-panel mt-4" aria-label="Unavailable platforms">
+    <h3>Unavailable platforms</h3>
+    <p class="muted">These channels are listed for honesty. Publishing is not implemented.</p>
+    <div class="nalva-cards">
+      @for (platform of unavailable; track platform.key) {
+        <article class="nalva-card">
+          <h3>{{ platform.name }}</h3>
+          <div class="pills">
+            <span class="pill">Unavailable</span>
+            <span class="pill">Not implemented</span>
+          </div>
+          <p class="muted mb-0">{{ platform.reason }}</p>
+        </article>
+      }
+    </div>
+  </section>
+}

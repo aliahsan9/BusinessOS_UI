@@ -6,12 +6,16 @@ export interface TrendPoint {
 
 export interface FinancialDashboard {
   totalRevenue: number;
+  costOfGoodsSold?: number;
   totalExpenses: number;
+  grossProfit?: number;
+  /** Net profit after cost of goods sold and operating expenses. */
   netProfit: number;
   totalPayments: number;
   outstandingInvoices: number;
   completedOrders: number;
   totalExpensesCount: number;
+  currency?: string;
   period: string;
   startDate: string;
   endDate: string;

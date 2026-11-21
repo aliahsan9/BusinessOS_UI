@@ -1,0 +1,44 @@
+<header class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+  <div>
+    <h2>Marketing overview</h2>
+    <p class="muted mb-0">Persisted campaign and content counts from <code>/marketing/overview</code>.</p>
+  </div>
+  <button class="btn" type="button" (click)="load()" [disabled]="loading()">Refresh</button>
+</header>
+
+@if (loading()) {
+  <p class="muted" role="status">Loading marketing overview…</p>
+}
+@if (error()) {
+  <p class="nalva-panel" role="alert">{{ error() }}</p>
+}
+
+@if (!loading() && !error() && stats(); as data) {
+  <section class="nalva-grid">
+    <article class="nalva-stat"><span>Active campaigns</span><strong>{{ data.activeCampaigns }}</strong></article>
+    <article class="nalva-stat"><span>Draft content</span><strong>{{ data.contentDrafts }}</strong></article>
+    <article class="nalva-stat"><span>Pending approvals</span><strong>{{ data.contentInReview }}</strong></article>
+    <article class="nalva-stat"><span>Scheduled posts</span><strong>{{ data.contentScheduled }}</strong></article>
+    <article class="nalva-stat"><span>Published posts</span><strong>{{ data.contentPublished }}</strong></article>
+    <article class="nalva-stat"><span>Publish jobs pending</span><strong>{{ data.publishJobsPending }}</strong></article>
+    <article class="nalva-stat"><span>Research reports</span><strong>{{ data.researchReports }}</strong></article>
+    <article class="nalva-stat"><span>Brand profile</span><strong>{{ data.hasBrandProfile ? 'Ready' : 'Missing' }}</strong></article>
+  </section>
+
+  <div class="d-flex flex-wrap gap-3 muted small mb-3">
+    <span>Data classification: {{ data.dataClassification || 'persisted records' }}</span>
+    <span>Total campaigns: {{ data.campaigns }}</span>
+    <span>Analytics snapshots: {{ data.analyticsSnapshots }}</span>
+  </div>
+
+  <section class="nalva-panel">
+    <h3>Quick links</h3>
+    <p class="muted">Approvals and OAuth connections stay on the shared Nalva surfaces. AI usage is tracked on Nalva analytics when available.</p>
+    <div class="actions">
+      <a class="btn" [routerLink]="routes.nalva.approvals">Open approvals</a>
+      <a class="btn" [routerLink]="routes.nalva.integrations">Open integrations</a>
+      <a class="btn" [routerLink]="routes.nalva.marketing.calendar">Content calendar</a>
+      <a class="btn" [routerLink]="routes.nalva.marketing.studio">Content studio</a>
+    </div>
+  </section>
+}

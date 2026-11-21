@@ -1,0 +1,156 @@
+<section class="support-workspace">
+  <header class="support-hero">
+    <div>
+      <p class="eyebrow">AI Workforce</p>
+      <h1>Customer Support Agent</h1>
+      <p class="lede">Live tickets, authorized replies, escalations, and channel status from persisted records.</p>
+    </div>
+    <div class="sandbox">
+      <label for="sandbox-body">Sandbox inbound</label>
+      <textarea id="sandbox-body" rows="3" [ngModel]="sandboxBody()" (ngModelChange)="sandboxBody.set($event)"></textarea>
+      <button class="btn primary" type="button" [disabled]="working()" (click)="sendSandbox()">Process message</button>
+    </div>
+  </header>
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+  @if (notice()) {
+    <p class="notice">{{ notice() }}</p>
+  }
+
+  @if (overview(); as stats) {
+    <div class="nalva-grid">
+      <div class="nalva-stat"><span>Total tickets</span><strong>{{ stats.totalTickets }}</strong></div>
+      <div class="nalva-stat"><span>Open</span><strong>{{ stats.openTickets }}</strong></div>
+      <div class="nalva-stat"><span>Waiting</span><strong>{{ stats.pendingTickets }}</strong></div>
+      <div class="nalva-stat"><span>Escalated</span><strong>{{ stats.escalatedTickets }}</strong></div>
+      <div class="nalva-stat"><span>Resolved</span><strong>{{ stats.resolvedTickets }}</strong></div>
+      <div class="nalva-stat"><span>Avg resolution (h)</span><strong>{{ stats.averageResolutionHours ?? '—' }}</strong></div>
+      <div class="nalva-stat"><span>Active conversations</span><strong>{{ stats.activeConversations }}</strong></div>
+      <div class="nalva-stat"><span>Pending approvals</span><strong>{{ stats.pendingApprovals }}</strong></div>
+      <div class="nalva-stat"><span>Resolution rate</span><strong>{{ stats.resolutionRate == null ? '—' : (stats.resolutionRate * 100 | number:'1.0-1') + '%' }}</strong></div>
+      <div class="nalva-stat"><span>AI cost (est.)</span><strong>{{ stats.estimatedAiCostUsd | number:'1.2-4' }}</strong></div>
+    </div>
+
+    <div class="nalva-panel channels">
+      <h3>Channels</h3>
+      <div class="channel-list">
+        @for (channel of stats.channels; track channel.channel) {
+          <article>
+            <strong>{{ channel.displayName }}</strong>
+            <span class="pill">{{ channel.status }}</span>
+            <span class="pill">{{ channel.implementation }}</span>
+            <p class="muted">{{ channel.lastError || (channel.allowsOutbound ? 'Outbound enabled when connected.' : 'Outbound unavailable.') }}</p>
+          </article>
+        }
+      </div>
+    </div>
+  }
+
+  <div class="support-layout">
+    <aside class="nalva-panel ticket-list">
+      <div class="list-head">
+        <h3>Tickets</h3>
+        <select [ngModel]="statusFilter()" (ngModelChange)="setStatusFilter($event)">
+          <option value="">All</option>
+          <option value="Open">Open</option>
+          <option value="InProgress">In progress</option>
+          <option value="WaitingForCustomer">Waiting</option>
+          <option value="Escalated">Escalated</option>
+          <option value="Resolved">Resolved</option>
+          <option value="Closed">Closed</option>
+        </select>
+      </div>
+
+      @if (loading()) {
+        <p class="muted">Loading tickets…</p>
+      } @else if (tickets().length === 0) {
+        <p class="muted">No tickets yet. Use the sandbox inbound box to create one.</p>
+      } @else {
+        <ul>
+          @for (ticket of tickets(); track ticket.id) {
+            <li>
+              <button type="button" class="ticket-row" [class.active]="selected()?.id === ticket.id" (click)="openTicket(ticket.id)">
+                <strong>{{ ticket.ticketNumber }}</strong>
+                <span>{{ ticket.subject }}</span>
+                <span class="muted">{{ ticket.status }} · {{ ticket.priority }} · {{ ticket.messageCount }} msgs</span>
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    </aside>
+
+    <section class="nalva-panel conversation">
+      @if (selected(); as ticket) {
+        <header>
+          <div>
+            <h3>{{ ticket.ticketNumber }} · {{ ticket.subject }}</h3>
+            <p class="muted">
+              {{ ticket.customerName || 'Unknown customer' }}
+              @if (ticket.relatedOrderNumber) {
+                · Order {{ ticket.relatedOrderNumber }}
+              }
+              · {{ ticket.channel }}
+            </p>
+          </div>
+          <div class="pills">
+            <span class="pill">{{ ticket.status }}</span>
+            <span class="pill">{{ ticket.priority }}</span>
+            <span class="pill">{{ ticket.category }}</span>
+            @if (ticket.humanTakeover) {
+              <span class="pill">Human takeover</span>
+            }
+          </div>
+        </header>
+
+        @if (ticket.aiSummary) {
+          <p><strong>AI summary:</strong> {{ ticket.aiSummary }}</p>
+        }
+        @if (ticket.recommendedAction) {
+          <p><strong>Recommended:</strong> {{ ticket.recommendedAction }}</p>
+        }
+        @if (ticket.escalationReason) {
+          <p><strong>Escalation:</strong> {{ ticket.escalationReason }}</p>
+        }
+
+        <div class="messages">
+          @for (message of ticket.messages; track message.id) {
+            <article [class.outbound]="message.direction === 'Outbound'" [class.internal]="message.isInternalNote">
+              <header>
+                <strong>{{ message.authorType }}</strong>
+                <span class="muted">{{ message.createdAt | date:'short' }} · {{ message.deliveryStatus }}</span>
+              </header>
+              <p>{{ message.body }}</p>
+            </article>
+          }
+        </div>
+
+        <div class="composer">
+          <textarea rows="4" [ngModel]="replyDraft()" (ngModelChange)="replyDraft.set($event)" placeholder="Write a reply or internal note"></textarea>
+          <div class="actions">
+            <button class="btn primary" type="button" [disabled]="working()" (click)="reply(true)">Send reply</button>
+            <button class="btn" type="button" [disabled]="working()" (click)="reply(false)">Internal note</button>
+            <button class="btn" type="button" [disabled]="working()" (click)="escalate()">Escalate</button>
+            <button class="btn" type="button" [disabled]="working()" (click)="resolve()">Resolve</button>
+            <button class="btn" type="button" [disabled]="working()" (click)="takeover(!ticket.humanTakeover)">
+              {{ ticket.humanTakeover ? 'Resume AI' : 'Human takeover' }}
+            </button>
+          </div>
+        </div>
+
+        @if (ticket.followUps.length) {
+          <div class="follow-ups">
+            <h4>Follow-ups</h4>
+            @for (job of ticket.followUps; track job.id) {
+              <p class="muted">{{ job.kind }} · {{ job.status }} · due {{ job.dueAt | date:'short' }}</p>
+            }
+          </div>
+        }
+      } @else {
+        <p class="muted">Select a ticket to inspect the conversation.</p>
+      }
+    </section>
+  </div>
+</section>

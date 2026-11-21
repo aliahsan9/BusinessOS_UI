@@ -73,7 +73,7 @@ export class SalesDashboardComponent implements OnInit {
       datasets: [
         {
           label: 'Revenue',
-          data: best.slice(0, 10).map((p) => p.totalRevenue),
+          data: best.slice(0, 10).map((p) => p.totalRevenue ?? p.revenue ?? 0),
           chartStyle: 'bar',
         },
       ],
