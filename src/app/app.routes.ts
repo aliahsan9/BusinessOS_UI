@@ -4,35 +4,76 @@ import { onboardingRedirectGuard } from './core/guards/onboarding.guard';
 import { themeGuard } from './core/theme/theme.guard';
 import { buildFeatureRoutes } from './app-feature.routes';
 import { ROUTES } from './core/constants/route.constants';
-import { AboutComponent } from './features/about/about.component';
-import { ServicesComponent } from './features/services/services.component';
-import { ContactComponent } from './features/contact/contact.component';
-import { FaqComponent } from './features/faq/faq.component';
-import { LegalPageComponent } from './features/legal/legal-page.component';
 import { CRM_ROUTES, PEOPLE_ROUTES, PROJECT_OPS_ROUTES, RETURN_ROUTES, WAREHOUSE_ROUTES } from './features/workspace/workspace.routes';
 
 export const routes: Routes = [
-  { path: 'about', component: AboutComponent, title: 'About | BusinessOS' },
-  { path: 'services', component: ServicesComponent, title: 'Services | BusinessOS' },
-  { path: 'contact', component: ContactComponent, title: 'Contact | BusinessOS' },
-  { path: 'faq', component: FaqComponent, title: 'FAQ | BusinessOS' },
+  {
+    path: 'about',
+    loadComponent: () => import('./features/about/about.component').then((m) => m.AboutComponent),
+    title: 'About | BusinessOS',
+  },
+  {
+    path: 'services',
+    loadComponent: () => import('./features/services/services.component').then((m) => m.ServicesComponent),
+    title: 'Services | BusinessOS',
+  },
+  {
+    path: 'contact',
+    loadComponent: () => import('./features/contact/contact.component').then((m) => m.ContactComponent),
+    title: 'Contact | BusinessOS',
+  },
+  {
+    path: 'pricing',
+    loadComponent: () =>
+      import('./features/marketing/public-pricing/public-pricing.component').then((m) => m.PublicPricingComponent),
+    title: 'Pricing | BusinessOS',
+  },
+  {
+    path: 'demo',
+    loadComponent: () =>
+      import('./features/marketing/demo-request/demo-request.component').then((m) => m.DemoRequestComponent),
+    title: 'Book a demo | BusinessOS',
+  },
+  {
+    path: 'security',
+    loadComponent: () =>
+      import('./features/marketing/security-page/security-page.component').then((m) => m.SecurityPageComponent),
+    title: 'Security | BusinessOS',
+  },
+  {
+    path: 'faq',
+    loadComponent: () => import('./features/faq/faq.component').then((m) => m.FaqComponent),
+    title: 'FAQ | BusinessOS',
+  },
   {
     path: 'privacy',
-    component: LegalPageComponent,
+    loadComponent: () => import('./features/legal/legal-page.component').then((m) => m.LegalPageComponent),
     title: 'Privacy Policy | BusinessOS',
     data: { document: 'privacy' },
   },
   {
     path: 'terms',
-    component: LegalPageComponent,
+    loadComponent: () => import('./features/legal/legal-page.component').then((m) => m.LegalPageComponent),
     title: 'Terms of Service | BusinessOS',
     data: { document: 'terms' },
   },
   {
     path: 'refunds',
-    component: LegalPageComponent,
+    loadComponent: () => import('./features/legal/legal-page.component').then((m) => m.LegalPageComponent),
     title: 'Refund Policy | BusinessOS',
     data: { document: 'refunds' },
+  },
+  {
+    path: 'dpa',
+    loadComponent: () => import('./features/legal/legal-page.component').then((m) => m.LegalPageComponent),
+    title: 'Data Processing Agreement | BusinessOS',
+    data: { document: 'dpa' },
+  },
+  {
+    path: 'aup',
+    loadComponent: () => import('./features/legal/legal-page.component').then((m) => m.LegalPageComponent),
+    title: 'Acceptable Use Policy | BusinessOS',
+    data: { document: 'aup' },
   },
   {
     path: 'insights',
@@ -236,6 +277,10 @@ export const routes: Routes = [
       {
         path: 'organization',
         loadChildren: () => import('./features/organization/organization.routes').then((m) => m.ORGANIZATION_ROUTES),
+      },
+      {
+        path: 'enterprise',
+        loadChildren: () => import('./features/enterprise/enterprise.routes').then((m) => m.ENTERPRISE_ROUTES),
       },
       {
         path: 'tenant-settings',

@@ -117,8 +117,49 @@ describe('NalvaExecutiveIntelligenceComponent', () => {
     inventoryRisks: [],
     inventoryDemand: [],
     inventoryTurnover: [],
-    cashFlow: null,
-    finance: null,
+    cashFlow: {
+      currency: 'USD',
+      startDate: new Date().toISOString(),
+      endDate: new Date().toISOString(),
+      openingBalanceConfigured: false,
+      openingBalance: null,
+      inflows: 80,
+      outflows: 20,
+      closingBalance: null,
+      closingBalanceAvailable: false,
+      expectedReceivableInflows: 10,
+      expectedPayableOutflows: 5,
+      projectionAvailable: false,
+      projectionConfidence: 'unavailable',
+      projection: [],
+      shortageWarnings: [],
+      assumptions: [],
+      limitations: ['Opening cash balance not configured.'],
+      dataClassification: 'REAL',
+    },
+    finance: {
+      currency: 'USD',
+      timeZoneId: 'UTC',
+      period: 'month',
+      startDate: new Date().toISOString(),
+      endDate: new Date().toISOString(),
+      salesRevenue: { available: true, value: 100, basis: 'completed orders' },
+      collectedCash: { available: true, value: 80, basis: 'payments' },
+      otherIncome: { available: true, value: 0, basis: 'other' },
+      totalExpenses: { available: true, value: 20, basis: 'approved/paid' },
+      costOfGoodsSold: { available: false, value: null, basis: 'cogs' },
+      grossProfit: { available: false, value: null, basis: 'sales − cogs' },
+      netProfit: { available: false, value: null, basis: 'net' },
+      outstandingReceivables: { available: true, value: 10, basis: 'invoices' },
+      outstandingPayables: { available: true, value: 5, basis: 'purchase invoices' },
+      overdueReceivables: { available: true, value: 0, basis: 'overdue' },
+      cashBalance: { available: false, value: null, basis: 'opening + net' },
+      monthlyTrends: [],
+      profitabilityByProduct: [],
+      limitations: ['Gross profit unavailable without COGS.'],
+      formulas: [],
+      dataClassification: 'REAL',
+    },
     risks: [],
     recommendations: [],
     predictionAccuracy: {
@@ -170,5 +211,14 @@ describe('NalvaExecutiveIntelligenceComponent', () => {
     expect(fixture.componentInstance).toBeTruthy();
     expect(fixture.nativeElement.textContent).toContain('healthy');
     expect(fixture.nativeElement.textContent).toContain('unavailable');
+  });
+
+  it('renders financial insights from recorded finance and cash-flow panels', () => {
+    const fixture = TestBed.createComponent(NalvaExecutiveIntelligenceComponent);
+    fixture.detectChanges();
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).toContain('Financial insights');
+    expect(text).toContain('Cash inflows / outflows');
+    expect(text).toContain('Gross profit unavailable without COGS');
   });
 });

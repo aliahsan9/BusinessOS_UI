@@ -1,0 +1,36 @@
+<app-home-navbar />
+
+<main class="security-page">
+  <section class="container security-page__hero">
+    <p class="security-page__brand">BusinessOS</p>
+    <h1>Security and privacy by design</h1>
+    <p>
+      BusinessOS is a multi-tenant business workspace. This page explains how we protect company data,
+      control access, and keep billing and AI usage accountable.
+    </p>
+    <div class="security-page__actions">
+      <a routerLink="/privacy" class="mkt-btn mkt-btn--primary">Privacy Policy</a>
+      <a routerLink="/dpa" class="mkt-btn mkt-btn--ghost">Data Processing Agreement</a>
+    </div>
+  </section>
+
+  <section class="container security-page__grid">
+    @for (item of pillars; track item.title) {
+      <article>
+        <h2>{{ item.title }}</h2>
+        <p>{{ item.body }}</p>
+      </article>
+    }
+  </section>
+
+  <section class="container security-page__note">
+    <h2>Still reviewing for enterprise?</h2>
+    <p>
+      Request a demo or contact us for questionnaire support. Legal documents are product requirements —
+      jurisdiction-specific counsel review is still required before you rely on them in a regulated contract.
+    </p>
+    <a routerLink="/demo" class="mkt-btn mkt-btn--primary">Book a demo</a>
+  </section>
+</main>
+
+<app-footer />

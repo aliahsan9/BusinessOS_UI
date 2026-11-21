@@ -427,6 +427,14 @@ export const NAV_ITEMS: NavItem[] = [
     group: 'Business',
   },
   {
+    label: 'Enterprise',
+    icon: 'bi-building-lock',
+    route: ROUTES.enterprise.base,
+    description: 'Branches, approvals, SSO, audit, and agent governance.',
+    permissions: ['Enterprise.View', 'Enterprise.Manage', 'Organization.Manage'],
+    group: 'Workspace',
+  },
+  {
     label: 'Settings',
     icon: 'bi-gear',
     route: ROUTES.settings.base,

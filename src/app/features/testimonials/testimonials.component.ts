@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 interface Testimonial {
@@ -15,6 +15,7 @@ interface Testimonial {
   imports: [CommonModule],
   templateUrl: './testimonials.component.html',
   styleUrls: ['./testimonials.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TestimonialsComponent {
   testimonials: Testimonial[] = [

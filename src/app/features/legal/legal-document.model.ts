@@ -1,4 +1,4 @@
-export type LegalDocumentKey = 'privacy' | 'terms' | 'refunds';
+export type LegalDocumentKey = 'privacy' | 'terms' | 'refunds' | 'dpa' | 'aup';
 
 export interface LegalBlock {
   type: 'p' | 'ul';

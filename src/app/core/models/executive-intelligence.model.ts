@@ -1,3 +1,5 @@
+import { CashFlowIntelligence, FinanceIntelligence } from './finance-agent.model';
+
 export interface BiMetric {
   value: number | null;
   available: boolean;
@@ -288,8 +290,8 @@ export interface ExecutiveDashboard {
   inventoryRisks: InventoryRisk[];
   inventoryDemand: DemandInsight[];
   inventoryTurnover: InventoryTurnover[];
-  cashFlow: unknown | null;
-  finance: unknown | null;
+  cashFlow: CashFlowIntelligence | null;
+  finance: FinanceIntelligence | null;
   risks: BusinessRisk[];
   recommendations: BiRecommendation[];
   predictionAccuracy: PredictionAccuracySummary;

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { FooterComponent } from '../footer/footer.component';
@@ -37,7 +37,8 @@ interface BusinessOutcome {
   standalone: true,
   imports: [CommonModule, RouterLink, FooterComponent, NavbarComponent],
   templateUrl: './services.component.html',
-  styleUrls: ['./services.component.scss']
+  styleUrls: ['./services.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ServicesComponent {
   readonly services: ServiceItem[] = [

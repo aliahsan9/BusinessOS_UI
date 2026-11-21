@@ -108,11 +108,27 @@
                     class="kpi__trend"
                     [class.kpi__trend--up]="(revenueChange() ?? 0) > 0"
                     [class.kpi__trend--down]="(revenueChange() ?? 0) < 0"
-                  >{{ change }} vs previous period</div>
+                  >
+                    <i
+                      class="bi"
+                      [class.bi-arrow-up-short]="(revenueChange() ?? 0) > 0"
+                      [class.bi-arrow-down-short]="(revenueChange() ?? 0) < 0"
+                      aria-hidden="true"
+                    ></i>
+                    {{ change }} vs previous period
+                  </div>
                 }
-                @if (revenueSpark(); as path) {
-                  <svg class="kpi__spark" viewBox="0 0 120 36" preserveAspectRatio="none" aria-hidden="true">
-                    <path [attr.d]="path" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                @if (revenueSpark(); as spark) {
+                  <svg
+                    class="kpi__spark"
+                    [class.kpi__spark--up]="spark.direction === 'up'"
+                    [class.kpi__spark--down]="spark.direction === 'down'"
+                    viewBox="0 0 120 36"
+                    preserveAspectRatio="none"
+                    aria-hidden="true"
+                  >
+                    <path class="kpi__spark-area" [attr.d]="spark.area" />
+                    <path class="kpi__spark-line" [attr.d]="spark.line" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" />
                   </svg>
                 }
               </a>
@@ -127,7 +143,36 @@
                 <div class="kpi__value">
                   @if (netProfit() === null) { — } @else { {{ netProfit() | appCurrency }} }
                 </div>
-                <p class="kpi__hint">Net after COGS &amp; expenses</p>
+                @if (formatChange(profitChange()); as change) {
+                  <div
+                    class="kpi__trend"
+                    [class.kpi__trend--up]="(profitChange() ?? 0) > 0"
+                    [class.kpi__trend--down]="(profitChange() ?? 0) < 0"
+                  >
+                    <i
+                      class="bi"
+                      [class.bi-arrow-up-short]="(profitChange() ?? 0) > 0"
+                      [class.bi-arrow-down-short]="(profitChange() ?? 0) < 0"
+                      aria-hidden="true"
+                    ></i>
+                    {{ change }} this period
+                  </div>
+                } @else {
+                  <p class="kpi__hint">Net after COGS &amp; expenses</p>
+                }
+                @if (profitSpark(); as spark) {
+                  <svg
+                    class="kpi__spark"
+                    [class.kpi__spark--up]="spark.direction === 'up'"
+                    [class.kpi__spark--down]="spark.direction === 'down'"
+                    viewBox="0 0 120 36"
+                    preserveAspectRatio="none"
+                    aria-hidden="true"
+                  >
+                    <path class="kpi__spark-area" [attr.d]="spark.area" />
+                    <path class="kpi__spark-line" [attr.d]="spark.line" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                }
               </a>
             }
 
@@ -143,11 +188,27 @@
                     class="kpi__trend"
                     [class.kpi__trend--up]="(ordersChange() ?? 0) > 0"
                     [class.kpi__trend--down]="(ordersChange() ?? 0) < 0"
-                  >{{ change }} vs previous period</div>
+                  >
+                    <i
+                      class="bi"
+                      [class.bi-arrow-up-short]="(ordersChange() ?? 0) > 0"
+                      [class.bi-arrow-down-short]="(ordersChange() ?? 0) < 0"
+                      aria-hidden="true"
+                    ></i>
+                    {{ change }} vs previous period
+                  </div>
                 }
-                @if (ordersSpark(); as path) {
-                  <svg class="kpi__spark" viewBox="0 0 120 36" preserveAspectRatio="none" aria-hidden="true">
-                    <path [attr.d]="path" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                @if (ordersSpark(); as spark) {
+                  <svg
+                    class="kpi__spark"
+                    [class.kpi__spark--up]="spark.direction === 'up'"
+                    [class.kpi__spark--down]="spark.direction === 'down'"
+                    viewBox="0 0 120 36"
+                    preserveAspectRatio="none"
+                    aria-hidden="true"
+                  >
+                    <path class="kpi__spark-area" [attr.d]="spark.area" />
+                    <path class="kpi__spark-line" [attr.d]="spark.line" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" />
                   </svg>
                 }
               </a>
@@ -160,12 +221,39 @@
                   <span class="kpi__label">Total Customers</span>
                 </div>
                 <div class="kpi__value">{{ (overview()?.totalCustomers ?? 0) | number }}</div>
-                @if (newCustomers() !== null || activeCustomers() !== null) {
+                @if (formatChange(customersChange()); as change) {
+                  <div
+                    class="kpi__trend"
+                    [class.kpi__trend--up]="(customersChange() ?? 0) > 0"
+                    [class.kpi__trend--down]="(customersChange() ?? 0) < 0"
+                  >
+                    <i
+                      class="bi"
+                      [class.bi-arrow-up-short]="(customersChange() ?? 0) > 0"
+                      [class.bi-arrow-down-short]="(customersChange() ?? 0) < 0"
+                      aria-hidden="true"
+                    ></i>
+                    {{ change }} growth
+                  </div>
+                } @else if (newCustomers() !== null || activeCustomers() !== null) {
                   <p class="kpi__hint">
                     @if (newCustomers() !== null) { {{ newCustomers() | number }} new }
                     @if (newCustomers() !== null && activeCustomers() !== null) { · }
                     @if (activeCustomers() !== null) { {{ activeCustomers() | number }} active }
                   </p>
+                }
+                @if (customersSpark(); as spark) {
+                  <svg
+                    class="kpi__spark"
+                    [class.kpi__spark--up]="spark.direction === 'up'"
+                    [class.kpi__spark--down]="spark.direction === 'down'"
+                    viewBox="0 0 120 36"
+                    preserveAspectRatio="none"
+                    aria-hidden="true"
+                  >
+                    <path class="kpi__spark-area" [attr.d]="spark.area" />
+                    <path class="kpi__spark-line" [attr.d]="spark.line" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
                 }
               </a>
             }
@@ -179,7 +267,40 @@
                 <div class="kpi__value">
                   @if (outstanding() === null) { — } @else { {{ outstanding() | appCurrency }} }
                 </div>
-                <p class="kpi__hint">Unpaid invoices</p>
+                @if (formatChange(outstandingChange()); as change) {
+                  <div
+                    class="kpi__trend"
+                    [class.kpi__trend--up]="(outstandingChange() ?? 0) > 0"
+                    [class.kpi__trend--down]="(outstandingChange() ?? 0) < 0"
+                  >
+                    <i
+                      class="bi"
+                      [class.bi-arrow-up-short]="(outstandingChange() ?? 0) > 0"
+                      [class.bi-arrow-down-short]="(outstandingChange() ?? 0) < 0"
+                      aria-hidden="true"
+                    ></i>
+                    @if ((outstandingChange() ?? 0) >= 0) {
+                      {{ change }} collection health
+                    } @else {
+                      {{ change }} needs follow-up
+                    }
+                  </div>
+                } @else {
+                  <p class="kpi__hint">Unpaid invoices</p>
+                }
+                @if (outstandingSpark(); as spark) {
+                  <svg
+                    class="kpi__spark"
+                    [class.kpi__spark--up]="spark.direction === 'up'"
+                    [class.kpi__spark--down]="spark.direction === 'down'"
+                    viewBox="0 0 120 36"
+                    preserveAspectRatio="none"
+                    aria-hidden="true"
+                  >
+                    <path class="kpi__spark-area" [attr.d]="spark.area" />
+                    <path class="kpi__spark-line" [attr.d]="spark.line" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                }
               </a>
             }
 
@@ -192,8 +313,35 @@
                 <div class="kpi__value">
                   @if (inventoryValue() === null) { — } @else { {{ inventoryValue() | appCurrency }} }
                 </div>
-                @if (lowStockCount() !== null) {
+                @if (formatChange(inventoryChange()); as change) {
+                  <div
+                    class="kpi__trend"
+                    [class.kpi__trend--up]="(inventoryChange() ?? 0) > 0"
+                    [class.kpi__trend--down]="(inventoryChange() ?? 0) < 0"
+                  >
+                    <i
+                      class="bi"
+                      [class.bi-arrow-up-short]="(inventoryChange() ?? 0) > 0"
+                      [class.bi-arrow-down-short]="(inventoryChange() ?? 0) < 0"
+                      aria-hidden="true"
+                    ></i>
+                    {{ change }} stock movement
+                  </div>
+                } @else if (lowStockCount() !== null) {
                   <p class="kpi__hint">{{ lowStockCount() | number }} low stock</p>
+                }
+                @if (inventorySpark(); as spark) {
+                  <svg
+                    class="kpi__spark"
+                    [class.kpi__spark--up]="spark.direction === 'up'"
+                    [class.kpi__spark--down]="spark.direction === 'down'"
+                    viewBox="0 0 120 36"
+                    preserveAspectRatio="none"
+                    aria-hidden="true"
+                  >
+                    <path class="kpi__spark-area" [attr.d]="spark.area" />
+                    <path class="kpi__spark-line" [attr.d]="spark.line" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
                 }
               </a>
             }

@@ -87,7 +87,7 @@ export class AppChartComponent implements OnDestroy {
           intersect: isDoughnut,
         },
         animation: {
-          duration: 900,
+          duration: 400,
           easing: 'easeInOutQuart',
         },
         plugins: {
@@ -192,6 +192,10 @@ export class AppChartComponent implements OnDestroy {
       isDoughnut,
       this.chartType,
     ) as never;
+    const animation = this.chart.options.animation;
+    if (animation && typeof animation === 'object') {
+      (animation as { duration?: number }).duration = 300;
+    }
     this.chart.update();
   }
 

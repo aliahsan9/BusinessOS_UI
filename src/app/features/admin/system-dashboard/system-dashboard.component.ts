@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { SystemAdminService } from '../../../core/services/system-admin.service';
 import { EnvironmentInfo, SystemHealth, SystemStats } from '../../../core/models/system.model';
@@ -20,6 +21,7 @@ import { AppEmptyStateComponent } from '../../../shared/components/app-empty-sta
   imports: [
     DatePipe,
     DecimalPipe,
+    RouterLink,
     AppBreadcrumbComponent,
     AppPageHeaderComponent,
     AppCardComponent,

@@ -195,6 +195,27 @@
             </li>
           }
         </ul>
+        <h3>Turnover (90d)</h3>
+        @if (d.inventoryTurnover.length === 0) {
+          <p class="muted">No turnover snapshots yet.</p>
+        } @else {
+          <ul>
+            @for (t of d.inventoryTurnover.slice(0, 5); track t.productId) {
+              <li>
+                {{ t.productName }} —
+                @if (t.turnoverRatio != null) {
+                  {{ t.turnoverRatio | number:'1.0-2' }}×
+                } @else {
+                  n/a
+                }
+                @if (t.estimatedLeadTimeDays != null) {
+                  · lead ~{{ t.estimatedLeadTimeDays }}d
+                }
+                <span class="prediction-tag">{{ t.confidence }}</span>
+              </li>
+            }
+          </ul>
+        }
       </section>
 
       <section class="nalva-panel">
@@ -219,6 +240,97 @@
         </ul>
       </section>
     </div>
+
+    <section class="nalva-panel">
+      <h2>Financial insights</h2>
+      <p class="muted">Actual recorded figures. Cash-flow projections are labeled estimates when available — never certified financial statements.</p>
+      @if (!d.finance && !d.cashFlow) {
+        <p class="muted">Finance panels unavailable for this user or period (permissions or missing opening balances / COGS).</p>
+      } @else {
+        <div class="nalva-grid compact">
+          @if (d.finance; as f) {
+            <div class="nalva-stat">
+              <span>Sales revenue (actual)</span>
+              <strong>
+                @if (f.salesRevenue.available) {
+                  {{ f.salesRevenue.value | number:'1.0-2' }} {{ f.currency }}
+                } @else {
+                  n/a
+                }
+              </strong>
+            </div>
+            <div class="nalva-stat">
+              <span>Expenses (actual)</span>
+              <strong>
+                @if (f.totalExpenses.available) {
+                  {{ f.totalExpenses.value | number:'1.0-2' }} {{ f.currency }}
+                } @else {
+                  n/a
+                }
+              </strong>
+            </div>
+            <div class="nalva-stat">
+              <span>Gross profit</span>
+              <strong>
+                @if (f.grossProfit.available) {
+                  {{ f.grossProfit.value | number:'1.0-2' }} {{ f.currency }}
+                } @else {
+                  unavailable
+                }
+              </strong>
+            </div>
+            <div class="nalva-stat">
+              <span>Receivables / payables</span>
+              <strong>
+                @if (f.outstandingReceivables.available) {
+                  {{ f.outstandingReceivables.value | number:'1.0-2' }}
+                } @else {
+                  n/a
+                }
+                /
+                @if (f.outstandingPayables.available) {
+                  {{ f.outstandingPayables.value | number:'1.0-2' }}
+                } @else {
+                  n/a
+                }
+              </strong>
+            </div>
+          }
+          @if (d.cashFlow; as cf) {
+            <div class="nalva-stat">
+              <span>Cash inflows / outflows</span>
+              <strong>{{ cf.inflows | number:'1.0-2' }} / {{ cf.outflows | number:'1.0-2' }} {{ cf.currency }}</strong>
+            </div>
+            <div class="nalva-stat">
+              <span>30d cash projection</span>
+              <strong>
+                @if (cf.projectionAvailable) {
+                  {{ cf.projectionConfidence }}
+                  <small class="prediction-tag">estimate</small>
+                } @else {
+                  unavailable
+                }
+              </strong>
+            </div>
+          }
+        </div>
+        @if (d.cashFlow?.shortageWarnings?.length) {
+          <h3>Cash risk warnings <span class="prediction-tag">estimates</span></h3>
+          <ul>
+            @for (w of d.cashFlow!.shortageWarnings.slice(0, 5); track w) {
+              <li>{{ w }}</li>
+            }
+          </ul>
+        }
+        @if (d.finance?.limitations?.length) {
+          <ul class="limitations">
+            @for (item of d.finance!.limitations.slice(0, 4); track item) {
+              <li>{{ item }}</li>
+            }
+          </ul>
+        }
+      }
+    </section>
 
     <div class="two-col">
       <section class="nalva-panel">

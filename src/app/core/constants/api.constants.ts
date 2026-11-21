@@ -187,6 +187,23 @@ export const API_ENDPOINTS = {
     stats: '/system/stats',
     environment: '/system/environment',
   },
+  growth: {
+    leads: '/growth/leads',
+    support: '/growth/support',
+    mySupport: '/growth/support',
+    myReferral: '/growth/referrals/me',
+    validateReferral: '/growth/referrals/validate',
+  },
+  platform: {
+    companies: '/platform/companies',
+    revenue: '/platform/revenue',
+    health: '/platform/health',
+    subscriptions: '/platform/subscriptions',
+    failedPayments: '/platform/payments/failed',
+    leads: '/platform/growth/leads',
+    support: '/platform/growth/support',
+    saasAnalytics: '/platform/growth/analytics',
+  },
 } as const;
 
 export const HTTP_HEADERS = {

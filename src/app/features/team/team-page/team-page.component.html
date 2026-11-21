@@ -93,7 +93,7 @@
                 <td data-label="Member">
                   <div class="member-cell">
                     @if (member.avatarUrl) {
-                      <img [src]="member.avatarUrl" [alt]="member.fullName" class="avatar avatar--img" />
+                      <img [src]="member.avatarUrl" [alt]="member.fullName" class="avatar avatar--img" loading="lazy" />
                     } @else {
                       <span class="avatar">{{ initials(member.fullName) }}</span>
                     }
@@ -131,7 +131,7 @@
             <div class="member-card__head">
               <div class="member-cell">
                 @if (member.avatarUrl) {
-                  <img [src]="member.avatarUrl" [alt]="member.fullName" class="avatar avatar--img" />
+                  <img [src]="member.avatarUrl" [alt]="member.fullName" class="avatar avatar--img" loading="lazy" />
                 } @else {
                   <span class="avatar">{{ initials(member.fullName) }}</span>
                 }

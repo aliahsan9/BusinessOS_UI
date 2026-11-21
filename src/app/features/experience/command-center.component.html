@@ -1,140 +1,420 @@
 <section class="cc" aria-label="AI command center">
   @if (leftOpen()) {
-    <aside class="cc__panel">
+    <aside class="cc__panel" aria-label="Conversations and task progress">
       <div class="ux__actions">
         <h2>Conversations</h2>
         <button type="button" class="cc__btn" (click)="leftOpen.set(false)">Hide</button>
       </div>
-      <button type="button" class="cc__btn" (click)="newConversation()">New conversation</button>
+      <button type="button" class="cc__btn cc__btn--primary" (click)="newConversation()">+ New conversation</button>
       <div class="cc__scroll">
         @for (session of sessions(); track session.id) {
-          <button type="button" class="cc__item" (click)="openSession(session)">
-            <strong>{{ session.title || 'Conversation' }}</strong>
-            <small class="cc__status">{{ session.lastMessagePreview || session.summary || session.messageCount + ' messages' }}</small>
+          <button
+            type="button"
+            class="cc__item"
+            [class.is-active]="selectedSessionId() === session.id"
+            (click)="openSession(session)"
+            [attr.aria-current]="selectedSessionId() === session.id ? 'true' : null">
+            <span class="cc__item-head">
+              <strong>{{ session.title || 'Untitled conversation' }}</strong>
+              <small class="cc__status">{{ relativeTime(session.lastActivityAt) }}</small>
+            </span>
+            <small class="cc__status">{{ session.lastMessagePreview || session.summary || (session.messageCount + ' messages') }}</small>
           </button>
         } @empty {
-          <p class="cc__empty">No saved conversations yet.</p>
+          <div class="cc__empty-state">
+            <p class="cc__empty">No saved conversations yet.</p>
+            <p class="cc__hint">Ask Navla a question in Chat mode, or assign an objective to your AI workforce.</p>
+          </div>
         }
-        <h2>Tasks</h2>
-        @for (task of rootTasks(); track task.id) {
-          <article class="cc__item">
-            <strong>{{ task.agentKey }} · {{ task.status }}</strong>
-            <p>{{ task.objective }}</p>
-            @if (task.deadline) { <p class="cc__status">Deadline {{ task.deadline }}</p> }
-            @if (task.lastError) { <p class="cc__status">{{ task.lastError }}</p> }
-            @if (canManage) {
-              <div class="ux__actions">
-                @if (task.status === 'Queued') { <button type="button" class="cc__btn" (click)="control(task, 'pause')">Pause</button> }
-                @if (task.status === 'Paused') { <button type="button" class="cc__btn" (click)="control(task, 'resume')">Resume</button> }
-                @if (task.status === 'Failed' || task.status === 'DeadLetter') { <button type="button" class="cc__btn" (click)="control(task, 'retry')">Retry</button> }
-                @if (task.status === 'Queued' || task.status === 'Paused' || task.status === 'Pending' || task.status === 'AwaitingApproval') {
-                  <button type="button" class="cc__btn" (click)="control(task, 'cancel')">Cancel</button>
-                }
-              </div>
-            }
-            @for (child of childTasks(task.id); track child.id) {
-              <p class="cc__status">{{ child.agentKey }} · {{ child.status }}</p>
-            }
-          </article>
+
+        <div class="cc__section-head">
+          <h2>Execution progress</h2>
+          <span class="cc__badge" [attr.data-tone]="statusTone(overallObjectiveStatus())">{{ overallObjectiveStatus() }}</span>
+        </div>
+        <div class="cc__lifecycle" aria-label="Objective lifecycle from live task statuses">
+          <div class="cc__life-stat"><span>Received</span><strong>{{ taskLifecycle().received }}</strong></div>
+          <div class="cc__life-stat"><span>Queued</span><strong>{{ taskLifecycle().queued }}</strong></div>
+          <div class="cc__life-stat"><span>In progress</span><strong>{{ taskLifecycle().inProgress }}</strong></div>
+          <div class="cc__life-stat"><span>Awaiting approval</span><strong>{{ taskLifecycle().awaitingApproval }}</strong></div>
+          <div class="cc__life-stat"><span>Completed</span><strong>{{ taskLifecycle().completed }}</strong></div>
+          <div class="cc__life-stat"><span>Failed</span><strong>{{ taskLifecycle().failed }}</strong></div>
+        </div>
+        <p class="cc__hint">Statuses come from queued workforce tasks — not simulated progress.</p>
+
+        <div class="cc__tabs" role="tablist" aria-label="Work panels">
+          <button type="button" class="cc__tab" role="tab" [attr.aria-selected]="panelView() === 'tasks'" (click)="panelView.set('tasks')">Tasks</button>
+          <button type="button" class="cc__tab" role="tab" [attr.aria-selected]="panelView() === 'approvals'" (click)="panelView.set('approvals')">
+            Approvals
+            @if (approvals().length) { <span class="cc__count">{{ approvals().length }}</span> }
+          </button>
+          <button type="button" class="cc__tab" role="tab" [attr.aria-selected]="panelView() === 'executions'" (click)="panelView.set('executions')">Executions</button>
+        </div>
+
+        @if (panelView() === 'tasks') {
+          @for (task of focusedTasks(); track task.id) {
+            <article class="cc__item">
+              <span class="cc__item-head">
+                <strong>{{ agentName(task.agentKey) }}</strong>
+                <span class="cc__badge" [attr.data-tone]="statusTone(task.status)">{{ task.status }}</span>
+              </span>
+              <p>{{ task.objective }}</p>
+              <p class="cc__status">Created {{ relativeTime(task.createdAt) }}</p>
+              @if (task.deadline) { <p class="cc__status">Priority deadline {{ task.deadline | date:'medium' }}</p> }
+              @if (task.lastError) { <p class="ux__error">{{ task.lastError }}</p> }
+              @if (canManage) {
+                <div class="ux__actions">
+                  @if (task.status === 'Queued') { <button type="button" class="cc__btn" (click)="control(task, 'pause')">Pause</button> }
+                  @if (task.status === 'Paused') { <button type="button" class="cc__btn" (click)="control(task, 'resume')">Resume</button> }
+                  @if (task.status === 'Failed' || task.status === 'DeadLetter') { <button type="button" class="cc__btn" (click)="control(task, 'retry')">Retry</button> }
+                  @if (task.status === 'Queued' || task.status === 'Paused' || task.status === 'Pending' || task.status === 'AwaitingApproval') {
+                    <button type="button" class="cc__btn" (click)="control(task, 'cancel')">Cancel</button>
+                  }
+                </div>
+              }
+              @for (child of childTasks(task.id); track child.id) {
+                <p class="cc__child">
+                  <span>{{ agentName(child.agentKey) }}</span>
+                  <span class="cc__badge" [attr.data-tone]="statusTone(child.status)">{{ child.status }}</span>
+                </p>
+              }
+            </article>
+          } @empty {
+            <p class="cc__empty">No workforce tasks yet. Assign an objective to create the first one.</p>
+          }
+        }
+
+        @if (panelView() === 'approvals') {
+          @for (approval of approvals(); track approval.id) {
+            <article class="cc__item">
+              <strong>{{ approval.action }}</strong>
+              <p>{{ agentName(approval.agentKey) }} · {{ approval.toolName }} · {{ approval.risk }}</p>
+              @if (approval.contextJson) { <p class="cc__status">{{ approval.contextJson }}</p> }
+              @if (canApprove) {
+                <div class="ux__actions">
+                  <button type="button" class="cc__btn cc__btn--primary" (click)="decide(approval, 'approve')">Approve</button>
+                  <button type="button" class="cc__btn" (click)="decide(approval, 'reject')">Reject</button>
+                </div>
+              }
+            </article>
+          } @empty {
+            <p class="cc__empty">No approvals are waiting. High-risk tools pause here automatically.</p>
+          }
+        }
+
+        @if (panelView() === 'executions') {
+          @for (execution of executions(); track execution.id) {
+            <button type="button" class="cc__item" (click)="selectedExecution.set(execution)">
+              <span class="cc__item-head">
+                <strong>{{ agentName(execution.agentKey) }}</strong>
+                <span class="cc__badge" [attr.data-tone]="statusTone(execution.status)">{{ execution.status }}</span>
+              </span>
+              <small class="cc__status">{{ execution.toolCallCount }} tools · {{ relativeTime(execution.startedAt) }}</small>
+            </button>
+          } @empty {
+            <p class="cc__empty">No executions recorded yet.</p>
+          }
+          @if (selectedExecution(); as execution) {
+            <article class="cc__item">
+              <h2>Execution record</h2>
+              <p>{{ execution.summary || 'No summary was stored.' }}</p>
+              <p class="cc__status">{{ execution.status }} · {{ execution.durationMs }} ms · attempt {{ execution.retryAttempt }}</p>
+              <p class="cc__status">Estimated cost {{ execution.estimatedCostUsd }} USD{{ execution.costIsEstimate ? ' (estimate)' : '' }}</p>
+              @if (execution.error) { <p class="ux__error">{{ execution.error }}</p> }
+              <p class="cc__hint">Hidden model reasoning is not shown. This is the stored summary, tool count, and result.</p>
+              <a class="cc__btn" [routerLink]="routes.reports">Open reports</a>
+            </article>
+          }
         }
       </div>
+      <p class="cc__tip">Tip: Use simple goals like “Increase sales this month.”</p>
     </aside>
   }
 
-  <section class="cc__panel">
-    <div class="ux__actions">
-      @if (!leftOpen()) { <button type="button" class="cc__btn" (click)="leftOpen.set(true)">Conversations</button> }
-      <h2>Command</h2>
-      <span class="cc__status">{{ status() }}</span>
-      @if (!rightOpen()) { <button type="button" class="cc__btn" (click)="rightOpen.set(true)">Workforce</button> }
-    </div>
-    @if (error()) { <p class="ux__error" role="alert">{{ error() }}</p> }
-    <div class="cc__scroll" aria-live="polite">
-      @for (message of messages(); track message.id) {
-        <article class="cc__message cc__message--user"><strong>You</strong><p>{{ message.prompt }}</p></article>
-        <article class="cc__message">
-          <strong>CompanyOS</strong>
-          <p>{{ message.response }}</p>
-          @if (message.toolsUsed.length) { <p class="cc__status">Tools: {{ message.toolsUsed.join(', ') }}</p> }
-        </article>
-      } @empty {
-        <p class="cc__empty">Ask a question or select agents and assign an objective. Answers and task states come from the company AI services.</p>
-      }
-    </div>
-    <form class="cc__composer" (submit)="$event.preventDefault(); send()">
-      <label for="command-input">Objective</label>
-      <textarea id="command-input" rows="3" [ngModel]="draft()" (ngModelChange)="draft.set($event)" name="objective"></textarea>
-      <label for="command-deadline">Deadline, optional</label>
-      <input id="command-deadline" type="datetime-local" [ngModel]="deadline()" (ngModelChange)="deadline.set($event)" name="deadline" />
-      @if (transcript()) { <p class="cc__status">Heard: {{ transcript() }}</p> }
-      @if (voiceNote()) { <p class="cc__status">{{ voiceNote() }}</p> }
-      <div class="ux__actions">
-        <button type="submit" class="cc__btn cc__btn--primary">Send</button>
-        <button type="button" class="cc__btn" (click)="stop()">Stop</button>
-        <button type="button" class="cc__btn" (click)="listen()">Voice</button>
-        <a class="cc__btn" routerLink="/reports">Reports</a>
-        <button type="button" class="cc__btn" (click)="stopSpeech()">Stop speech</button>
-        <label>
-          Voice
-          <select [value]="selectedVoice()" (change)="chooseVoice($event)" aria-label="Spoken voice">
-            @for (voice of voices(); track voice.id) {
-              <option [value]="voice.id">{{ voice.label }}</option>
-            }
-          </select>
-        </label>
+  <section class="cc__panel cc__panel--main">
+    <header class="cc__hero">
+      <div>
+        <p class="cc__eyebrow">AI Workforce</p>
+        <h1>Command Center</h1>
+        <p class="cc__lede">Tell your AI workforce what you want to accomplish, then supervise real tasks, approvals, and results.</p>
       </div>
-    </form>
+      <div class="ux__actions">
+        @if (!leftOpen()) { <button type="button" class="cc__btn" (click)="leftOpen.set(true)">Conversations</button> }
+        @if (!rightOpen()) { <button type="button" class="cc__btn" (click)="rightOpen.set(true)">Workforce</button> }
+        <span class="cc__status" aria-live="polite">{{ status() }}</span>
+      </div>
+    </header>
+
+    @if (showGuidance()) {
+      <aside class="cc__guidance" aria-label="First-time guidance">
+        <div>
+          <strong>How this page works</strong>
+          <ul>
+            <li><strong>AI CEO</strong> receives your objective and may create follow-up tasks for other agents while it runs.</li>
+            <li><strong>Manual assignment</strong> queues the same objective to the agents you pick.</li>
+            <li><strong>Tasks</strong> appear on the left; <strong>approvals</strong> pause sensitive tools; completed summaries show in executions and <a [routerLink]="routes.reports">Reports</a>.</li>
+          </ul>
+        </div>
+        <button type="button" class="cc__btn" (click)="dismissGuidance()">Got it</button>
+      </aside>
+    }
+
+    <div class="cc__mode-tabs" role="tablist" aria-label="Command modes">
+      <button type="button" class="cc__mode" role="tab" [attr.aria-selected]="centerMode() === 'assign'" (click)="setCenterMode('assign')">Assign objective</button>
+      <button type="button" class="cc__mode" role="tab" [attr.aria-selected]="centerMode() === 'chat'" (click)="setCenterMode('chat')">Ask Navla</button>
+    </div>
+
+    @if (error()) { <p class="ux__error" role="alert">{{ error() }}</p> }
+    @if (notice()) { <p class="cc__notice" role="status">{{ notice() }}</p> }
+
+    @if (centerMode() === 'assign') {
+      <ol class="cc__steps" aria-label="Assignment steps">
+        <li [class.is-current]="wizardStep() === 1" [class.is-done]="wizardStep() > 1">
+          <button type="button" (click)="goToStep(1)">1. Define</button>
+        </li>
+        <li [class.is-current]="wizardStep() === 2" [class.is-done]="wizardStep() > 2">
+          <button type="button" (click)="goToStep(2)">2. Workforce</button>
+        </li>
+        <li [class.is-current]="wizardStep() === 3" [class.is-done]="wizardStep() > 3">
+          <button type="button" (click)="goToStep(3)">3. Settings</button>
+        </li>
+        <li [class.is-current]="wizardStep() === 4">
+          <button type="button" (click)="goToStep(4)">4. Review</button>
+        </li>
+      </ol>
+
+      @if (wizardStep() === 1) {
+        <section class="cc__card" aria-labelledby="objective-heading">
+          <h2 id="objective-heading">What would you like to accomplish?</h2>
+          <p class="cc__hint">Write a clear business goal. Example objectives are suggestions only — the workforce uses your exact text.</p>
+          <label class="cc__sr-only" for="command-input">Objective</label>
+          <textarea
+            id="command-input"
+            rows="5"
+            [ngModel]="draft()"
+            (ngModelChange)="draft.set($event)"
+            name="objective"
+            placeholder="e.g. Analyze my business performance and suggest ways to increase sales..."
+            maxlength="2000"></textarea>
+          <p class="cc__examples-label">Popular examples</p>
+          <div class="cc__chips" role="list">
+            @for (example of objectiveExamples; track example) {
+              <button type="button" class="cc__chip" role="listitem" (click)="useExample(example)">{{ example }}</button>
+            }
+          </div>
+          <div class="ux__actions cc__step-actions">
+            <button type="button" class="cc__btn cc__btn--primary" (click)="nextStep()" [disabled]="!canAdvanceFromObjective()">Continue</button>
+          </div>
+        </section>
+      }
+
+      @if (wizardStep() === 2) {
+        <section class="cc__card" aria-labelledby="workforce-heading">
+          <h2 id="workforce-heading">Who should handle this?</h2>
+          <div class="cc__method-grid">
+            <button
+              type="button"
+              class="cc__method"
+              [class.is-selected]="assignMethod() === 'ceo'"
+              (click)="setAssignMethod('ceo')"
+              [disabled]="!canManage"
+              title="Queues the objective to AI CEO. While running, the CEO may create or delegate follow-up tasks to other active agents.">
+              <span class="cc__method-tag">Recommended</span>
+              <strong>AI CEO delegation</strong>
+              <p>Give the objective to AI CEO. The CEO analyzes and may create follow-up tasks for other agents during execution.</p>
+              @if (!ceoAvailable()) {
+                <p class="ux__error">AI CEO is not activated for this company. <a [routerLink]="routes.nalva.marketplace">Activate agents</a></p>
+              }
+            </button>
+            <button
+              type="button"
+              class="cc__method"
+              [class.is-selected]="assignMethod() === 'manual'"
+              (click)="setAssignMethod('manual')"
+              [disabled]="!canManage"
+              title="Creates one queued task per selected agent. The first agent is the parent; others are linked as children.">
+              <strong>Select specific agents</strong>
+              <p>You choose which agents receive the same objective. Useful when you already know the owners.</p>
+            </button>
+          </div>
+          <p class="cc__hint">
+            Multi-agent collaboration workflows (plan → start) also live on
+            <a [routerLink]="routes.nalva.workforce">Workforce</a>.
+            Command Center queues real tasks through the existing Nalva APIs.
+          </p>
+          @if (assignMethod() === 'manual') {
+            <div class="cc__chips">
+              @for (agent of selectedAgentCards(); track agent.key) {
+                <span class="cc__chip cc__chip--static">{{ agent.name }}</span>
+              } @empty {
+                <span class="cc__status">Select agents in the Workforce panel.</span>
+              }
+            </div>
+          } @else {
+            @if (ceoAgent(); as ceo) {
+              <div class="cc__chips"><span class="cc__chip cc__chip--static">{{ ceo.name }}</span></div>
+            }
+          }
+          <div class="ux__actions cc__step-actions">
+            <button type="button" class="cc__btn" (click)="previousStep()">Back</button>
+            <button type="button" class="cc__btn cc__btn--primary" (click)="nextStep()" [disabled]="!canAdvanceFromWorkforce()">Continue</button>
+          </div>
+        </section>
+      }
+
+      @if (wizardStep() === 3) {
+        <section class="cc__card" aria-labelledby="settings-heading">
+          <h2 id="settings-heading">Execution settings</h2>
+          <label for="command-deadline">Deadline (optional)</label>
+          <input
+            id="command-deadline"
+            type="datetime-local"
+            [ngModel]="deadline()"
+            (ngModelChange)="deadline.set($event)"
+            name="deadline" />
+          <p class="cc__hint">Deadlines help prioritize which queued task is claimed first. They do not auto-cancel overdue work.</p>
+
+          <div class="cc__info-block">
+            <strong>Approvals</strong>
+            <p>Sensitive tools always pause for human approval based on company policy. There is no per-assignment approval toggle on enqueue.</p>
+            <a class="cc__btn" [routerLink]="routes.nalva.settings">Review approval settings</a>
+          </div>
+
+          <div class="cc__info-block">
+            <strong>Execution mode</strong>
+            <p>Queued tasks run through the background workforce processor. Dry-run and sync execute options are not available on this assign path.</p>
+          </div>
+
+          <div class="ux__actions cc__step-actions">
+            <button type="button" class="cc__btn" (click)="previousStep()">Back</button>
+            <button type="button" class="cc__btn cc__btn--primary" (click)="nextStep()">Continue</button>
+          </div>
+        </section>
+      }
+
+      @if (wizardStep() === 4) {
+        <section class="cc__card" aria-labelledby="review-heading">
+          <h2 id="review-heading">Review and assign</h2>
+          <dl class="cc__review">
+            <div>
+              <dt>Objective</dt>
+              <dd>{{ draft().trim() }}</dd>
+            </div>
+            <div>
+              <dt>Assignment</dt>
+              <dd>
+                @if (assignMethod() === 'ceo') {
+                  AI CEO delegation
+                } @else {
+                  Manual — {{ assignmentTargets().length }} agent(s)
+                }
+              </dd>
+            </div>
+            <div>
+              <dt>Agents</dt>
+              <dd>{{ assignmentTargetNames() || 'None selected' }}</dd>
+            </div>
+            <div>
+              <dt>Deadline</dt>
+              <dd>{{ deadline() ? (deadline() | date:'medium') : 'None' }}</dd>
+            </div>
+            <div>
+              <dt>Approvals</dt>
+              <dd>Policy-driven for sensitive tools</dd>
+            </div>
+          </dl>
+          <div class="cc__ready-bar">
+            <span>{{ canAssign() ? 'Ready to assign' : 'Complete the previous steps first' }}</span>
+            <div class="ux__actions">
+              <button type="button" class="cc__btn" (click)="previousStep()">Back</button>
+              <button
+                type="button"
+                class="cc__btn cc__btn--primary"
+                (click)="assignObjective()"
+                [disabled]="!canAssign()">
+                {{ assigning() ? 'Assigning…' : 'Assign to AI Workforce' }}
+              </button>
+            </div>
+          </div>
+        </section>
+      }
+    } @else {
+      <div class="cc__scroll cc__chat" aria-live="polite">
+        @for (message of messages(); track message.id) {
+          <article class="cc__message cc__message--user"><strong>You</strong><p>{{ message.prompt }}</p></article>
+          <article class="cc__message">
+            <strong>Navla</strong>
+            <p>{{ message.response }}</p>
+            @if (message.toolsUsed.length) { <p class="cc__status">Tools: {{ message.toolsUsed.join(', ') }}</p> }
+          </article>
+        } @empty {
+          <p class="cc__empty">Ask a business question. Chat answers come from Navla and do not create workforce tasks unless you switch to Assign objective.</p>
+        }
+      </div>
+      <form class="cc__composer" (submit)="$event.preventDefault(); send()">
+        <label for="chat-input">Message</label>
+        <textarea id="chat-input" rows="3" [ngModel]="draft()" (ngModelChange)="draft.set($event)" name="chat"></textarea>
+        @if (transcript()) { <p class="cc__status">Heard: {{ transcript() }}</p> }
+        @if (voiceNote()) { <p class="cc__status">{{ voiceNote() }}</p> }
+        <div class="ux__actions">
+          <button type="submit" class="cc__btn cc__btn--primary">Send</button>
+          <button type="button" class="cc__btn" (click)="stop()">Stop</button>
+          <button type="button" class="cc__btn" (click)="listen()">Voice</button>
+          <a class="cc__btn" [routerLink]="routes.reports">Reports</a>
+          <button type="button" class="cc__btn" (click)="stopSpeech()">Stop speech</button>
+          <label>
+            Voice
+            <select [value]="selectedVoice()" (change)="chooseVoice($event)" aria-label="Spoken voice">
+              @for (voice of voices(); track voice.id) {
+                <option [value]="voice.id">{{ voice.label }}</option>
+              }
+            </select>
+          </label>
+        </div>
+      </form>
+    }
   </section>
 
   @if (rightOpen()) {
-    <aside class="cc__panel">
+    <aside class="cc__panel" aria-label="Your AI workforce">
       <div class="ux__actions">
-        <h2>Workforce</h2>
+        <h2>Your AI Workforce</h2>
         <button type="button" class="cc__btn" (click)="rightOpen.set(false)">Hide</button>
       </div>
+      <p class="cc__hint">
+        @if (assignMethod() === 'ceo') {
+          CEO mode targets AI CEO. Switch to manual assignment to pick other agents.
+        } @else {
+          Checked agents receive the objective when you assign.
+        }
+      </p>
       <div class="cc__scroll">
         @for (agent of agents(); track agent.key) {
-          <label class="cc__item">
-            <input type="checkbox" [checked]="selectedAgents().includes(agent.key)" (change)="toggleAgent(agent.key)" [disabled]="!canManage" />
-            <a [routerLink]="['/nalva/agents', agent.key]">{{ agent.name }}</a>
-            <span class="cc__status">{{ agent.status }} · {{ agent.role }}</span>
+          <label class="cc__agent" [class.is-selected]="isAgentSelected(agent.key)">
+            <input
+              type="checkbox"
+              [checked]="isAgentSelected(agent.key)"
+              (change)="toggleAgent(agent.key)"
+              [disabled]="!canManage || (assignMethod() === 'ceo' && agent.key !== 'ceo')" />
+            <span class="cc__agent-body">
+              <span class="cc__item-head">
+                <a [routerLink]="[routes.nalva.agent, agent.key]">{{ agent.name }}</a>
+                <span class="cc__badge" [attr.data-tone]="agent.status === 'Active' ? 'ok' : 'mute'">{{ agent.status }}</span>
+              </span>
+              <span class="cc__status">{{ agent.role }}</span>
+              <span class="cc__status">{{ agentBlurb(agent) }}</span>
+            </span>
           </label>
         } @empty {
-          <p class="cc__empty">No agents are activated for this company.</p>
-        }
-        <h2>Approvals</h2>
-        @for (approval of approvals(); track approval.id) {
-          <article class="cc__item">
-            <strong>{{ approval.action }}</strong>
-            <p>{{ approval.agentKey }} · {{ approval.toolName }} · {{ approval.risk }}</p>
-            @if (approval.contextJson) { <p class="cc__status">{{ approval.contextJson }}</p> }
-            @if (canApprove) {
-              <div class="ux__actions">
-                <button type="button" class="cc__btn cc__btn--primary" (click)="decide(approval, 'approve')">Approve</button>
-                <button type="button" class="cc__btn" (click)="decide(approval, 'reject')">Reject</button>
-              </div>
-            }
-          </article>
-        } @empty {
-          <p class="cc__empty">No approvals are waiting.</p>
-        }
-        <h2>Executions</h2>
-        @for (execution of executions(); track execution.id) {
-          <button type="button" class="cc__item" (click)="selectedExecution.set(execution)">
-            {{ execution.agentKey }} · {{ execution.status }} · {{ execution.toolCallCount }} tools
-          </button>
-        }
-        @if (selectedExecution(); as execution) {
-          <article class="cc__item">
-            <h2>Execution record</h2>
-            <p>{{ execution.summary || 'No summary was stored.' }}</p>
-            <p class="cc__status">{{ execution.status }} · {{ execution.durationMs }} ms · attempt {{ execution.retryAttempt }}</p>
-            <p class="cc__status">Estimated cost {{ execution.estimatedCostUsd }} USD{{ execution.costIsEstimate ? ' (estimate)' : '' }}</p>
-            @if (execution.error) { <p class="ux__error">{{ execution.error }}</p> }
-            <p class="cc__status">Hidden model reasoning is not shown. This is the stored summary, tool count, and result.</p>
-          </article>
+          <div class="cc__empty-state">
+            <p class="cc__empty">No agents are activated for this company.</p>
+            <a class="cc__btn cc__btn--primary" [routerLink]="routes.nalva.marketplace">Open marketplace</a>
+          </div>
         }
       </div>
+      <p class="cc__tip">AI CEO can create follow-up tasks for other agents while it runs. Structured multi-step workflows are on Workforce.</p>
+      @if (lastPolledAt()) {
+        <p class="cc__status">Last updated {{ relativeTime(lastPolledAt()) }}</p>
+      }
     </aside>
   }
 </section>

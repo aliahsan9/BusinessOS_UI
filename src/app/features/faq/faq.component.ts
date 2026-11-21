@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { NavbarComponent } from '../navbar/navbar.component';
@@ -29,6 +29,7 @@ interface FaqHighlight {
   imports: [CommonModule, RouterLink, NavbarComponent, FooterComponent],
   templateUrl: './faq.component.html',
   styleUrls: ['./faq.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FaqComponent {
   readonly categories: FaqCategory[] = [

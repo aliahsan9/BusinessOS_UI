@@ -1,4 +1,4 @@
-import { Component, HostListener, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostListener, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 
@@ -13,7 +13,8 @@ interface NavItem {
   standalone: true,
   imports: [CommonModule, RouterModule],
   templateUrl: './navbar.component.html',
-  styleUrls: ['./navbar.component.scss']
+  styleUrls: ['./navbar.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NavbarComponent {
   isScrolled = signal(false);
@@ -23,9 +24,10 @@ export class NavbarComponent {
     { label: 'Home', route: '/', icon: 'bi-house' },
     { label: 'About', route: '/about', icon: 'bi-building' },
     { label: 'Services', route: '/services', icon: 'bi-layers' },
-    { label: 'Insights', route: '/insights', icon: 'bi-journal-richtext' },
+    { label: 'Pricing', route: '/pricing', icon: 'bi-tag' },
+    { label: 'Security', route: '/security', icon: 'bi-shield-lock' },
+    { label: 'Demo', route: '/demo', icon: 'bi-play-circle' },
     { label: 'FAQ', route: '/faq', icon: 'bi-question-circle' },
-    { label: 'Privacy', route: '/privacy', icon: 'bi-shield-check' },
     { label: 'Contact', route: '/contact', icon: 'bi-envelope' },
   ];
 

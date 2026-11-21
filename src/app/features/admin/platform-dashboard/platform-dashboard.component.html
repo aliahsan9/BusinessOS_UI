@@ -1,0 +1,106 @@
+<app-breadcrumb [items]="breadcrumbs" />
+<app-page-header
+  title="Platform commercial dashboard"
+  subtitle="Registered businesses, subscriptions, inbound leads, support, and measured SaaS metrics."
+/>
+
+@if (loading()) {
+  <app-skeleton />
+} @else if (error()) {
+  <app-alert variant="danger" [message]="error()!" />
+  <p><a routerLink="/admin">Open system admin</a></p>
+} @else {
+  @if (health(); as h) {
+    <p class="platform-note">
+      Health: {{ h.status }} · Database {{ h.databaseConnected ? 'connected' : 'down' }} ·
+      AI {{ h.aiProviderConfigured ? 'configured' : 'not configured' }} ·
+      Checked {{ h.checkedAt | date: 'medium' }}
+    </p>
+  }
+
+  @if (revenue(); as rev) {
+    <section class="metric-grid">
+      <article><h3>MRR</h3><p>{{ rev.monthlyRecurringRevenue | number: '1.2-2' }}</p></article>
+      <article><h3>Active</h3><p>{{ rev.activeSubscriptions }}</p></article>
+      <article><h3>Trials</h3><p>{{ rev.trialSubscriptions }}</p></article>
+      <article><h3>Failed payments</h3><p>{{ rev.failedPayments }}</p></article>
+      <article><h3>Churned this month</h3><p>{{ rev.churnedThisMonth }}</p></article>
+      <article><h3>Collected</h3><p>{{ rev.collectedRevenue | number: '1.2-2' }}</p></article>
+    </section>
+    <p class="platform-note">{{ rev.note }}</p>
+  }
+
+  @if (analytics(); as a) {
+    <section class="analytics">
+      <h2>SaaS analytics</h2>
+      <div class="metric-grid">
+        <article><h3>ARPT</h3><p>{{ a.averageRevenuePerTenant ?? '—' }}</p><small>Measured</small></article>
+        <article><h3>Trial→paid</h3><p>{{ a.trialToPaidConversionRate ?? '—' }}%</p><small>Measured</small></article>
+        <article><h3>Monthly churn</h3><p>{{ a.monthlyChurnRate ?? '—' }}%</p><small>Measured</small></article>
+        <article><h3>Est. AI / tenant</h3><p>{{ a.estimatedAiCostPerTenantUsd ?? '—' }}</p><small>Estimated</small></article>
+        <article><h3>Est. gross margin</h3><p>{{ a.estimatedGrossMarginUsd ?? '—' }}</p><small>Estimated</small></article>
+        <article><h3>CAC / LTV</h3><p>Unavailable</p><small>Needs acquisition spend &amp; cohorts</small></article>
+      </div>
+      <p class="platform-note">{{ a.note }}</p>
+    </section>
+  }
+
+  <section class="tables">
+    <div>
+      <h2>Businesses</h2>
+      <table>
+        <thead>
+          <tr><th>Name</th><th>Plan</th><th>Status</th><th>Members</th></tr>
+        </thead>
+        <tbody>
+          @for (company of companies(); track company.id) {
+            <tr>
+              <td>{{ company.name }}</td>
+              <td>{{ company.subscriptionPlan }}</td>
+              <td>{{ company.subscriptionStatus || company.status }}</td>
+              <td>{{ company.memberCount }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div>
+      <h2>Inbound leads</h2>
+      <table>
+        <thead>
+          <tr><th>Name</th><th>Kind</th><th>Topic</th><th>Created</th></tr>
+        </thead>
+        <tbody>
+          @for (lead of leads(); track lead.id) {
+            <tr>
+              <td>{{ lead.fullName }}</td>
+              <td>{{ lead.kind }}</td>
+              <td>{{ lead.topic }}</td>
+              <td>{{ lead.createdAt | date: 'mediumDate' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div>
+      <h2>Support tickets</h2>
+      <table>
+        <thead>
+          <tr><th>Subject</th><th>Category</th><th>Status</th><th>Created</th></tr>
+        </thead>
+        <tbody>
+          @for (ticket of tickets(); track ticket.id) {
+            <tr>
+              <td>{{ ticket.subject }}</td>
+              <td>{{ ticket.category }}</td>
+              <td>{{ ticket.status }}</td>
+              <td>{{ ticket.createdAt | date: 'mediumDate' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+}

@@ -1,0 +1,85 @@
+:host {
+  display: block;
+}
+
+.demo-page {
+  padding-bottom: 4rem;
+
+  &__hero {
+    padding: 3.5rem 0 1.5rem;
+
+    h1 {
+      margin: 0 0 1rem;
+      max-width: 16ch;
+      font-family: var(--mkt-font-display);
+      font-size: clamp(2rem, 4vw, 3rem);
+      letter-spacing: -0.03em;
+    }
+
+    p {
+      max-width: 40rem;
+      color: var(--mkt-muted);
+      line-height: 1.6;
+    }
+  }
+
+  &__brand {
+    margin: 0 0 0.75rem;
+    font-family: var(--mkt-font-display);
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--mkt-accent);
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: 1fr 1.1fr;
+    gap: 2rem;
+    align-items: start;
+
+    @media (max-width: 860px) {
+      grid-template-columns: 1fr;
+    }
+
+    ul {
+      padding-left: 1.1rem;
+      line-height: 1.7;
+      color: var(--mkt-muted);
+    }
+  }
+
+  &__form,
+  &__success {
+    display: grid;
+    gap: 0.85rem;
+    padding: 1.35rem;
+    border-radius: 1rem;
+    border: 1px solid color-mix(in srgb, var(--mkt-ink) 10%, transparent);
+    background: #fff;
+  }
+
+  label {
+    display: grid;
+    gap: 0.35rem;
+    font-size: 0.9rem;
+  }
+
+  input,
+  textarea {
+    padding: 0.65rem 0.75rem;
+    border-radius: 0.5rem;
+    border: 1px solid color-mix(in srgb, var(--mkt-ink) 14%, transparent);
+  }
+
+  &__optin {
+    grid-template-columns: auto 1fr;
+    align-items: start;
+    gap: 0.55rem;
+    color: var(--mkt-muted);
+  }
+
+  &__error {
+    color: #b42318;
+    margin: 0;
+  }
+}

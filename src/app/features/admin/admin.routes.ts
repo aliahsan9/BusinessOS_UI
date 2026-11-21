@@ -10,4 +10,11 @@ export const ADMIN_ROUTES: Routes = [
     title: 'System Admin | BusinessOS',
     canActivate: [permissionGuard([PermissionCodes.systemAdmin.view])],
   },
+  {
+    path: 'platform',
+    loadComponent: () =>
+      import('./platform-dashboard/platform-dashboard.component').then((m) => m.PlatformDashboardComponent),
+    title: 'Platform Admin | BusinessOS',
+    canActivate: [permissionGuard([PermissionCodes.systemAdmin.view])],
+  },
 ];

@@ -1,0 +1,181 @@
+<section class="enterprise-shell">
+  <header class="enterprise-shell__header">
+    <div>
+      <p class="eyebrow">Enterprise Edition</p>
+      <h1>Organization control center</h1>
+      <p class="lede">
+        Branches, approvals, SSO, audit, and agent governance. Available on the Enterprise plan only.
+      </p>
+    </div>
+    <a [routerLink]="routes.billing.base" class="link-quiet">Billing &amp; plans</a>
+  </header>
+
+  @if (!unlocked()) {
+    <div class="locked-panel">
+      <h2>Enterprise security is locked</h2>
+      <p>
+        Free, Starter, and Professional keep the simple company workspace. Upgrade to Enterprise to unlock
+        advanced RBAC, multi-branch hierarchy, SSO, MFA policy, and approval governance.
+      </p>
+      <a [routerLink]="routes.pricing.base" class="btn-primary">View Enterprise plan</a>
+    </div>
+  } @else {
+    <nav class="tabs" aria-label="Enterprise sections">
+      <button type="button" [class.active]="tab() === 'hierarchy'" (click)="setTab('hierarchy')">Hierarchy</button>
+      <button type="button" [class.active]="tab() === 'approvals'" (click)="setTab('approvals')">Approvals</button>
+      <button type="button" [class.active]="tab() === 'sso'" (click)="setTab('sso')">SSO &amp; security</button>
+      <button type="button" [class.active]="tab() === 'audit'" (click)="setTab('audit')">Audit</button>
+      <button type="button" [class.active]="tab() === 'reports'" (click)="setTab('reports')">Reports</button>
+      <button type="button" [class.active]="tab() === 'agents'" (click)="setTab('agents')">Agent governance</button>
+      <button type="button" [class.active]="tab() === 'mfa'" (click)="setTab('mfa')">MFA</button>
+    </nav>
+
+    @if (error()) {
+      <p class="error">{{ error() }}</p>
+    }
+    @if (loading()) {
+      <p class="muted">Loading…</p>
+    }
+
+    @if (tab() === 'hierarchy') {
+      <div class="panel">
+        <h2>Branches</h2>
+        <div class="form-row">
+          <input [(ngModel)]="branchName" placeholder="Branch name" />
+          <input [(ngModel)]="branchCode" placeholder="Code" />
+          <button type="button" (click)="createBranch()">Add branch</button>
+        </div>
+        <ul>
+          @for (branch of hierarchy()?.branches || []; track branch.id) {
+            <li>
+              <strong>{{ branch.name }}</strong>
+              @if (branch.isHeadquarters) {
+                <span class="tag">HQ</span>
+              }
+              <span class="muted">{{ branch.code || '—' }} · {{ branch.region || 'No region' }}</span>
+            </li>
+          }
+        </ul>
+        <h3>Departments</h3>
+        <ul>
+          @for (dept of hierarchy()?.departments || []; track dept.id) {
+            <li>{{ dept.name }} <span class="muted">branch {{ dept.branchId || 'company-wide' }}</span></li>
+          }
+        </ul>
+      </div>
+    }
+
+    @if (tab() === 'approvals') {
+      <div class="panel">
+        <h2>Approval policies</h2>
+        <div class="form-row">
+          <input [(ngModel)]="policyName" placeholder="Policy name" />
+          <input type="number" [(ngModel)]="policyThreshold" placeholder="Amount threshold" />
+          <button type="button" (click)="createExpensePolicy()">Create expense policy</button>
+        </div>
+        <ul>
+          @for (policy of policies(); track policy.id) {
+            <li>
+              <strong>{{ policy.name }}</strong>
+              <span class="muted">{{ policy.triggerType }} · {{ policy.mode }} · threshold {{ policy.amountThreshold ?? 'n/a' }}</span>
+            </li>
+          }
+        </ul>
+        <h3>Pending requests</h3>
+        <ul>
+          @for (request of requests(); track request.id) {
+            <li>
+              <div>
+                <strong>{{ request.title }}</strong>
+                <span class="muted">{{ request.status }} · {{ request.amount ?? '—' }}</span>
+              </div>
+              <div class="actions">
+                <button type="button" (click)="decide(request.id, true)">Approve</button>
+                <button type="button" class="danger" (click)="decide(request.id, false)">Reject</button>
+              </div>
+            </li>
+          }
+        </ul>
+      </div>
+    }
+
+    @if (tab() === 'sso') {
+      <div class="panel">
+        <h2>OIDC SSO</h2>
+        <p class="muted">Configure real Entra ID or Google Workspace OIDC. Secrets are encrypted at rest. SCIM is not included in Phase 10.</p>
+        <div class="form-grid">
+          <input [(ngModel)]="ssoProvider" placeholder="Provider (EntraId / GoogleWorkspace)" />
+          <input [(ngModel)]="ssoAuthority" placeholder="Authority URL" />
+          <input [(ngModel)]="ssoClientId" placeholder="Client ID" />
+          <input [(ngModel)]="ssoSecret" type="password" placeholder="Client secret" />
+          <button type="button" (click)="saveOidc()">Save OIDC config</button>
+        </div>
+        <ul>
+          @for (config of ssoConfigs(); track config.id) {
+            <li>
+              <strong>{{ config.provider }}</strong>
+              <span class="muted">{{ config.protocol }} · {{ config.isEnabled ? 'enabled' : 'disabled' }}</span>
+            </li>
+          }
+        </ul>
+        <h3>Security policy</h3>
+        <label class="check">
+          <input type="checkbox" [(ngModel)]="requireMfa" />
+          Require MFA for this company
+        </label>
+        <button type="button" (click)="saveSecurity()">Save security settings</button>
+      </div>
+    }
+
+    @if (tab() === 'audit') {
+      <div class="panel">
+        <h2>Enterprise audit</h2>
+        <ul>
+          @for (item of audit()?.items || []; track item.id) {
+            <li>
+              <strong>{{ item.category }}</strong> · {{ item.action }}
+              <span class="muted">{{ item.createdAt | date: 'medium' }}</span>
+            </li>
+          }
+        </ul>
+      </div>
+    }
+
+    @if (tab() === 'reports') {
+      <div class="panel">
+        <h2>{{ report()?.title || 'Branch report' }}</h2>
+        <ul>
+          @for (metric of report()?.metrics || []; track metric.key) {
+            <li>{{ metric.label }}: <strong>{{ metric.value }}</strong></li>
+          }
+        </ul>
+      </div>
+    }
+
+    @if (tab() === 'agents') {
+      <div class="panel">
+        <h2>Agent governance</h2>
+        <div class="form-row">
+          <input [(ngModel)]="agentKey" placeholder="Agent key" />
+          <input [(ngModel)]="deniedTools" placeholder="Denied tools (comma-separated)" />
+          <button type="button" (click)="saveAgentGovernance()">Save</button>
+        </div>
+      </div>
+    }
+
+    @if (tab() === 'mfa') {
+      <div class="panel">
+        <h2>Authenticator MFA</h2>
+        <button type="button" (click)="startMfa()">Generate authenticator key</button>
+        @if (mfaSetup(); as setup) {
+          <p>Shared key: <code>{{ setup.sharedKey }}</code></p>
+          <p class="muted break">{{ setup.authenticatorUri }}</p>
+          <div class="form-row">
+            <input [(ngModel)]="mfaCode" placeholder="6-digit code" />
+            <button type="button" (click)="enableMfa()">Enable MFA</button>
+          </div>
+        }
+      </div>
+    }
+  }
+</section>

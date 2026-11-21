@@ -1,0 +1,63 @@
+:host {
+  display: block;
+}
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+
+  article {
+    padding: 0.9rem 1rem;
+    border: 1px solid var(--bos-border, #e5e7eb);
+    border-radius: 0.75rem;
+    background: var(--bos-surface, #fff);
+  }
+
+  h3 {
+    margin: 0;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--bos-muted, #6b7280);
+  }
+
+  p {
+    margin: 0.35rem 0 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+
+  small {
+    color: var(--bos-muted, #6b7280);
+  }
+}
+
+.platform-note {
+  color: var(--bos-muted, #6b7280);
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+}
+
+.tables {
+  display: grid;
+  gap: 1.5rem;
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+
+  th,
+  td {
+    text-align: left;
+    padding: 0.55rem 0.4rem;
+    border-bottom: 1px solid var(--bos-border, #e5e7eb);
+  }
+
+  h2 {
+    margin: 0 0 0.65rem;
+    font-size: 1.05rem;
+  }
+}

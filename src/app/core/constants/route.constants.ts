@@ -149,6 +149,7 @@ export const ROUTES = {
   admin: {
     base: '/admin',
     dashboard: '/admin',
+    platform: '/admin/platform',
   },
   activity: {
     base: '/activity',
@@ -162,6 +163,10 @@ export const ROUTES = {
   organization: {
     base: '/organization',
     settings: '/organization',
+  },
+  enterprise: {
+    base: '/enterprise',
+    hub: '/enterprise',
   },
   tenant: {
     base: '/tenant',

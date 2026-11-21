@@ -215,7 +215,7 @@
             <form [formGroup]="settingsForm" (ngSubmit)="saveSettings()">
               <app-input label="Logo URL" formControlName="logoUrl" />
               @if (settings()?.logoUrl) {
-                <img [src]="settings()!.logoUrl!" alt="Logo preview" class="logo-preview" />
+                <img [src]="settings()!.logoUrl!" alt="Logo preview" class="logo-preview" loading="lazy" />
               }
               @if (canUpdate) {
                 <div class="form-actions"><app-button label="Save" type="submit" [loading]="saving()" /></div>

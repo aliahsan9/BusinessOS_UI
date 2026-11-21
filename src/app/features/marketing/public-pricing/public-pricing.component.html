@@ -1,0 +1,90 @@
+<app-home-navbar />
+
+<main class="public-pricing">
+  <section class="public-pricing__hero container">
+    <p class="public-pricing__brand">BusinessOS</p>
+    <h1>Pricing that matches how your business grows</h1>
+    <p>
+      Start free, trial paid plans for 14 days, and upgrade when your team, AI usage, or client workload needs more room.
+      Limits are enforced on the server — not only in the UI.
+    </p>
+    <div class="public-pricing__actions">
+      <a routerLink="/auth/register" class="mkt-btn mkt-btn--primary">Start free trial</a>
+      <a routerLink="/demo" class="mkt-btn mkt-btn--ghost">Book a demo</a>
+    </div>
+  </section>
+
+  <section class="container public-pricing__toolbar">
+    <label>
+      <span>Billing country</span>
+      <select [value]="country()" (change)="onCountry($any($event.target).value)">
+        @for (item of countries; track item.country) {
+          <option [value]="item.country">{{ item.label }}</option>
+        }
+      </select>
+    </label>
+    <div class="public-pricing__toggle" role="group" aria-label="Billing interval">
+      <button type="button" [class.is-active]="!annual()" (click)="annual.set(false)">Monthly</button>
+      <button type="button" [class.is-active]="annual()" (click)="annual.set(true)">
+        Annual
+        @if (maxSavings() > 0) {
+          <em>Save up to {{ maxSavings() }}%</em>
+        }
+      </button>
+    </div>
+  </section>
+
+  <section class="container">
+    @if (loading()) {
+      <p class="public-pricing__status">Loading plans…</p>
+    } @else if (error() && plans().length === 0) {
+      <p class="public-pricing__status public-pricing__status--error">{{ error() }}</p>
+    } @else {
+      <div class="public-pricing__grid">
+        @for (plan of plans(); track plan.id) {
+          <article class="plan" [class.plan--featured]="plan.isRecommended">
+            <header>
+              @if (plan.isRecommended) {
+                <span class="pill">Recommended</span>
+              }
+              <h2>{{ plan.name }}</h2>
+              <p>{{ plan.description }}</p>
+            </header>
+            <p class="plan__price">
+              <strong>{{ money(price(plan), currency()) }}</strong>
+              <span>/ {{ annual() ? 'year' : 'month' }}</span>
+            </p>
+            @if (plan.trialDays > 0) {
+              <p class="plan__trial">{{ plan.trialDays }}-day free trial</p>
+            }
+            <ul>
+              @for (feature of plan.features; track feature) {
+                <li>{{ feature }}</li>
+              }
+            </ul>
+            <a routerLink="/auth/register" [queryParams]="{ plan: plan.slug }" class="mkt-btn mkt-btn--primary">
+              {{ plan.monthlyPrice === 0 ? 'Start free' : 'Start trial' }}
+            </a>
+          </article>
+        }
+      </div>
+    }
+  </section>
+
+  <section class="container public-pricing__trust">
+    <h2>What you get with every paid plan</h2>
+    <ul>
+      <li>Tenant isolation for company data</li>
+      <li>Role-based access for your team</li>
+      <li>Usage tracking for AI, agents, and automation</li>
+      <li>Cancel anytime; renewal and grace periods are in the Terms of Service</li>
+    </ul>
+    <p>
+      Read the <a routerLink="/terms">Terms of Service</a>,
+      <a routerLink="/refunds">Refund Policy</a>, and
+      <a routerLink="/security">Security overview</a>.
+    </p>
+  </section>
+</main>
+
+<app-footer />

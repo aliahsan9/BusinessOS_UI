@@ -13,7 +13,6 @@ import { RouterLink } from '@angular/router';
 import { AppCurrencyPipe } from '../../shared/pipes/app-currency.pipe';
 import { DashboardStateService } from '../../state/dashboard.state';
 import { OrderService } from '../../core/services/order.service';
-import { NotificationStateService } from '../../state/notification.state';
 import { AuthService } from '../../core/services/auth.service';
 import { CurrencyService } from '../../core/services/currency.service';
 import { ExperienceService, BusinessInsight } from '../../core/services/experience.service';
@@ -37,6 +36,13 @@ import { DashboardExperienceComponent } from '../experience/dashboard-experience
 import { DashboardCopilotComponent } from '../../shared/components/ai-assistant/dashboard-copilot/dashboard-copilot.component';
 
 type StatusTone = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'neutral';
+type SparkDirection = 'up' | 'down' | 'flat';
+
+interface SparkView {
+  line: string;
+  area: string;
+  direction: SparkDirection;
+}
 
 interface CategorySlice {
   name: string;
@@ -76,7 +82,6 @@ const DONUT_CIRCUMFERENCE = 2 * Math.PI * DONUT_RADIUS;
 export class DashboardComponent implements OnInit {
   private readonly dashboardState = inject(DashboardStateService);
   private readonly orderService = inject(OrderService);
-  private readonly notificationState = inject(NotificationStateService);
   private readonly authService = inject(AuthService);
   private readonly currencyService = inject(CurrencyService);
   readonly experience = inject(ExperienceService);
@@ -187,6 +192,59 @@ export class DashboardComponent implements OnInit {
   readonly netProfit = computed(() => this.numericOrNull(this.finance()?.netProfit));
   readonly outstanding = computed(() => this.numericOrNull(this.finance()?.outstandingInvoices));
   readonly averageOrderValue = computed(() => this.numericOrNull(this.sales()?.averageOrderValue));
+  readonly customersChange = computed(() => this.numericOrNull(this.customers()?.customerGrowthRate));
+
+  readonly profitSeries = computed(() => {
+    const revenue = this.finance()?.revenueTrend ?? [];
+    const expenses = this.finance()?.expenseTrend ?? [];
+    if (revenue.length >= 2) {
+      const expenseByPeriod = new Map(
+        expenses.map((point) => [point.period, Number(point.amount) || 0] as const),
+      );
+      return revenue.map((point) => (Number(point.amount) || 0) - (expenseByPeriod.get(point.period) ?? 0));
+    }
+    const salesRevenue = (this.sales()?.revenueTrends ?? []).map((point) => Number(point.revenue) || 0);
+    if (salesRevenue.length < 2) return [] as number[];
+    const revenueTotal = salesRevenue.reduce((sum, value) => sum + value, 0);
+    const profit = this.netProfit();
+    if (profit == null || revenueTotal <= 0) return salesRevenue;
+    const margin = profit / revenueTotal;
+    return salesRevenue.map((value) => value * margin);
+  });
+
+  readonly profitChange = computed(() => this.seriesChangePercent(this.profitSeries()));
+
+  readonly inventorySeries = computed(() => {
+    const trends = this.inventory()?.stockMovementTrends ?? [];
+    if (trends.length < 2) return [] as number[];
+    let running = 0;
+    return trends.map((point) => {
+      const inbound = Number(point.inbound ?? point.totalIn) || 0;
+      const outbound = Number(point.outbound ?? point.totalOut) || 0;
+      running += inbound - outbound;
+      return running;
+    });
+  });
+
+  readonly inventoryChange = computed(() => this.seriesChangePercent(this.inventorySeries()));
+
+  /** Positive = healthier collections (lower unpaid share). Negative = needs follow-up. */
+  readonly outstandingChange = computed(() => {
+    const outstanding = this.outstanding();
+    const payments = this.numericOrNull(this.finance()?.totalPayments);
+    const revenue =
+      this.numericOrNull(this.finance()?.totalRevenue) ?? this.numericOrNull(this.overview()?.totalRevenue);
+    if (outstanding == null) return null;
+    if (outstanding <= 0) return 100;
+    if (payments != null && payments + outstanding > 0) {
+      const unpaidShare = outstanding / (payments + outstanding);
+      return -((unpaidShare - 0.5) * 100);
+    }
+    if (revenue != null && revenue > 0) {
+      return -Math.min(150, (outstanding / revenue) * 40);
+    }
+    return -25;
+  });
 
   readonly inventoryValue = computed(() => {
     const inventory = this.inventory();
@@ -231,14 +289,45 @@ export class DashboardComponent implements OnInit {
 
   readonly revenueSpark = computed(() => {
     const fromSales = (this.sales()?.revenueTrends ?? []).map((point) => Number(point.revenue) || 0);
-    if (fromSales.length >= 2) return this.sparkPath(fromSales);
+    if (fromSales.length >= 2) return this.buildSpark(fromSales);
     const series = this.revenueChart()?.datasets?.[0]?.data ?? [];
-    return this.sparkPath(series.map((value) => Number(value) || 0));
+    return this.buildSpark(series.map((value) => Number(value) || 0));
   });
 
   readonly ordersSpark = computed(() =>
-    this.sparkPath((this.sales()?.revenueTrends ?? []).map((point) => Number(point.orderCount) || 0)),
+    this.buildSpark((this.sales()?.revenueTrends ?? []).map((point) => Number(point.orderCount) || 0)),
   );
+
+  readonly profitSpark = computed(() => this.buildSpark(this.profitSeries()));
+
+  readonly customersSpark = computed(() => {
+    const growth = this.customersChange();
+    if (growth != null) return this.buildSpark(this.seriesFromChange(growth));
+    const total = this.numericOrNull(this.overview()?.totalCustomers) ?? 0;
+    const neu = this.newCustomers() ?? 0;
+    if (total > 0 && neu > 0) {
+      const prior = Math.max(total - neu, 1);
+      return this.buildSpark(this.seriesFromChange((neu / prior) * 100));
+    }
+    return this.buildSpark(this.seriesFromChange(0));
+  });
+
+  readonly outstandingSpark = computed(() => {
+    const change = this.outstandingChange();
+    if (change != null) return this.buildSpark(this.seriesFromChange(change));
+    const billed = (this.finance()?.revenueTrend ?? []).map((point) => Number(point.amount) || 0);
+    return this.buildSpark(billed);
+  });
+
+  readonly inventorySpark = computed(() => {
+    const fromStock = this.buildSpark(this.inventorySeries());
+    if (fromStock) return fromStock;
+    const value = this.inventoryValue();
+    const low = this.lowStockCount();
+    if (value == null) return null;
+    const pressure = low != null && value > 0 ? -Math.min(40, (low / Math.max(value / 1000, 1)) * 10) : 0;
+    return this.buildSpark(this.seriesFromChange(pressure));
+  });
 
   readonly salesChart = computed((): ChartDataResponse | null => {
     const currency = this.overview()?.currency || this.finance()?.currency || this.dashboardState.currency() || undefined;
@@ -478,7 +567,7 @@ export class DashboardComponent implements OnInit {
   ngOnInit(): void {
     this.dashboardState.loadDashboard();
     this.loadRecentOrders();
-    void this.notificationState.refresh(5);
+    // Notifications are initialized by app-navbar; skip duplicate refresh here.
     this.syncChartHeight();
   }
 
@@ -724,21 +813,53 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  private sparkPath(values: number[]): string | null {
+  private seriesChangePercent(values: number[]): number | null {
     const series = values.filter((value) => Number.isFinite(value));
-    if (series.length < 2 || new Set(series).size < 2) return null;
+    if (series.length < 2) return null;
+    const first = series[0];
+    const last = series[series.length - 1];
+    if (first === 0) return last === 0 ? 0 : last > 0 ? 100 : -100;
+    return ((last - first) / Math.abs(first)) * 100;
+  }
+
+  private seriesFromChange(changePercent: number, points = 8): number[] {
+    const end = 100;
+    const start = end / (1 + changePercent / 100);
+    if (!Number.isFinite(start) || !Number.isFinite(end)) return [100, 100];
+    const series: number[] = [];
+    for (let i = 0; i < points; i++) {
+      const t = i / (points - 1);
+      const eased = t * t * (3 - 2 * t);
+      const wobble = Math.sin(t * Math.PI * 2) * Math.min(4, Math.abs(changePercent) * 0.08);
+      series.push(start + (end - start) * eased + wobble);
+    }
+    return series;
+  }
+
+  private buildSpark(values: number[]): SparkView | null {
+    const series = values.filter((value) => Number.isFinite(value));
+    if (series.length < 2) return null;
     const width = 120;
     const height = 36;
     const min = Math.min(...series);
     const max = Math.max(...series);
     const range = max - min || 1;
-    return series
-      .map((value, index) => {
-        const x = (index / (series.length - 1)) * width;
-        const y = 4 + (1 - (value - min) / range) * (height - 8);
-        return `${index === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`;
-      })
+    const points = series.map((value, index) => {
+      const x = (index / (series.length - 1)) * width;
+      const y = 4 + (1 - (value - min) / range) * (height - 8);
+      return { x, y };
+    });
+    const line = points
+      .map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x.toFixed(1)} ${point.y.toFixed(1)}`)
       .join(' ');
+    const last = points[points.length - 1];
+    const first = points[0];
+    const area = `${line} L ${last.x.toFixed(1)} ${height} L ${first.x.toFixed(1)} ${height} Z`;
+    const firstValue = series[0];
+    const lastValue = series[series.length - 1];
+    const direction: SparkDirection =
+      lastValue > firstValue ? 'up' : lastValue < firstValue ? 'down' : 'flat';
+    return { line, area, direction };
   }
 
   private roundPercentages(ratios: number[]): number[] {

@@ -1,6 +1,6 @@
 import { LegalDocument, LegalDocumentKey } from './legal-document.model';
 
-const UPDATED = 'November 14, 2026';
+const UPDATED = 'November 21, 2026';
 
 const privacy: LegalDocument = {
   key: 'privacy',
@@ -605,8 +605,177 @@ const refunds: LegalDocument = {
   ],
 };
 
+const dpa: LegalDocument = {
+  key: 'dpa',
+  path: '/dpa',
+  label: 'Data Processing Agreement',
+  eyebrow: 'DPA',
+  title: 'Data Processing Agreement',
+  lead:
+    'This Data Processing Agreement (DPA) is a product requirements draft for BusinessOS customer contracts. It must be reviewed by qualified counsel for your jurisdiction before it is signed.',
+  updated: UPDATED,
+  sections: [
+    {
+      id: 'roles',
+      title: 'Roles of the parties',
+      blocks: [
+        {
+          type: 'p',
+          text: 'The customer is the controller (or equivalent) of business records entered into BusinessOS. BusinessOS is the processor (or equivalent) when it processes that customer personal data to provide the service.',
+        },
+      ],
+    },
+    {
+      id: 'scope',
+      title: 'Subject matter and duration',
+      blocks: [
+        {
+          type: 'ul',
+          items: [
+            'Subject matter: hosting and processing workspace data needed to operate BusinessOS.',
+            'Duration: while the subscription is active and during any retention or deletion period stated in the Privacy Policy or the order form.',
+            'Nature: storage, retrieval, transmission, backup, support, and AI-assisted processing initiated by authorized users.',
+          ],
+        },
+      ],
+    },
+    {
+      id: 'instructions',
+      title: 'Processing instructions',
+      blocks: [
+        {
+          type: 'p',
+          text: 'BusinessOS processes personal data only on documented instructions from the customer, including configuration inside the product, unless law requires otherwise. The customer is responsible for the lawfulness of the instructions and for the data it uploads.',
+        },
+      ],
+    },
+    {
+      id: 'security',
+      title: 'Security measures',
+      blocks: [
+        {
+          type: 'ul',
+          items: [
+            'Access controls, authentication, and role-based authorization.',
+            'Tenant isolation for company records.',
+            'Encryption in transit for public HTTP endpoints.',
+            'Logging and operational monitoring appropriate to the hosting environment.',
+          ],
+        },
+      ],
+    },
+    {
+      id: 'subprocessors',
+      title: 'Subprocessors',
+      blocks: [
+        {
+          type: 'p',
+          text: 'Infrastructure, email, payment, and AI model providers may process data as subprocessors. A current list should be maintained for enterprise customers. Customers will be notified of material subprocessor changes according to the contract.',
+        },
+      ],
+    },
+    {
+      id: 'rights',
+      title: 'Assistance with data subject rights',
+      blocks: [
+        {
+          type: 'p',
+          text: 'BusinessOS will assist the customer, where feasible, with access, correction, deletion, and export requests that relate to personal data stored in the service.',
+        },
+      ],
+    },
+    {
+      id: 'deletion',
+      title: 'Return and deletion',
+      blocks: [
+        {
+          type: 'p',
+          text: 'On termination, the customer may request an export and deletion according to product procedures. Residual encrypted backups may persist for a limited period until rotated.',
+        },
+      ],
+    },
+    {
+      id: 'jurisdiction',
+      title: 'Jurisdiction-specific review required',
+      blocks: [
+        {
+          type: 'ul',
+          items: [
+            'GDPR / UK GDPR: standard contractual clauses, transfer assessments, and Article 28 terms.',
+            'Pakistan: local data protection and sector rules applicable to the customer.',
+            'US state privacy laws: controller/processor terms and consumer request handling.',
+            'This draft is not legal advice and is not a substitute for a negotiated enterprise DPA.',
+          ],
+        },
+      ],
+    },
+  ],
+};
+
+const aup: LegalDocument = {
+  key: 'aup',
+  path: '/aup',
+  label: 'Acceptable Use Policy',
+  eyebrow: 'Acceptable Use',
+  title: 'Acceptable Use Policy',
+  lead:
+    'This Acceptable Use Policy explains what you may not do with BusinessOS. It complements the Terms of Service and applies to every workspace and API client.',
+  updated: UPDATED,
+  sections: [
+    {
+      id: 'allowed',
+      title: 'Allowed use',
+      blocks: [
+        {
+          type: 'p',
+          text: 'Use BusinessOS to run legitimate business operations for your organization and your clients, subject to your plan limits and applicable law.',
+        },
+      ],
+    },
+    {
+      id: 'prohibited',
+      title: 'Prohibited use',
+      blocks: [
+        {
+          type: 'ul',
+          items: [
+            'Attempting to access another company’s tenant data.',
+            'Bypassing subscription, quota, or entitlement checks.',
+            'Uploading malware, scraping the service abusively, or attacking infrastructure.',
+            'Sending spam or unlawful marketing through integrations or AI outreach tools.',
+            'Using the service for fraud, illegal goods, or prohibited content involving minors.',
+            'Reselling the platform as a white-label host without a written agreement.',
+          ],
+        },
+      ],
+    },
+    {
+      id: 'ai',
+      title: 'AI and automation',
+      blocks: [
+        {
+          type: 'p',
+          text: 'AI agents must stay within your permissions and approval policies. You remain responsible for content generated or actions proposed on your behalf.',
+        },
+      ],
+    },
+    {
+      id: 'enforcement',
+      title: 'Enforcement',
+      blocks: [
+        {
+          type: 'p',
+          text: 'We may suspend or terminate workspaces that violate this policy, and we may report unlawful activity to authorities when required.',
+        },
+      ],
+    },
+  ],
+};
+
 export const LEGAL_DOCUMENTS: Record<LegalDocumentKey, LegalDocument> = {
   privacy,
   terms,
   refunds,
+  dpa,
+  aup,
 };

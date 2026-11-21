@@ -87,6 +87,18 @@ export const PermissionCodes = {
   },
   audit: {
     view: 'Audit.View',
+    export: 'Audit.Export',
+  },
+  enterprise: {
+    view: 'Enterprise.View',
+    manage: 'Enterprise.Manage',
+    branchView: 'Org.Branch.View',
+    branchManage: 'Org.Branch.Manage',
+    approvalPolicyView: 'Approval.Policy.View',
+    approvalPolicyManage: 'Approval.Policy.Manage',
+    approvalDecide: 'Approval.Decide',
+    ssoManage: 'Sso.Manage',
+    agentGovernance: 'Agent.Governance.Manage',
   },
   notification: {
     view: 'Notification.View',

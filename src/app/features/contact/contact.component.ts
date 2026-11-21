@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -8,6 +8,7 @@ import {
 import { RouterLink } from '@angular/router';
 import { FooterComponent } from '../footer/footer.component';
 import { NavbarComponent } from '../navbar/navbar.component';
+import { GrowthService } from '../../core/services/growth.service';
 
 interface ContactChannel {
   icon: string;
@@ -35,12 +36,16 @@ interface AssistItem {
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink, NavbarComponent, FooterComponent],
   templateUrl: './contact.component.html',
-  styleUrls: ['./contact.component.scss']
+  styleUrls: ['./contact.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ContactComponent {
   private fb = inject(FormBuilder);
+  private growth = inject(GrowthService);
 
   submitted = signal(false);
+  submitting = signal(false);
+  error = signal<string | null>(null);
 
   readonly channels: ContactChannel[] = [
     {
@@ -128,7 +133,8 @@ export class ContactComponent {
     company: [''],
     topic: ['', Validators.required],
     subject: ['', Validators.required],
-    message: ['', Validators.required]
+    message: ['', Validators.required],
+    marketingOptIn: [false],
   });
 
   submit(): void {
@@ -137,8 +143,38 @@ export class ContactComponent {
       return;
     }
 
-    console.log(this.contactForm.value);
-    this.contactForm.reset();
-    this.submitted.set(true);
+    const value = this.contactForm.getRawValue();
+    const topic = value.topic ?? '';
+    const kind = topic === 'Product demo'
+      ? 'Demo'
+      : topic === 'Technical support'
+        ? 'Support'
+        : 'Contact';
+
+    this.submitting.set(true);
+    this.error.set(null);
+    this.growth
+      .submitLead({
+        fullName: value.fullName ?? '',
+        email: value.email ?? '',
+        company: value.company || undefined,
+        kind,
+        topic,
+        subject: value.subject ?? '',
+        message: value.message ?? '',
+        sourcePath: '/contact',
+        marketingOptIn: !!value.marketingOptIn,
+      })
+      .subscribe({
+        next: () => {
+          this.contactForm.reset({ marketingOptIn: false });
+          this.submitted.set(true);
+          this.submitting.set(false);
+        },
+        error: () => {
+          this.error.set('We could not save your message. Please email support@businessos.com.');
+          this.submitting.set(false);
+        },
+      });
   }
 }

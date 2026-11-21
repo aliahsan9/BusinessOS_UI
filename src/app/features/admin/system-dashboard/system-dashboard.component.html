@@ -1,6 +1,7 @@
 <app-breadcrumb [items]="breadcrumbs" />
 
 <app-page-header title="System Admin" subtitle="Monitor system health, statistics, and environment." />
+<p class="mb-3"><a routerLink="/admin/platform">Open platform commercial dashboard</a></p>
 
 @if (error()) {
   <app-alert variant="danger" [message]="error()!" [dismissible]="false" />

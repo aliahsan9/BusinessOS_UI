@@ -1,0 +1,67 @@
+<app-home-navbar />
+
+<main class="demo-page">
+  <section class="container demo-page__hero">
+    <p class="demo-page__brand">BusinessOS</p>
+    <h1>See the AI workforce in your business</h1>
+    <p>
+      Book a focused walkthrough of agency onboarding, CRM, projects, billing, and human-approved AI agents.
+      No payment is taken during a demo request.
+    </p>
+  </section>
+
+  <section class="container demo-page__grid">
+    <div>
+      <h2>What we cover</h2>
+      <ul>
+        <li>Company setup and team invites</li>
+        <li>CRM, projects, and client portal</li>
+        <li>Subscription plans and usage limits</li>
+        <li>AI agents with approval policies</li>
+      </ul>
+      <p>
+        Prefer self-serve? <a routerLink="/auth/register">Start a free trial</a> or
+        review <a routerLink="/pricing">public pricing</a>.
+      </p>
+    </div>
+
+    @if (submitted()) {
+      <div class="demo-page__success">
+        <h2>Request received</h2>
+        <p>Thanks — we stored your demo request and will reply by email. Marketing email is only sent if you opted in.</p>
+        <a routerLink="/pricing" class="mkt-btn mkt-btn--primary">View pricing</a>
+      </div>
+    } @else {
+      <form class="demo-page__form" [formGroup]="form" (ngSubmit)="submit()">
+        <label>
+          <span>Full name</span>
+          <input formControlName="fullName" autocomplete="name" />
+        </label>
+        <label>
+          <span>Work email</span>
+          <input formControlName="email" type="email" autocomplete="email" />
+        </label>
+        <label>
+          <span>Company</span>
+          <input formControlName="company" autocomplete="organization" />
+        </label>
+        <label>
+          <span>What should we focus on?</span>
+          <textarea formControlName="message" rows="5"></textarea>
+        </label>
+        <label class="demo-page__optin">
+          <input type="checkbox" formControlName="marketingOptIn" />
+          <span>Send me product updates. Transactional messages about this request still go through either way.</span>
+        </label>
+        @if (error()) {
+          <p class="demo-page__error">{{ error() }}</p>
+        }
+        <button class="mkt-btn mkt-btn--primary" type="submit" [disabled]="submitting()">
+          {{ submitting() ? 'Sending…' : 'Request demo' }}
+        </button>
+      </form>
+    }
+  </section>
+</main>
+
+<app-footer />

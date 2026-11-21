@@ -74,7 +74,7 @@
           <h3>Preview</h3>
           <p class="muted small mb-2">Instagram / TikTok / YouTube publishing is not implemented. Meta Page publish only when connected.</p>
           @if (previewImage(); as imageUrl) {
-            <img [src]="imageUrl" alt="Content graphic preview" class="preview-image" />
+            <img [src]="imageUrl" alt="Content graphic preview" class="preview-image" loading="lazy" />
           } @else {
             <p class="muted">No graphic preview available. BriefOnly assets store a visual brief without fake logos.</p>
           }

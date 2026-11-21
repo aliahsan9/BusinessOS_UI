@@ -1,0 +1,77 @@
+:host {
+  display: block;
+}
+
+.security-page {
+  padding-bottom: 4rem;
+
+  &__hero {
+    padding: 3.5rem 0 2rem;
+
+    h1 {
+      margin: 0 0 1rem;
+      max-width: 16ch;
+      font-family: var(--mkt-font-display);
+      font-size: clamp(2rem, 4vw, 3rem);
+      letter-spacing: -0.03em;
+    }
+
+    p {
+      max-width: 42rem;
+      color: var(--mkt-muted);
+      line-height: 1.6;
+    }
+  }
+
+  &__brand {
+    margin: 0 0 0.75rem;
+    font-family: var(--mkt-font-display);
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--mkt-accent);
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1.35rem;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+
+    article {
+      padding: 1.2rem;
+      border-radius: 1rem;
+      border: 1px solid color-mix(in srgb, var(--mkt-ink) 10%, transparent);
+      background: #fff;
+    }
+
+    h2 {
+      margin: 0 0 0.55rem;
+      font-size: 1.1rem;
+      font-family: var(--mkt-font-display);
+    }
+
+    p {
+      margin: 0;
+      color: var(--mkt-muted);
+      line-height: 1.55;
+    }
+  }
+
+  &__note {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid color-mix(in srgb, var(--mkt-ink) 10%, transparent);
+
+    p {
+      max-width: 42rem;
+      color: var(--mkt-muted);
+      line-height: 1.6;
+    }
+  }
+}

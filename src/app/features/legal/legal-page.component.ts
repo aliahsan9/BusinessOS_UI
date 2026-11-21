@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ViewportScroller } from '@angular/common';
@@ -37,6 +37,7 @@ export class LegalInlineComponent {
   imports: [RouterLink, NavbarComponent, FooterComponent, LegalInlineComponent],
   templateUrl: './legal-page.component.html',
   styleUrl: './legal-page.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LegalPageComponent {
   private readonly route = inject(ActivatedRoute);
